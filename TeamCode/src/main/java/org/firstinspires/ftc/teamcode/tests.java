@@ -19,6 +19,8 @@ public class tests extends OpMode {
     public void loop(){
         if(gamepad1.x) {
             shooter.setPower(1);
+        } else {
+            shooter.setPower(0);
         }
     }
 }
