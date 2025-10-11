@@ -7,20 +7,23 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 @TeleOp
 public class tests extends OpMode {
 
-    private DcMotor shooter = null ;
+    private DcMotor shooter1 = null ;
+    private DcMotor shooter2 = null ;
 
     @Override
     public void init() {
-        shooter = hardwareMap.get(DcMotor.class,"shooter");
-
+        shooter1 = hardwareMap.get(DcMotor.class,"shooter1");
+        shooter2 = hardwareMap.get(DcMotor.class, "shooter2");
     }
 
     @Override
     public void loop(){
         if(gamepad1.x) {
-            shooter.setPower(1);
+            shooter1.setPower(1);
+            shooter2.setPower(-1);
         } else {
-            shooter.setPower(0);
+            shooter1.setPower(0);
+            shooter2.setPower(0);
         }
     }
 }
