@@ -24,9 +24,9 @@ public class tests extends OpMode {
         double vertical;
         double horizontal;
         double pivot;
-        vertical =  gamepad1.left_stick_y;
+        vertical =  -gamepad1.left_stick_y;
         horizontal = -gamepad1.left_stick_x;
-        pivot = gamepad1.right_stick_x;
+        pivot = -gamepad1.right_stick_x;
 
         motorRightFront.setPower((0.6 * -pivot) + (vertical - horizontal));
         motorRightBack.setPower((0.6 * -pivot) + (vertical + horizontal));
@@ -56,16 +56,16 @@ public class tests extends OpMode {
 
         moveDriveTrain();
 
-        if (gamepad1.x) {
-            shooter1.setPower(-0.4);
-            shooter2.setPower(0.4);
+        if (gamepad2.x) {
+            shooter1.setPower(-0.5);
+            shooter2.setPower(0.5);
         } else {
             shooter1.setPower(0);
             shooter2.setPower(0);
         }
 
 
-        if (gamepad1.y) {
+        if (gamepad2.y) {
             intake.setPosition(0.1);
         } else {
             intake.setPosition(.8);
