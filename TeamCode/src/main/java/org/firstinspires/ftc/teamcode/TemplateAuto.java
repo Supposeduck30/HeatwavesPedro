@@ -15,10 +15,10 @@ public class TemplateAuto extends LinearOpMode {
     protected DcMotor motorRightBack = null;
     protected DcMotor motorLeftFront = null;
     protected DcMotor motorLeftBack = null;
-    protected DcMotor shooter1 = null ;
-    protected DcMotor shooter2 = null ;
+    protected DcMotor shooter1;
+    protected DcMotor shooter2;
 
-    private CRServo intake = null;
+    protected Servo intake = null;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -26,14 +26,13 @@ public class TemplateAuto extends LinearOpMode {
         motorRightBack = hardwareMap.get(DcMotor.class, "rr");
         motorLeftBack = hardwareMap.get(DcMotor.class, "lr");
         motorLeftFront = hardwareMap.get(DcMotor.class, "lf");
-        intake = hardwareMap.get(CRServo.class, "Intake");
+        intake = hardwareMap.get(Servo.class, "Intake");
 
 
         motorLeftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
         motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
         motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
         motorRightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
-
 
     }
 
