@@ -57,9 +57,8 @@ public class tests extends OpMode {
         moveDriveTrain();
 
         if (gamepad2.x) {
-            shooter1.setPower(-0.5);
-
-            shooter2.setPower(0.5);
+            shooter1.setPower(-0.4);
+            shooter2.setPower(0.4);
         } else {
             shooter1.setPower(0);
             shooter2.setPower(0);
@@ -69,7 +68,7 @@ public class tests extends OpMode {
         if (gamepad2.y) {
             intake.setPosition(0.2);
         } else {
-            intake.setPosition(.8);
+            intake.setPosition(1.0);
         }
 
     } }

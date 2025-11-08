@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 @Autonomous
@@ -17,31 +18,29 @@ public class BlueSide extends TemplateAuto{
 
         waitForStart();
         moveFront(0.3);
-        sleep(600);
+        sleep(800);
 
-
-        shoot(0.5);
+        shoot(0.4);
         sleep(2000);
         intake.setPosition(0.1);
         sleep(1000);
 
         moveFront(0.0);
         intake.setPosition(0.8);
-        shoot(0.5);
+        shoot(0.38);
         sleep(2000);
         intake.setPosition(0.1);
-        sleep(1000);
+        sleep(3000);
 
         moveFront(0.0);
         intake.setPosition(0.8);
-        shoot(0.5);
+        shoot(0.38);
         sleep(2000);
         intake.setPosition(0.1);
         sleep(2000);
 
-        sleep(2000);
         strafeRight(0.7);
-        sleep(1000);
+        sleep(500);
 
 
 

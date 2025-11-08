@@ -13,16 +13,47 @@ public class LongDistance extends TemplateAuto{
         super.runOpMode();
         shooter1 = hardwareMap.get(DcMotor.class,"SM1");
         shooter2 = hardwareMap.get(DcMotor.class, "SM2");
+
         waitForStart();
         moveFront(-0.5);
         sleep(300);
+
         moveFront(0.0);
+        sleep(2000);
+        shoot(.4);
         sleep(4000);
+        intake.setPosition(0.3);
+        sleep(1000);
+        intake.setPosition(0.8);
+
+        moveFront(0.0);
+        sleep(2000);
+        shoot(.4);
+        sleep(4000);
+        intake.setPosition(0.3);
+        sleep(1000);
+        intake.setPosition(0.8);
+
+        moveFront(0.0);
+        sleep(2000);
+        shoot(.4);
+        sleep(4000);
+        intake.setPosition(0.3);
+        sleep(1000);
+        intake.setPosition(0.8);
+
+
+
+        moveFront(-0.4);
+        sleep(2500);
+        /*intake.setPosition(.8);
+        moveFront(0.0);
         shoot(.6);
-        sleep(3000);
-        intake.setPosition(0.1);
+        sleep(6000);
+        intake.setPosition(.1);*/
     }
     public void shoot(double speed){
+
         shooter1.setPower(-speed);
         shooter2.setPower(speed);
     }
