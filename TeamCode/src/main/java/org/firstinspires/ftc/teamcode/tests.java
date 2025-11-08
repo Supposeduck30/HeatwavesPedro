@@ -58,6 +58,7 @@ public class tests extends OpMode {
 
         if (gamepad2.x) {
             shooter1.setPower(-0.5);
+
             shooter2.setPower(0.5);
         } else {
             shooter1.setPower(0);
@@ -66,7 +67,7 @@ public class tests extends OpMode {
 
 
         if (gamepad2.y) {
-            intake.setPosition(0.1);
+            intake.setPosition(0.2);
         } else {
             intake.setPosition(.8);
         }
