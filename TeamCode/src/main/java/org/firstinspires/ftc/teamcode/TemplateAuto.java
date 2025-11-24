@@ -18,6 +18,7 @@ public class TemplateAuto extends LinearOpMode {
     protected DcMotor shooter1;
     protected DcMotor shooter2;
 
+
     protected Servo intake = null;
 
     @Override
@@ -28,7 +29,8 @@ public class TemplateAuto extends LinearOpMode {
         motorLeftFront = hardwareMap.get(DcMotor.class, "lf");
         intake = hardwareMap.get(Servo.class, "Intake");
 
-
+        shooter1 = hardwareMap.get(DcMotor.class,"SM1");
+        shooter2 = hardwareMap.get(DcMotor.class, "SM2");
         motorLeftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
         motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
         motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
@@ -77,6 +79,15 @@ public class TemplateAuto extends LinearOpMode {
         motorRightFront.setPower(-speed);
         motorLeftFront.setPower(-speed);
         motorLeftBack.setPower(-speed);
+    }
+
+    public void shootOneBall(double speed){
+        shooter1.setPower(-speed);
+        shooter2.setPower(speed);
+    }
+
+    public void transfer (double position ) {
+        intake.setPosition(position);
     }
 
 }

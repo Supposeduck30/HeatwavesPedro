@@ -25,7 +25,7 @@ public class tests extends OpMode {
         double horizontal;
         double pivot;
         vertical =  -gamepad1.left_stick_y;
-        horizontal = -gamepad1.left_stick_x;
+        horizontal = gamepad1.left_stick_x;
         pivot = -gamepad1.right_stick_x;
 
         motorRightFront.setPower((0.6 * -pivot) + (vertical - horizontal));

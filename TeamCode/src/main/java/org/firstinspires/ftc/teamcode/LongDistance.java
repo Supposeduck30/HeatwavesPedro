@@ -20,7 +20,7 @@ public class LongDistance extends TemplateAuto{
 
         moveFront(0.0);
         sleep(2000);
-        shoot(.4);
+        shoot(.55);
         sleep(4000);
         intake.setPosition(0.3);
         sleep(1000);
@@ -28,7 +28,7 @@ public class LongDistance extends TemplateAuto{
 
         moveFront(0.0);
         sleep(2000);
-        shoot(.4);
+        shoot(.45);
         sleep(4000);
         intake.setPosition(0.3);
         sleep(1000);
@@ -36,7 +36,7 @@ public class LongDistance extends TemplateAuto{
 
         moveFront(0.0);
         sleep(2000);
-        shoot(.4);
+        shoot(.6);
         sleep(4000);
         intake.setPosition(0.3);
         sleep(1000);
@@ -45,7 +45,7 @@ public class LongDistance extends TemplateAuto{
 
 
         moveFront(-0.4);
-        sleep(2500);
+        sleep(600);
         /*intake.setPosition(.8);
         moveFront(0.0);
         shoot(.6);
