@@ -5,7 +5,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 @Autonomous
 public class BlueSide2 extends TemplateAuto{
-     ;
 
     public void runOpMode() throws InterruptedException {
 
