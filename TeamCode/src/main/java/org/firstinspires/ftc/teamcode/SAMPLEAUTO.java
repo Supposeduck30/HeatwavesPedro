@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode;
 
 import static java.lang.Thread.sleep;
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.TelemetryManager;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -15,8 +17,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous
+@Configurable
 public class SAMPLEAUTO extends OpMode {
 
+    private TelemetryManager panelsTelemetry;
     //mechanisms
     private DcMotor shooter1 = null;
     private DcMotor shooter2 = null;
@@ -40,7 +44,7 @@ public class SAMPLEAUTO extends OpMode {
     PathState pathState;
 
     private final Pose startPose = new Pose(21.825370675453048,122.88632619439869,Math.toRadians(145));
-    private final Pose shootPose = new Pose(58.83360790774301,87.77594728171334, Math.toRadians(138));
+    private final Pose shootPose = new Pose(67.37397034596376,76.86326194398681, Math.toRadians(136));
     private final Pose endPose = new Pose(60.25700164744645,112.92257001647447, Math.toRadians(90));
     private PathChain driveStartPosShootPos, driveShootPosEndPos;
 
@@ -69,6 +73,13 @@ public class SAMPLEAUTO extends OpMode {
                     follower.followPath(driveShootPosEndPos,true);
                     setPathState(PathState.SHOOT_END);
                     shoot();
+                    sleep(500);
+                    shoot();
+                    sleep(500);
+                    shoot();
+                    shooter1.setPower(0.0);
+                    shooter2.setPower(0.0);
+
                 }
                 break;
             case SHOOT_END:
@@ -121,14 +132,26 @@ public class SAMPLEAUTO extends OpMode {
     }
 
     public void shoot() throws InterruptedException {
-        shooter1.setPower(-0.6);
-        shooter2.setPower(0.6);
-        sleep(1000);
+        shooter1.setPower(-0.5);
+        shooter2.setPower(0.5);
+        sleep(1200);
+        intake.setPosition(1.0);
+        sleep(500);
+        shooter1.setPower(0.1);
+        shooter2.setPower(-0.1);
+        sleep(400);
+        intake.setPosition(0.2);
+    }
+
+    public void shoot1() throws InterruptedException {
+        shooter1.setPower(-0.5);
+        shooter2.setPower(0.5);
+        sleep(1300);
         intake.setPosition(1.0);
         sleep(500);
         shooter1.setPower(0.2);
         shooter2.setPower(-0.2);
-        sleep(400);
+        sleep(600);
         intake.setPosition(0.2);
     }
 }
