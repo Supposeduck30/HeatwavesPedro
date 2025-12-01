@@ -44,7 +44,7 @@ public class SAMPLEAUTO extends OpMode {
     PathState pathState;
 
     private final Pose startPose = new Pose(21.825370675453048,122.88632619439869,Math.toRadians(145));
-    private final Pose shootPose = new Pose(67.37397034596376,76.86326194398681, Math.toRadians(136));
+    private final Pose shootPose = new Pose(67.37397034596376,76.86326194398681, Math.toRadians(135));
     private final Pose endPose = new Pose(60.25700164744645,112.92257001647447, Math.toRadians(90));
     private PathChain driveStartPosShootPos, driveShootPosEndPos;
 
@@ -132,26 +132,16 @@ public class SAMPLEAUTO extends OpMode {
     }
 
     public void shoot() throws InterruptedException {
-        shooter1.setPower(-0.5);
-        shooter2.setPower(0.5);
+        shooter1.setPower(-0.55);
+        shooter2.setPower(0.55);
         sleep(1200);
-        intake.setPosition(1.0);
+        intake.setPosition(0.2);
         sleep(500);
         shooter1.setPower(0.1);
         shooter2.setPower(-0.1);
         sleep(400);
-        intake.setPosition(0.2);
+        intake.setPosition(1.0);
     }
 
-    public void shoot1() throws InterruptedException {
-        shooter1.setPower(-0.5);
-        shooter2.setPower(0.5);
-        sleep(1300);
-        intake.setPosition(1.0);
-        sleep(500);
-        shooter1.setPower(0.2);
-        shooter2.setPower(-0.2);
-        sleep(600);
-        intake.setPosition(0.2);
-    }
+
 }
