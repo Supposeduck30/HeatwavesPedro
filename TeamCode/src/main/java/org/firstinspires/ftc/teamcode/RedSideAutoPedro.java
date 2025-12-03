@@ -8,17 +8,18 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
+import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Autonomous
+
+@Autonomous(name = "RedSideAutoPedro", group = "Pedro_Autonomous")
 @Configurable
-public class SAMPLEAUTO extends OpMode {
+public class RedSideAutoPedro extends OpMode {
 
     private TelemetryManager panelsTelemetry;
     //mechanisms
@@ -31,6 +32,8 @@ public class SAMPLEAUTO extends OpMode {
     //software
     private Follower follower;
     private Timer pathTimer, opModeTimer;
+
+    //States
     public enum PathState{
         //START POSTION_END POSTION
         //DRIVE > MOVEMENT STATE
@@ -43,9 +46,9 @@ public class SAMPLEAUTO extends OpMode {
 
     PathState pathState;
 
-    private final Pose startPose = new Pose(21.825370675453048,122.88632619439869,Math.toRadians(145));
-    private final Pose shootPose = new Pose(67.37397034596376,76.86326194398681, Math.toRadians(135));
-    private final Pose endPose = new Pose(60.25700164744645,112.92257001647447, Math.toRadians(90));
+    private final Pose startPose = new Pose(119.32784184514004,127.15650741350906,Math.toRadians(37));
+    private final Pose shootPose = new Pose(74.25370675453047,76.38879736408568, Math.toRadians(47));
+    private final Pose endPose = new Pose(86.58978583196047,114.82042833607908, Math.toRadians(90));
     private PathChain driveStartPosShootPos, driveShootPosEndPos;
 
     public void buildPaths(){
@@ -85,7 +88,7 @@ public class SAMPLEAUTO extends OpMode {
             case SHOOT_END:
                 // all done
                 if (!follower.isBusy()){
-                    telemetry.addLine("Done all Paths");
+                    telemetry.addLine("Done all Paths :)");
                 }
             default:
                 telemetry.addLine("DONE :)");
@@ -122,6 +125,7 @@ public class SAMPLEAUTO extends OpMode {
     @Override
     public void loop() {
         follower.update();
+        telemetry.update();
         try {
             statePathUpdate();
         } catch (InterruptedException e) {
