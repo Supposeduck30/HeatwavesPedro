@@ -28,10 +28,10 @@ public class tests extends OpMode {
         horizontal = gamepad1.left_stick_x;
         pivot = -gamepad1.right_stick_x;
 
-        motorRightFront.setPower((0.6 * -pivot) + (vertical - horizontal));
-        motorRightBack.setPower((0.6 * -pivot) + (vertical + horizontal));
-        motorLeftBack.setPower((0.6 * -pivot) + (-vertical + horizontal));
-        motorLeftFront.setPower((0.6 * +-pivot) + (-vertical - horizontal));
+        motorRightFront.setPower((-pivot) + (vertical - horizontal));
+        motorRightBack.setPower((-pivot) + (vertical + horizontal));
+        motorLeftBack.setPower((-pivot) + (-vertical + horizontal));
+        motorLeftFront.setPower((-pivot) + (-vertical - horizontal));
     }
 
     @Override
@@ -58,8 +58,13 @@ public class tests extends OpMode {
 
         if (gamepad2.x) {
             shooter1.setPower(-0.4);
-            shooter2.setPower(0.4);
-        } else {
+            shooter2.setPower(0.4
+            );
+        }/*else if(gamepad2.x) {
+            shooter1.setPower(0.3);
+            shooter2.setPower(0.3);
+        }*/
+        else {
             shooter1.setPower(0);
             shooter2.setPower(0);
         }

@@ -14,7 +14,6 @@ public class autoWheel extends OpMode {
 
     @Override
     public void loop() {
-        shooterWheel.setPower(1.0
-        );
+        shooterWheel.setPower(1.0);
     }
 }

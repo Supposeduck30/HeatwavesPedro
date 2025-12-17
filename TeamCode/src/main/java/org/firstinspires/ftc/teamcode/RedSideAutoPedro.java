@@ -47,7 +47,7 @@ public class RedSideAutoPedro extends OpMode {
     PathState pathState;
 
     private final Pose startPose = new Pose(119.32784184514004,127.15650741350906,Math.toRadians(37));
-    private final Pose shootPose = new Pose(74.25370675453047,76.38879736408568, Math.toRadians(47));
+    private final Pose shootPose = new Pose(74.25370675453047,76.38879736408568, Math.toRadians(42));
     private final Pose endPose = new Pose(86.58978583196047,114.82042833607908, Math.toRadians(90));
     private PathChain driveStartPosShootPos, driveShootPosEndPos;
 
