@@ -6,50 +6,73 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @TeleOp(name = "Sumo Teleop")
 public class SUMOTELEOP extends OpMode {
 
-    private  DcMotor motorRightFront = null;
-    private  DcMotor motorLeftFront = null;
-    private  DcMotor motorRightBack = null;
-    private  DcMotor motorLeftBack = null;
-    private  DcMotor shooter = null;
-    private  DcMotor intake = null;
-    private  Servo kicker = null;
+    private DcMotor motorRightFront;
+    private DcMotor motorLeftFront;
+    private DcMotor motorRightBack;
+    private DcMotor motorLeftBack;
+    private DcMotor shooter;
+    private DcMotor intake;
+    private Servo kicker;
 
     @Override
     public void init() {
+
+        // Drive motors
         motorRightFront = hardwareMap.get(DcMotor.class, "FR");
-        motorLeftBack = hardwareMap.get(DcMotor.class, "BL");
-        motorRightBack = hardwareMap.get(DcMotor.class, "BR");
-        motorLeftFront = hardwareMap.get(DcMotor.class, "FL");
-        shooter = hardwareMap.get(DcMotor.class,"Shooter");
-        intake = hardwareMap.get(DcMotor.class, "Intake");
-        kicker = hardwareMap.get(Servo.class, "Kicker");
+        motorLeftFront  = hardwareMap.get(DcMotor.class, "FL");
+        motorRightBack  = hardwareMap.get(DcMotor.class, "BR");
+        motorLeftBack   = hardwareMap.get(DcMotor.class, "BL");
+
+        // Other motors
+        shooter = hardwareMap.get(DcMotor.class, "Shooter");
+        intake  = hardwareMap.get(DcMotor.class, "Intake");
+        kicker  = hardwareMap.get(Servo.class, "Kicker");
+
+        // Motor directions
+        motorRightFront.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorRightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD
+
+
+        );
+
+        // Brake mode
+        motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorRightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorLeftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
     @Override
     public void loop() {
 
-        moveDriveTrain();
-        if(gamepad2.a){
+        // Drive controls
+       moveDriveTrain();
+
+        // Kicker
+        if (gamepad2.a) {
             kicker.setPosition(0.6);
         } else {
-
-            kicker.setPosition(0.35);
+            kicker.setPosition(0.25);
         }
 
-        if(gamepad2.b){
-
-            intake.setPower(0.4);
-        }else {
+        // Intake
+        if (gamepad2.b) {
+            intake.setPower(1.0);
+        } else {
             intake.setPower(0.0);
-
         }
-        if (gamepad2.x){
+
+        // Shooter
+        if (gamepad2.x) {
             shooter.setPower(1.0);
-        }else{
+        } else {
             shooter.setPower(0.0);
         }
     }
@@ -62,17 +85,13 @@ public class SUMOTELEOP extends OpMode {
         horizontal = gamepad1.left_stick_x;
         pivot = -gamepad1.right_stick_x;
 
-        motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorRightFront.setDirection(DcMotorSimple.Direction.FORWARD);
-
-        motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD);
-        motorRightBack.setDirection(DcMotorSimple.Direction.FORWARD);
+        motorRightBack.setDirection(DcMotor.Direction.REVERSE);
+        motorLeftFront.setDirection(DcMotorSimple.Direction.FORWARD);
 
 
-        motorRightFront.setPower((-pivot) + (vertical - horizontal));
-        motorRightBack.setPower((-pivot) + (vertical + horizontal));
-        motorLeftBack.setPower((-pivot) + (-vertical + horizontal));
-        motorLeftFront.setPower((-pivot) + (-vertical - horizontal));
+        motorRightFront.setPower(-(0.6 * pivot) + (-vertical + horizontal));
+        motorRightBack.setPower(-(0.6 * -pivot) + (vertical + horizontal));
+        motorLeftBack.setPower(-(0.6 * pivot) + (vertical -  horizontal));
+        motorLeftFront.setPower(-(0.6 * -pivot) + (-vertical - horizontal));
     }
-
 }
