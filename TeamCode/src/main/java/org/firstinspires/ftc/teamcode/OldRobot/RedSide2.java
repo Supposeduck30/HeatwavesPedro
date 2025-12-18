@@ -1,10 +1,14 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.OldRobot;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.teamcode.TemplateAuto;
+
+@Disabled
 @Autonomous
-public class RedSide2 extends TemplateAuto{
+public class RedSide2 extends TemplateAuto {
     private DcMotor shooter1 = null ;
     private DcMotor shooter2 = null ;
 

@@ -2,10 +2,12 @@ package org.firstinspires.ftc.teamcode.Limelight;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
+@Autonomous
 public class limeLightTest extends LinearOpMode {
 
     private Limelight3A limelight;
@@ -24,6 +26,7 @@ public class limeLightTest extends LinearOpMode {
          */
         limelight.start();
 
+        waitForStart();
         while (opModeIsActive()) {
             LLResult result = limelight.getLatestResult();
             if (result != null) {
@@ -33,7 +36,9 @@ public class limeLightTest extends LinearOpMode {
                     telemetry.addData("ty", result.getTy());
                     telemetry.addData("Botpose", botpose.toString());
                 }
+
             }
+            telemetry.update();
         }
     }
 }
