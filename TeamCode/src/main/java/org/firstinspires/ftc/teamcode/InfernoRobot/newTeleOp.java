@@ -6,10 +6,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-
-@TeleOp(name = "Sumo Teleop")
-public class SUMOTELEOP extends OpMode {
+@TeleOp
+public class newTeleOp extends OpMode {
 
     private DcMotor motorRightFront;
     private DcMotor motorLeftFront;
@@ -93,5 +91,9 @@ public class SUMOTELEOP extends OpMode {
         motorRightBack.setPower(-(0.6 * -pivot) + (vertical + horizontal));
         motorLeftBack.setPower(-(0.6 * pivot) + (vertical -  horizontal));
         motorLeftFront.setPower(-(0.6 * -pivot) + (-vertical - horizontal));
+    }
+
+    public void shoot() {
+
     }
 }
