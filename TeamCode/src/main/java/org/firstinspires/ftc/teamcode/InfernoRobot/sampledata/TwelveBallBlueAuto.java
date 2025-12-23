@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous
 @Configurable
-public class BlueNineBallAuto extends OpMode {
+public class TwelveBallBlueAuto extends OpMode {
 
     private TelemetryManager panelsTelemetry;
     //mechanisms
@@ -50,6 +50,7 @@ public class BlueNineBallAuto extends OpMode {
         TAKEROW2,
         SHOOTROW2POSE,
         SHOOTROW2,
+        COLLECTROW3,
 
         SHOOT_END
     }
@@ -64,8 +65,9 @@ public class BlueNineBallAuto extends OpMode {
     private final Pose collectRow2 = new Pose(48.158154859967055,59.54530477759474, Math.toRadians(180));
     private final Pose takeRow2 = new Pose(10.43822075782537,59.54530477759474, Math.toRadians(180));
     private final Pose shootpose3 = new Pose(63.57825370675453,80.1845140032949, Math.toRadians(138));
+    private final Pose collectRow3 = new Pose(41.75288303130148,35.58484349258651, Math.toRadians(180));
     private final Pose endPose = new Pose(54.088962108731465,116.7182866556837, Math.toRadians(270));
-    private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2EndPos;
+    private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2CollectPose3, shootPose2EndPos;
 
     public void buildPaths(){
         // put in coordinates start pos and end pos
@@ -97,9 +99,9 @@ public class BlueNineBallAuto extends OpMode {
                 .addPath(new BezierLine(takeRow2,shootpose3))
                 .setLinearHeadingInterpolation(takeRow2.getHeading(), shootpose3.getHeading())
                 .build();
-        shootPose2EndPos = follower.pathBuilder()
-                .addPath(new BezierLine(shootpose3, endPose))
-                .setLinearHeadingInterpolation(shootpose3.getHeading(),endPose.getHeading())
+        shootPose2CollectPose3 = follower.pathBuilder()
+                .addPath(new BezierLine(shootpose3, collectRow3))
+                .setLinearHeadingInterpolation(shootpose3.getHeading(),collectRow3.getHeading())
                 .build();
     }
 
@@ -191,7 +193,7 @@ public class BlueNineBallAuto extends OpMode {
             case SHOOTROW2:
                 if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
                     // TODO add logic to flywheel shooter'
-                    follower.followPath(shootPose2EndPos,true);
+                    follower.followPath(shootPose2CollectPose3,true);
                     shooter.setPower(0.9);
                     sleep(500);
                     shoot();
@@ -205,11 +207,16 @@ public class BlueNineBallAuto extends OpMode {
                     setPathState(PathState.SHOOT_END);
                 }
                 break;
+            case COLLECTROW3:
+                if (!follower.isBusy()){
+
+                }
+                break;
             case SHOOT_END:
                 // all done
                 if (!follower.isBusy()){
                     telemetry.addLine("Done all Paths");
-               }
+                }
             default:
                 telemetry.addLine("DONE :)");
                 break;

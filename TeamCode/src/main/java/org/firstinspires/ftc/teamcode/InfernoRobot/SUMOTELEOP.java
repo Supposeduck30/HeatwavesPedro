@@ -25,6 +25,7 @@ public class SUMOTELEOP extends OpMode {
         // Drive motors
         motorRightFront = hardwareMap.get(DcMotor.class, "FR");
         motorLeftFront  = hardwareMap.get(DcMotor.class, "FL");
+
         motorRightBack  = hardwareMap.get(DcMotor.class, "BR");
         motorLeftBack   = hardwareMap.get(DcMotor.class, "BL");
 
@@ -37,10 +38,7 @@ public class SUMOTELEOP extends OpMode {
         motorRightFront.setDirection(DcMotorSimple.Direction.FORWARD);
         motorRightBack.setDirection(DcMotorSimple.Direction.FORWARD);
         motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD
-
-
-        );
+        motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // Brake mode
         motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
