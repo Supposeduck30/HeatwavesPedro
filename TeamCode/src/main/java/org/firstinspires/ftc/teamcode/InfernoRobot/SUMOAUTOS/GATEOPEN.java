@@ -97,7 +97,7 @@ public class GATEOPEN extends OpMode {
                 break;
             case SHOOT_PRELOAD:
                 if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
-                    // TODO add logic to flywheel shooter'
+                    // TODO add logic to flywheel shooter
                     follower.followPath(driveStartPosShootPos,true);
                     setPathState(PathState.ROW1COLLECT);
                     shooter.setPower(0.85);
@@ -110,7 +110,6 @@ public class GATEOPEN extends OpMode {
                     sleep(100);
                     shooter.setPower(0.0);
                     intake.setPower(0.0);
-
                 }
                 break;
             case ROW1COLLECT:
