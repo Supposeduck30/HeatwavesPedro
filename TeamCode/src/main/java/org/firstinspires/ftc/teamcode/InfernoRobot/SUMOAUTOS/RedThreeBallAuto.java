@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.InfernoRobot.sampledata;
+package org.firstinspires.ftc.teamcode.InfernoRobot.SUMOAUTOS;
 
 import static java.lang.Thread.sleep;
 
@@ -8,17 +8,19 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.util.Timer;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous
+@Disabled
 @Configurable
-public class BlueThreeBallAuto extends OpMode {
+public class RedThreeBallAuto extends OpMode {
 
     private TelemetryManager panelsTelemetry;
     //mechanisms
@@ -45,9 +47,9 @@ public class BlueThreeBallAuto extends OpMode {
 
     PathState pathState;
 
-    private final Pose startPose = new Pose(21.825370675453048,122.88632619439869,Math.toRadians(145));
-    private final Pose shootPose = new Pose(59.54530477759472,85.4036243822076, Math.toRadians(138));
-    private final Pose endPose = new Pose(60.25700164744645,112.92257001647447, Math.toRadians(90));
+    private final Pose startPose = new Pose(119.32784184514004,127.15650741350906,Math.toRadians(37));
+    private final Pose shootPose = new Pose(74.96540362438222,91.334431630972, Math.toRadians(42));
+    private final Pose endPose = new Pose(83.74299835255354,119.32784184514004, Math.toRadians(90));
     private PathChain driveStartPosShootPos, driveShootPosEndPos;
 
     public void buildPaths(){
@@ -70,11 +72,11 @@ public class BlueThreeBallAuto extends OpMode {
                 setPathState(PathState.SHOOT_PRELOAD); //reset timer and make new state
                 break;
             case SHOOT_PRELOAD:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(driveShootPosEndPos,true);
                     setPathState(PathState.SHOOT_END);
-                    shooter.setPower(0.9);
+                    shooter.setPower(0.87);
                     sleep(500);
                     shoot();
                     sleep(500);
@@ -90,7 +92,7 @@ public class BlueThreeBallAuto extends OpMode {
             case SHOOT_END:
                 // all done
                 if (!follower.isBusy()){
-                    telemetry.addLine("Done all Paths");
+                    telemetry.addLine("Done all Paths :)");
                 }
             default:
                 telemetry.addLine("DONE :)");
@@ -111,11 +113,10 @@ public class BlueThreeBallAuto extends OpMode {
         /*opModeTimer.resetTimer()*/;
         follower = Constants.createFollower(hardwareMap);
         // Todo add in other init mechanisms
-        shooter = hardwareMap.get(DcMotor.class, "Shooter");
+        shooter = hardwareMap.get(DcMotor.class, "Shoote r");
         intake  = hardwareMap.get(DcMotor.class, "Intake");
         kicker  = hardwareMap.get(Servo.class, "Kicker");
 
-        kicker.setPosition(0.31);
         buildPaths();
         follower.setPose(startPose);
     }
@@ -139,7 +140,7 @@ public class BlueThreeBallAuto extends OpMode {
     }
 
     public void shoot() throws InterruptedException {
-        shooter.setPower(0.9);
+        shooter.setPower(0.87);
         intake.setPower(0.6);
         sleep(500);
         kicker.setPosition(0.6);
