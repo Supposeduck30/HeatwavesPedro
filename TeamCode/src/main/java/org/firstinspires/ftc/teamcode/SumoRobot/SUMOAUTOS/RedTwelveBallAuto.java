@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.InfernoRobot.SUMOAUTOS;
+package org.firstinspires.ftc.teamcode.SumoRobot.SUMOAUTOS;
 
 import static java.lang.Thread.sleep;
 
@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @Autonomous
 @Disabled
 @Configurable
-public class TwelveBallBlueAuto extends OpMode {
+public class RedTwelveBallAuto extends OpMode {
 
     private TelemetryManager panelsTelemetry;
     //mechanisms
@@ -52,24 +52,33 @@ public class TwelveBallBlueAuto extends OpMode {
         TAKEROW2,
         SHOOTROW2POSE,
         SHOOTROW2,
-        COLLECTROW3,
+        ROW3COLLECT,
+        INTAKEON3,
+        TAKEROW3,
+        SHOOTROW3POSE,
+        SHOOTROW3,
 
         SHOOT_END
     }
 
     PathState pathState;
 
-    private final Pose startPose = new Pose(21.825370675453048,122.88632619439869,Math.toRadians(145));
-    private final Pose shootPose1 = new Pose(59.54530477759472,85.4036243822076, Math.toRadians(138));
-    private final Pose collectRow1 = new Pose(47.92092257001647,83.50576606260297, Math.toRadians(180));
-    private final Pose takeRow1 = new Pose(13.759472817133444,83.98023064250413, Math.toRadians(180));
-    private final Pose shootpose2 = new Pose(54.32619439868205,90.85996705107084, Math.toRadians(138));
-    private final Pose collectRow2 = new Pose(48.158154859967055,59.54530477759474, Math.toRadians(180));
-    private final Pose takeRow2 = new Pose(10.43822075782537,59.54530477759474, Math.toRadians(180));
-    private final Pose shootpose3 = new Pose(63.57825370675453,80.1845140032949, Math.toRadians(138));
-    private final Pose collectRow3 = new Pose(41.75288303130148,35.58484349258651, Math.toRadians(180));
-    private final Pose endPose = new Pose(54.088962108731465,116.7182866556837, Math.toRadians(270));
-    private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2CollectPose3, shootPose2EndPos;
+    private final Pose startPose = new Pose(123.83525535420098,127.15650741350906,Math.toRadians(37));
+    private final Pose shootPose1 = new Pose(89.91103789126852,91.09719934102142, Math.toRadians(42));
+    private final Pose collectRow1 = new Pose(98.92586490939044,86.35255354200987, Math.toRadians(0));
+    private final Pose takeRow1 = new Pose(128.34266886326193,83.26853377265239, Math.toRadians(0));
+    private final Pose shootpose2 = new Pose(91.80889621087314,92.52059308072488, Math.toRadians(42));
+    private final Pose collectRow2 = new Pose(100.5864909390445,61.680395387149915, Math.toRadians(0));
+    private final Pose takeRow2 = new Pose(131.9011532125206,59.78253706754529, Math.toRadians(0));
+    private final Pose shootpose3 = new Pose(87.53871499176277,86.82701812191105, Math.toRadians(42));
+    private final Pose collectRow3 = new Pose(101.77265238879737,35.58484349258651, Math.toRadians(0));
+    private final Pose takeRow3 = new Pose(133.32454695222407,35.58484349258651, Math.toRadians(0));
+    private final Pose shootpose4 = new Pose(87.77594728171334, 91.80889621087314, Math.toRadians(42));
+
+    private final Pose endPose = new Pose(85.64085667215816,121.22570016474465, Math.toRadians(270));
+    private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose,
+            shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2CollectPose3,
+            CollectPose3TakePos3, takePose3ShootPose4, shootPose3EndPos;
 
     public void buildPaths(){
         // put in coordinates start pos and end pos
@@ -105,7 +114,12 @@ public class TwelveBallBlueAuto extends OpMode {
                 .addPath(new BezierLine(shootpose3, collectRow3))
                 .setLinearHeadingInterpolation(shootpose3.getHeading(),collectRow3.getHeading())
                 .build();
-    }
+
+        CollectPose3TakePos3 = follower.pathBuilder()
+                .addPath(new BezierLine(collectRow3,takeRow3))
+                .setLinearHeadingInterpolation(collectRow3.getHeading(),takeRow3.getHeading())
+                .build();
+   }
 
 
     public void statePathUpdate() throws InterruptedException {
@@ -119,7 +133,7 @@ public class TwelveBallBlueAuto extends OpMode {
                     // TODO add logic to flywheel shooter'
                     follower.followPath(driveStartPosShootPos,true);
                     setPathState(PathState.ROW1COLLECT);
-                    shooter.setPower(0.87);
+                    shooter.setPower(0.9);
                     sleep(500);
                     shoot();
                     sleep(500);
@@ -209,9 +223,20 @@ public class TwelveBallBlueAuto extends OpMode {
                     setPathState(PathState.SHOOT_END);
                 }
                 break;
-            case COLLECTROW3:
-                if (!follower.isBusy()){
-
+            case ROW3COLLECT:
+                if (!follower.isBusy()) {
+                    follower.followPath(shootPose2CollectPose3, true);
+                    setPathState(PathState.INTAKEON3);
+                }
+                break;
+            case INTAKEON3:
+                intake.setPower(0.8);
+                setPathState(PathState.TAKEROW3);
+                break;
+            case TAKEROW3:
+                if (!follower.isBusy()) {
+                    follower.followPath(CollectPose3TakePos3, true);
+                    setPathState(PathState.SHOOTROW2POSE);
                 }
                 break;
             case SHOOT_END:
@@ -266,7 +291,7 @@ public class TwelveBallBlueAuto extends OpMode {
     }
 
     public void shoot() throws InterruptedException {
-        shooter.setPower(0.87);
+        shooter.setPower(0.9);
         intake.setPower(0.6);
         sleep(500);
         kicker.setPosition(0.6);

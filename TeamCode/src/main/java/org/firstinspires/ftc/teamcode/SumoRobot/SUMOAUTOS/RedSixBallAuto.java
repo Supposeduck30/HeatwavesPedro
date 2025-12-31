@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.InfernoRobot.SUMOAUTOS;
+package org.firstinspires.ftc.teamcode.SumoRobot.SUMOAUTOS;
 
 import static java.lang.Thread.sleep;
 

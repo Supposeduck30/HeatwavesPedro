@@ -1,21 +1,26 @@
-package org.firstinspires.ftc.teamcode.InfernoRobot;
+package org.firstinspires.ftc.teamcode.SumoRobot;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp
-public class newTeleOp extends OpMode {
+@TeleOp(name = "Sumo Teleop")
+public class SUMOTELEOP extends OpMode {
 
     private DcMotor motorRightFront;
     private DcMotor motorLeftFront;
     private DcMotor motorRightBack;
     private DcMotor motorLeftBack;
-    private DcMotor shooter;
+    private DcMotorEx shooter1;
+    private DcMotorEx shooter2;
     private DcMotor intake;
     private Servo kicker;
+
+    static final double targetVelocityClose = 1800;
+    static final double targetVelocityFar = 2400;
 
     @Override
     public void init() {
@@ -23,11 +28,20 @@ public class newTeleOp extends OpMode {
         // Drive motors
         motorRightFront = hardwareMap.get(DcMotor.class, "FR");
         motorLeftFront  = hardwareMap.get(DcMotor.class, "FL");
+
         motorRightBack  = hardwareMap.get(DcMotor.class, "BR");
         motorLeftBack   = hardwareMap.get(DcMotor.class, "BL");
 
         // Other motors
-        shooter = hardwareMap.get(DcMotor.class, "Shooter");
+        shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
+        shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
+
+        shooter1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        shooter1.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        shooter2.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        shooter2.setDirection(DcMotorSimple.Direction.REVERSE);
+
         intake  = hardwareMap.get(DcMotor.class, "Intake");
         kicker  = hardwareMap.get(Servo.class, "Kicker");
 
@@ -35,10 +49,7 @@ public class newTeleOp extends OpMode {
         motorRightFront.setDirection(DcMotorSimple.Direction.FORWARD);
         motorRightBack.setDirection(DcMotorSimple.Direction.FORWARD);
         motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD
-
-
-        );
+        motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // Brake mode
         motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -63,10 +74,12 @@ public class newTeleOp extends OpMode {
         // Intake
         if (gamepad2.left_bumper) {
             intake.setPower(0.9);
-            shooter.setPower(0.9);
+            shooter1.setVelocity(targetVelocityClose);
+            shooter2.setVelocity(targetVelocityClose);
         } else {
             intake.setPower(0.0);
-            shooter.setPower(0.0);
+            shooter1.setVelocity(0.0);
+            shooter2.setVelocity(0.0);
         }
 
 
@@ -91,9 +104,5 @@ public class newTeleOp extends OpMode {
         motorRightBack.setPower(-(0.6 * -pivot) + (vertical + horizontal));
         motorLeftBack.setPower(-(0.6 * pivot) + (vertical -  horizontal));
         motorLeftFront.setPower(-(0.6 * -pivot) + (-vertical - horizontal));
-    }
-
-    public void shoot() {
-
     }
 }

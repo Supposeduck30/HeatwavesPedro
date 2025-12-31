@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.InfernoRobot;
+package org.firstinspires.ftc.teamcode.SumoRobot;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;

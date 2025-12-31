@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.InfernoRobot.SUMOAUTOS;
+package org.firstinspires.ftc.teamcode.SumoRobot.SUMOAUTOS;
 
 import static java.lang.Thread.sleep;
 
@@ -62,7 +62,7 @@ public class GATEOPEN extends OpMode {
     private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseEndPos;
 
     public void buildPaths(){
-        // put in coordinates start pos and end pos
+        // pu t in coordinates start pos and end pos
         driveStartPosShootPos = follower.pathBuilder()
                 .addPath(new BezierLine(startPose,shootPose))
                 .setLinearHeadingInterpolation(startPose.getHeading(), shootPose.getHeading())
