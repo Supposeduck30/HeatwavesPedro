@@ -31,7 +31,7 @@ public class shoot extends OpMode {
         }
         if(gamepad2.b){
 
-            intake.setPower(0.4);
+            intake.setPower(0.8);
         }else {
             intake.setPower(0.0);
 

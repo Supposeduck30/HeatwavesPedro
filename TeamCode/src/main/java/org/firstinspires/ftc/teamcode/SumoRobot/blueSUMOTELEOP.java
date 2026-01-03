@@ -45,7 +45,7 @@ public class blueSUMOTELEOP extends OpMode {
         motorRightBack  = hardwareMap.get(DcMotor.class, "BR");
         motorLeftBack   = hardwareMap.get(DcMotor.class, "BL");
 
-        shooter = hardwareMap.get(DcMotor.class, "Shooter");
+        shooter = hardwareMap.get(DcMotor.class, "Shooter1");
         intake  = hardwareMap.get(DcMotor.class, "Intake");
         kicker  = hardwareMap.get(Servo.class, "Kicker");
 
