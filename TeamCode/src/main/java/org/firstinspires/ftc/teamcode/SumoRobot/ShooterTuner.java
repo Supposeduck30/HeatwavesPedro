@@ -11,16 +11,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 @TeleOp
 public class ShooterTuner extends OpMode {
 
-    private DcMotor motorRightFront;
-    private DcMotor motorLeftFront;
-    private DcMotor motorRightBack;
-    private DcMotor motorLeftBack;
     private DcMotorEx shooter1;
+    private DcMotorEx shooter2;
     private DcMotor intake;
     private Servo kicker;
 
-    public double highVelocity = 2060;
-    public double lowVelocity = 2000;
+    public double highVelocity = 4000;
+    public double lowVelocity = 2100;
 
     double curTargetVelocity = highVelocity;
 
@@ -36,18 +33,20 @@ public class ShooterTuner extends OpMode {
     @Override
     public void init() {
 
-        // Drive motors
-
-        // Other motors
-        shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
-
+        // other motors
         intake  = hardwareMap.get(DcMotor.class, "Intake");
         kicker  = hardwareMap.get(Servo.class, "Kicker");
-
+        // shooter motors
+        shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
+        shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter1.setDirection(DcMotorEx.Direction.REVERSE);
+        shooter2.setDirection(DcMotorSimple.Direction.REVERSE);
         PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P,0,0,F);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
         telemetry.addLine("Init complete");
 
     }
@@ -56,7 +55,10 @@ public class ShooterTuner extends OpMode {
     public void loop() {
 
         if (gamepad1.left_bumper) {
-            intake.setPower(0.80);
+            intake.setPower(1.0);
+        }
+        else{
+            intake.setPower(0.0);
         }
 
         if (gamepad1.yWasPressed()) {
@@ -64,7 +66,8 @@ public class ShooterTuner extends OpMode {
             if (curTargetVelocity == highVelocity) {
                 curTargetVelocity = lowVelocity;
             } else {
-                curTargetVelocity = highVelocity;}
+                curTargetVelocity = highVelocity;
+            }
         }
 
         if (gamepad1.bWasPressed()) {
@@ -95,8 +98,10 @@ public class ShooterTuner extends OpMode {
 
         PIDFCoefficients pidfCoefficients = new PIDFCoefficients(P,0,0,F);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 
         shooter1.setVelocity(curTargetVelocity);
+        shooter2.setVelocity(curTargetVelocity);
 
         double curVelocity = shooter1.getVelocity();
         double error = curTargetVelocity - curVelocity;

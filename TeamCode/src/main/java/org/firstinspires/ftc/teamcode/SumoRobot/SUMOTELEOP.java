@@ -16,13 +16,13 @@ public class SUMOTELEOP extends OpMode {
     private DcMotor motorRightBack;
     private DcMotor motorLeftBack;
     private DcMotorEx shooter1;
+    private DcMotorEx shooter2;
     private DcMotor intake;
     private Servo kicker;
 
-    public double highVelocity = 2300;
-    public double lowVelocity = 1500;
+    public double highVelocity = 4000;
+    public double lowVelocity = 2100;
 
-    double curTargetVelocity = highVelocity;
 
     @Override
     public void init() {
@@ -36,6 +36,7 @@ public class SUMOTELEOP extends OpMode {
 
         // Other motors
         shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
+        shooter2 = hardwareMap.get(DcMotorEx.class,"Shooter2");
 
         intake  = hardwareMap.get(DcMotor.class, "Intake");
         kicker  = hardwareMap.get(Servo.class, "Kicker");
@@ -47,9 +48,15 @@ public class SUMOTELEOP extends OpMode {
         motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD);
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(100,0,0,15.5);
+
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(-10,0,0,-60);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+
+        shooter1.setDirection(DcMotorEx.Direction.REVERSE);
+        shooter2.setDirection(DcMotorEx.Direction.REVERSE);
 
         // Brake mode
         motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -66,25 +73,35 @@ public class SUMOTELEOP extends OpMode {
         // Drive controls
        moveDriveTrain();
 
-        // Kicker
+        intake.setPower(1.0);
+        // Shooter and Intake
         if (gamepad2.right_bumper) {
+           // intake.setPower(0.9);
+            //shooter1.setVelocity(3000);
+            //shooter2.setVelocity(3000);
+        } else {
+           // intake.setPower(0.0);
+           // shooter1.setVelocity(0.0);
+            // shooter2.setVelocity(0.0);
+        }
+
+        if (gamepad2.left_bumper) {
+            intake.setPower(0.9);
+            shooter1.setVelocity(lowVelocity);
+            shooter2.setVelocity(lowVelocity);
+        } else {
+            intake.setPower(0.0);
+            shooter1.setVelocity(0.0);
+            shooter2.setVelocity(0.0);
+        }
+
+        // Intake
+
+        if(gamepad2.dpad_up){
             kicker.setPosition(0.6);
         } else {
             kicker.setPosition(0.31);
         }
-
-        // Intake
-        if (gamepad2.left_bumper) {
-            intake.setPower(0.9);
-            shooter1.setVelocity(curTargetVelocity);
-        } else {
-            intake.setPower(0.0);
-            shooter1.setVelocity(0.0);
-        }
-
-
-
-        // Shooter
 
     }
 

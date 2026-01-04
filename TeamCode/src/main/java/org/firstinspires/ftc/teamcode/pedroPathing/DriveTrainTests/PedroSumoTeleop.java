@@ -8,16 +8,28 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.HeadingInterpolator;
 import com.pedropathing.paths.Path;
 import com.pedropathing.paths.PathChain;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.function.Supplier;
 
+@Disabled
 @Configurable
 @TeleOp(group = "DriveTrain")
 public class PedroSumoTeleop extends OpMode {
+
+    private DcMotorEx shooter1;
+    private DcMotorEx shooter2;
+    private DcMotor intake;
+    private Servo kicker;
+
     private Follower follower;
     public static Pose startingPose;
     private boolean automatedDrive;
@@ -26,8 +38,26 @@ public class PedroSumoTeleop extends OpMode {
     private boolean slowMode = false;
     private double slowModeMultiplier = 0.5;
 
+    public double highVelocity = 2440;
+    public double lowVelocity = 2100;
+
     @Override
     public void init() {
+
+        shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
+        shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter1");
+        intake  = hardwareMap.get(DcMotor.class, "Intake");
+        kicker  = hardwareMap.get(Servo.class, "Kicker");
+
+
+        shooter1.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(-10,0,0,0);
+        shooter1.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+        shooter2.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+
+
+
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
         follower.update();
@@ -86,20 +116,51 @@ public class PedroSumoTeleop extends OpMode {
             automatedDrive = false;
         }
 
-        //Slow Mode
-        if (gamepad1.aWasPressed()) {
-            slowMode = !slowMode;
+        if(gamepad2.left_bumper){
+            shooter1.setVelocity(lowVelocity);
+            shooter2.setVelocity(lowVelocity);
+
+            intake.setPower(1.0);
+        } else{
+            shooter1.setVelocity(0.0);
+            shooter2.setVelocity(0.0);
+
+            intake.setPower(0.0);
         }
 
-        //Optional way to change slow mode strength
-        if (gamepad1.xWasPressed()) {
-            slowModeMultiplier += 0.25;
+        if(gamepad2.right_bumper){
+            shooter1.setVelocity(highVelocity);
+            shooter2.setVelocity(highVelocity);
+
+            intake.setPower(1.0);
+        } else{
+            shooter1.setVelocity(0.0);
+            shooter2.setVelocity(0.0);
+
+            intake.setPower(0.0);
         }
 
-        //Optional way to change slow mode strength
-        if (gamepad2.yWasPressed()) {
-            slowModeMultiplier -= 0.25;
+        if(gamepad2.dpad_up){
+            kicker.setPosition(0.6);
+        }else{
+            kicker.setPosition(0.31);
         }
+
+//        //Slow Mode
+//        if (gamepad1.aWasPressed()) {
+//            slowMode = !slowMode;
+//        }
+//
+//        //Optional way to change slow mode strength
+//        if (gamepad1.xWasPressed()) {
+//            slowModeMultiplier += 0.25;
+//        }
+//
+//        //Optional way to change slow mode strength
+//        if (gamepad2.yWasPressed()) {
+//            slowModeMultiplier -= 0.25;
+//        }
+
 
         telemetryM.debug("position", follower.getPose());
         telemetryM.debug("velocity", follower.getVelocity());

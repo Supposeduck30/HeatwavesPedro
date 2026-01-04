@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.SumoRobot;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,6 +15,7 @@ import com.pedropathing.paths.Path;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 
+@Disabled
 @TeleOp(name = "Blue SUMO TeleOp")
 public class blueSUMOTELEOP extends OpMode {
 

@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.SumoRobot;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+@Disabled
 @Autonomous
 public class autoWheel extends OpMode {
     private DcMotor shooterWheel;
