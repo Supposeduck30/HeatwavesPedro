@@ -28,6 +28,8 @@ public class FeildCentric extends OpMode {
     private TelemetryManager telemetryM;
     private boolean slowMode = false;
     private double slowModeMultiplier = 0.5;
+    private static final double DEADZONE = 0.05;
+
 
     @Override
     public void init() {
@@ -51,10 +53,38 @@ public class FeildCentric extends OpMode {
         follower.startTeleopDrive();
     }
 
+    private double dz(double value) {
+        return Math.abs(value) > DEADZONE ? value : 0.0;
+    }
+
+
     @Override
     public void loop() {
         follower.update();
         telemetryM.update();
+
+        double y  = dz(-gamepad1.left_stick_y);
+        double x  = dz(-gamepad1.left_stick_x);
+        double rx = dz(-gamepad1.right_stick_x);
+
+        if (!automatedDrive) {
+            if (!slowMode) {
+                follower.setTeleOpDrive(
+                        y,
+                        x,
+                        rx,
+                        false // FIELD-CENTRIC
+                );
+            } else {
+                follower.setTeleOpDrive(
+                        y * slowModeMultiplier,
+                        x * slowModeMultiplier,
+                        rx * slowModeMultiplier,
+                        false // FIELD-CENTRIC
+                );
+            }
+        }
+
 
         // FIELD-CENTRIC TELEOP DRIVE ONLY
         if (!automatedDrive) {
@@ -74,6 +104,8 @@ public class FeildCentric extends OpMode {
                 );
             }
         }
+
+
 
         // AUTOMATED PATH (A BUTTON)
         if (gamepad1.aWasPressed()) {

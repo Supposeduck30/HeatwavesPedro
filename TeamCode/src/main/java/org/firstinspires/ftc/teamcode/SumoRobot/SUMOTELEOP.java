@@ -20,8 +20,8 @@ public class SUMOTELEOP extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double highVelocity = 4000;
-    public double lowVelocity = 2100;
+    public double highVelocity = 2300;//4000
+    public double lowVelocity = 1500;//2100
 
 
     @Override
@@ -51,12 +51,9 @@ public class SUMOTELEOP extends OpMode {
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(-10,0,0,-60);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(100,0,0,15.5);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
-
-        shooter1.setDirection(DcMotorEx.Direction.REVERSE);
-        shooter2.setDirection(DcMotorEx.Direction.REVERSE);
 
         // Brake mode
         motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
