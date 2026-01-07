@@ -20,7 +20,7 @@ public class SUMOTELEOP extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double highVelocity = 4000;//4000
+    public double highVelocity = 2250;//4000
     public double lowVelocity = 2100;//2100
 
     public static final double KICKER_OUT = 0.6;
