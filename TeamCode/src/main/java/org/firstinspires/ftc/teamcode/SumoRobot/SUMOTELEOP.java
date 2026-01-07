@@ -20,8 +20,8 @@ public class SUMOTELEOP extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double highVelocity = 2250;//4000
-    public double lowVelocity = 2100;//2100
+    public static double LOW_VELOCITY  = 1850;
+    public static double HIGH_VELOCITY = 2250;
 
     public static final double KICKER_OUT = 0.6;
     public static final double KICKER_IN  = 0.31;
@@ -87,25 +87,7 @@ public class SUMOTELEOP extends OpMode {
            //shooter2.setVelocity(0.0);
         }
 
-        if (gamepad2.left_bumper) {
-            shooter1.setVelocity(lowVelocity);
-            shooter2.setVelocity(lowVelocity);
-
-            // Only run intake if kicker is NOT active
-            if (!kickerActive) {
-                intake.setPower(1.0);
-            } else {
-                intake.setPower(0.0);
-            }
-        } else {
-            shooter1.setVelocity(0.0);
-            shooter2.setVelocity(0.0);
-            intake.setPower(0.0);
-        }
-
-
-        // Intake
-
+        // === KICKER CONTROL ===
         if (gamepad2.dpad_up) {
             kicker.setPosition(KICKER_OUT);
             kickerActive = true;
@@ -113,6 +95,36 @@ public class SUMOTELEOP extends OpMode {
             kicker.setPosition(KICKER_IN);
             kickerActive = false;
         }
+
+        boolean lowGoal  = gamepad2.left_bumper;
+        boolean highGoal = gamepad2.right_bumper;
+
+        if (highGoal) {
+            shooter1.setVelocity(HIGH_VELOCITY);
+            shooter2.setVelocity(HIGH_VELOCITY);
+
+            if (!kickerActive) {
+                intake.setPower(1.0);
+            } else {
+                intake.setPower(0.0);
+            }
+
+        } else if (lowGoal) {
+            shooter1.setVelocity(LOW_VELOCITY);
+            shooter2.setVelocity(LOW_VELOCITY);
+
+            if (!kickerActive) {
+                intake.setPower(1.0);
+            } else {
+                intake.setPower(0.0);
+            }
+
+        } else {
+            shooter1.setVelocity(0);
+            shooter2.setVelocity(0);
+            intake.setPower(0);
+        }
+
 
 
     }
