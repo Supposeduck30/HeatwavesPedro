@@ -14,20 +14,25 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous
-@Disabled
 @Configurable
 public class GATEOPEN extends OpMode {
 
     private TelemetryManager panelsTelemetry;
     //mechanisms
-    private DcMotor shooter;
+    private DcMotorEx shooter1;
+    private DcMotorEx shooter2;
     private DcMotor intake;
     private Servo kicker;
+
+    public double highVelocity = 4000;//4000
+    public double lowVelocity = 2100;
 
 
 
@@ -100,7 +105,8 @@ public class GATEOPEN extends OpMode {
                     // TODO add logic to flywheel shooter
                     follower.followPath(driveStartPosShootPos,true);
                     setPathState(PathState.ROW1COLLECT);
-                    shooter.setPower(0.85);
+                    shooter1.setVelocity(lowVelocity);
+                    shooter2.setVelocity(lowVelocity);
                     sleep(500);
                     shoot();
                     sleep(500);
@@ -108,7 +114,8 @@ public class GATEOPEN extends OpMode {
                     sleep(500);
                     shoot();
                     sleep(100);
-                    shooter.setPower(0.0);
+                    shooter1.setVelocity(0.0);
+                    shooter2.setVelocity(0.0);
                     intake.setPower(0.0);
                 }
                 break;
@@ -137,7 +144,8 @@ public class GATEOPEN extends OpMode {
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPoseEndPos,true);
                     setPathState(PathState.SHOOT_END);
-                    shooter.setPower(0.85);
+                    shooter1.setVelocity(lowVelocity);
+                    shooter2.setVelocity(lowVelocity);
                     sleep(500);
                     shoot();
                     sleep(500);
@@ -145,7 +153,8 @@ public class GATEOPEN extends OpMode {
                     sleep(500);
                     shoot();
                     sleep(100);
-                    shooter.setPower(0.0);
+                    shooter1.setVelocity(0.0);
+                    shooter2.setVelocity(0.0);
                     intake.setPower(0.0);
                 }
             case SHOOT_END:
@@ -172,9 +181,18 @@ public class GATEOPEN extends OpMode {
         /*opModeTimer.resetTimer()*/;
         follower = Constants.createFollower(hardwareMap);
         // Todo add in other init mechanisms
-        shooter = hardwareMap.get(DcMotor.class, "Shooter");
+        shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
+        shooter2 = hardwareMap.get(DcMotorEx.class,"Shooter2");
         intake  = hardwareMap.get(DcMotor.class, "Intake");
         kicker  = hardwareMap.get(Servo.class, "Kicker");
+
+        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(25,0,0,15);
+        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 
         kicker.setPosition(0.31);
         buildPaths();
@@ -200,7 +218,8 @@ public class GATEOPEN extends OpMode {
     }
 
     public void shoot() throws InterruptedException {
-        shooter.setPower(0.85 );
+        shooter1.setVelocity(lowVelocity);
+        shooter2.setVelocity(lowVelocity);
         intake.setPower(0.6);
         sleep(500);
         kicker.setPosition(0.6);

@@ -30,9 +30,37 @@ public class FeildCentric extends OpMode {
     private double slowModeMultiplier = 0.5;
     private static final double DEADZONE = 0.05;
 
+    // === SHOOTER / INTAKE / KICKER ===
+    private DcMotorEx shooter1, shooter2;
+    private DcMotor intake;
+    private Servo kicker;
+
+    public static double LOW_VELOCITY  = 1850;
+    public static double HIGH_VELOCITY = 2250;
+
+    public static final double KICKER_OUT = 0.6;
+    public static final double KICKER_IN  = 0.31;
+
+
+    private boolean kickerActive = false;
+
+
 
     @Override
     public void init() {
+        shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
+        shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
+        intake   = hardwareMap.get(DcMotor.class, "Intake");
+        kicker   = hardwareMap.get(Servo.class, "Kicker");
+
+        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        shooter1.setVelocityPIDFCoefficients(25, 0, 0, 15);
+        shooter2.setVelocityPIDFCoefficients(25, 0, 0, 15);
+
+        kicker.setPosition(KICKER_IN);
+
 
         follower = Constants.createFollower(hardwareMap);
         follower.setStartingPose(startingPose == null ? new Pose() : startingPose);
@@ -106,23 +134,23 @@ public class FeildCentric extends OpMode {
         }
 
 
-
-        // AUTOMATED PATH (A BUTTON)
-        if (gamepad1.aWasPressed()) {
-            follower.followPath(pathChain.get());
-            automatedDrive = true;
-        }
-
-        // STOP AUTO (B BUTTON OR FINISHED)
-        if (automatedDrive && (gamepad1.bWasPressed() || !follower.isBusy())) {
-            follower.startTeleopDrive();
-            automatedDrive = false;
-        }
-
-        // SLOW MODE TOGGLE (RIGHT BUMPER)
-        if (gamepad1.rightBumperWasPressed()) {
-            slowMode = !slowMode;
-        }
+//
+//        // AUTOMATED PATH (A BUTTON)
+//        if (gamepad1.aWasPressed()) {
+//            follower.followPath(pathChain.get());
+//            automatedDrive = true;
+//        }
+//
+//        // STOP AUTO (B BUTTON OR FINISHED)
+//        if (automatedDrive && (gamepad1.bWasPressed() || !follower.isBusy())) {
+//            follower.startTeleopDrive();
+//            automatedDrive = false;
+//        }
+//
+//        // SLOW MODE TOGGLE (RIGHT BUMPER)
+//        if (gamepad1.rightBumperWasPressed()) {
+//            slowMode = !slowMode;
+//        }
 
         // HEADING RESET (X BUTTON)
         if (gamepad1.xWasPressed()) {
@@ -133,6 +161,44 @@ public class FeildCentric extends OpMode {
                     0
             ));
         }
+        // === KICKER CONTROL ===
+        if (gamepad2.dpad_up) {
+            kicker.setPosition(KICKER_OUT);
+            kickerActive = true;
+        } else {
+            kicker.setPosition(KICKER_IN);
+            kickerActive = false;
+        }
+
+        boolean lowGoal  = gamepad2.left_bumper;
+        boolean highGoal = gamepad2.right_bumper;
+
+        if (highGoal) {
+            shooter1.setVelocity(HIGH_VELOCITY);
+            shooter2.setVelocity(HIGH_VELOCITY);
+
+            if (!kickerActive) {
+                intake.setPower(1.0);
+            } else {
+                intake.setPower(0.0);
+            }
+
+        } else if (lowGoal) {
+            shooter1.setVelocity(LOW_VELOCITY);
+            shooter2.setVelocity(LOW_VELOCITY);
+
+            if (!kickerActive) {
+                intake.setPower(1.0);
+            } else {
+                intake.setPower(0.0);
+            }
+
+        } else {
+            shooter1.setVelocity(0);
+            shooter2.setVelocity(0);
+            intake.setPower(0);
+        }
+
 
         telemetryM.debug("position", follower.getPose());
         telemetryM.debug("velocity", follower.getVelocity());

@@ -12,6 +12,8 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
@@ -22,11 +24,13 @@ public class BlueNineBallAuto extends OpMode {
 
     private TelemetryManager panelsTelemetry;
     //mechanisms
-    private DcMotor shooter;
+    private DcMotorEx shooter1;
+    private DcMotorEx shooter2;
     private DcMotor intake;
     private Servo kicker;
 
-
+    public double highVelocity = 4000;//4000
+    public double lowVelocity = 2100;//2100
 
     //software
     private Follower follower;
@@ -115,7 +119,8 @@ public class BlueNineBallAuto extends OpMode {
                     // TODO add logic to flywheel shooter'
                     follower.followPath(driveStartPosShootPos,true);
                     setPathState(PathState.ROW1COLLECT);
-                    shooter.setPower(0.87);
+                    shooter1.setVelocity(lowVelocity);
+                    shooter2.setVelocity(lowVelocity);
                     sleep(500);
                     shoot();
                     sleep(500);
@@ -123,7 +128,8 @@ public class BlueNineBallAuto extends OpMode {
                     sleep(500);
                     shoot();
                     sleep(100);
-                    shooter.setPower(0.0);
+                    shooter1.setVelocity(0.0);
+                    shooter2.setVelocity(0.0);
                     intake.setPower(0.0);
 
                 }
@@ -152,7 +158,8 @@ public class BlueNineBallAuto extends OpMode {
                 if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPoseCollectPose2,true);
-                    shooter.setPower(0.9);
+                    shooter1.setVelocity(lowVelocity);
+                    shooter2.setVelocity(lowVelocity);
                     sleep(500);
                     shoot();
                     sleep(500);
@@ -160,7 +167,8 @@ public class BlueNineBallAuto extends OpMode {
                     sleep(500);
                     shoot();
                     sleep(100);
-                    shooter.setPower(0.0);
+                    shooter1.setVelocity(0.0);
+                    shooter2.setVelocity(0.0);
                     intake.setPower(0.0);
                     setPathState(PathState.ROW2COLLECT);
                 }
@@ -192,7 +200,8 @@ public class BlueNineBallAuto extends OpMode {
                 if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPose2EndPos,true);
-                    shooter.setPower(0.9);
+                    shooter1.setVelocity(lowVelocity);
+                    shooter2.setVelocity(lowVelocity);
                     sleep(500);
                     shoot();
                     sleep(500);
@@ -200,7 +209,9 @@ public class BlueNineBallAuto extends OpMode {
                     sleep(500);
                     shoot();
                     sleep(100);
-                    shooter.setPower(0.0);
+                    shooter1.setVelocity(0.0);
+                    shooter2.setVelocity(0.0);
+                    intake.setPower(0.0);
                     intake.setPower(0.0);
                     setPathState(PathState.SHOOT_END);
                 }
@@ -229,9 +240,19 @@ public class BlueNineBallAuto extends OpMode {
         /*opModeTimer.resetTimer()*/;
         follower = Constants.createFollower(hardwareMap);
         // Todo add in other init mechanisms
-        shooter = hardwareMap.get(DcMotor.class, "Shooter");
+        // Other motors
+        shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
+        shooter2 = hardwareMap.get(DcMotorEx.class,"Shooter2");
         intake  = hardwareMap.get(DcMotor.class, "Intake");
         kicker  = hardwareMap.get(Servo.class, "Kicker");
+
+        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(25,0,0,15);
+        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 
         kicker.setPosition(0.31);
         buildPaths();
@@ -257,8 +278,9 @@ public class BlueNineBallAuto extends OpMode {
     }
 
     public void shoot() throws InterruptedException {
-        shooter.setPower(0.87);
-        intake.setPower(0.6);
+        shooter1.setVelocity(lowVelocity);
+        shooter2.setVelocity(lowVelocity);
+        intake.setPower(0.7);
         sleep(500);
         kicker.setPosition(0.6);
         sleep(500);

@@ -20,8 +20,14 @@ public class SUMOTELEOP extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double highVelocity = 2300;//4000
-    public double lowVelocity = 1500;//2100
+    public double highVelocity = 4000;//4000
+    public double lowVelocity = 2100;//2100
+
+    public static final double KICKER_OUT = 0.6;
+    public static final double KICKER_IN  = 0.31;
+
+    boolean kickerActive = false;
+
 
 
     @Override
@@ -51,7 +57,7 @@ public class SUMOTELEOP extends OpMode {
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(100,0,0,15.5);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(25,0,0,15);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 
@@ -69,36 +75,45 @@ public class SUMOTELEOP extends OpMode {
 
         // Drive controls
        moveDriveTrain();
-
-        intake.setPower(1.0);
         // Shooter and Intake
+
         if (gamepad2.right_bumper) {
            // intake.setPower(0.9);
-            //shooter1.setVelocity(3000);
-            //shooter2.setVelocity(3000);
+            //shooter1.setVelocity(highVelocity);
+            //shooter2.setVelocity(highVelocity);
         } else {
            // intake.setPower(0.0);
-           // shooter1.setVelocity(0.0);
-            // shooter2.setVelocity(0.0);
+           //shooter1.setVelocity(0.0);
+           //shooter2.setVelocity(0.0);
         }
 
         if (gamepad2.left_bumper) {
-            intake.setPower(0.9);
             shooter1.setVelocity(lowVelocity);
             shooter2.setVelocity(lowVelocity);
+
+            // Only run intake if kicker is NOT active
+            if (!kickerActive) {
+                intake.setPower(1.0);
+            } else {
+                intake.setPower(0.0);
+            }
         } else {
-            intake.setPower(0.0);
             shooter1.setVelocity(0.0);
             shooter2.setVelocity(0.0);
+            intake.setPower(0.0);
         }
+
 
         // Intake
 
-        if(gamepad2.dpad_up){
-            kicker.setPosition(0.6);
+        if (gamepad2.dpad_up) {
+            kicker.setPosition(KICKER_OUT);
+            kickerActive = true;
         } else {
-            kicker.setPosition(0.31);
+            kicker.setPosition(KICKER_IN);
+            kickerActive = false;
         }
+
 
     }
 
