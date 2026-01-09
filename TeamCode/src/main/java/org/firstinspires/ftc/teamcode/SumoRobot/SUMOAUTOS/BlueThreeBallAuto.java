@@ -29,6 +29,12 @@ public class BlueThreeBallAuto extends OpMode {
     private Servo kicker;
 
 
+    public static double LOW_VELOCITY  = 1850;
+    public static double HIGH_VELOCITY = 2250;
+
+    public static final double KICKER_OUT = 0.6;
+    public static final double KICKER_IN  = 0.31;
+
 
     //software
     private Follower follower;
