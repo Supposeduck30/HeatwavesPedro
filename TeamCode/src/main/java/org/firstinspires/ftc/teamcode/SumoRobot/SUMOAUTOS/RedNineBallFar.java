@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous
 @Configurable
-public class BlueNineBallAuto extends OpMode {
+public class RedNineBallFar extends OpMode {
 
     private TelemetryManager panelsTelemetry;
     //mechanisms
@@ -29,8 +29,7 @@ public class BlueNineBallAuto extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double highVelocity = 4000;//4000
-    public double lowVelocity = 1300;//2100
+    public double lowVelocity = 2250;//2100
 
     //software
     private Follower follower;
@@ -60,15 +59,15 @@ public class BlueNineBallAuto extends OpMode {
 
     PathState pathState;
 
-    private final Pose startPose = new Pose(21.825370675453048,122.88632619439869,Math.toRadians(145));
-    private final Pose shootPose1 = new Pose(59.54530477759472,85.4036243822076, Math.toRadians(138));
-    private final Pose collectRow1 = new Pose(47.92092257001647,83.50576606260297, Math.toRadians(180));
-    private final Pose takeRow1 = new Pose(13.759472817133444,83.98023064250413, Math.toRadians(180));
-    private final Pose shootpose2 = new Pose(54.32619439868205,90.85996705107084, Math.toRadians(138));
-    private final Pose collectRow2 = new Pose(48.158154859967055,59.54530477759474, Math.toRadians(180));
-    private final Pose takeRow2 = new Pose(10.43822075782537,59.54530477759474, Math.toRadians(180));
-    private final Pose shootpose3 = new Pose(63.57825370675453,80.1845140032949, Math.toRadians(138));
-    private final Pose endPose = new Pose(54.088962108731465,116.7182866556837, Math.toRadians(270));
+    private final Pose startPose = new Pose(144+56,8,Math.toRadians(90));
+    private final Pose shootPose1 = new Pose(144+60.56000000000002,18.24000000000001, Math.toRadians(116-90));
+    private final Pose collectRow1 = new Pose(144+40.6,34.96000000000001, Math.toRadians(180-90));
+    private final Pose takeRow1 = new Pose(144+13.599999999999996,35.28, Math.toRadians(180-90));
+    private final Pose shootpose2 = new Pose(144+60.4,18.07999999999999, Math.toRadians(116-90));
+    private final Pose collectRow2 = new Pose(144+41.519999999999996,59.68, Math.toRadians(180-90));
+    private final Pose takeRow2 = new Pose(144+12.12,59.88000000000001, Math.toRadians(180-90));
+    private final Pose shootpose3 = new Pose(144+60.44,17.919999999999987, Math.toRadians(116-90));
+    private final Pose endPose = new Pose(144+29.60000000000001,65.39999999999999, Math.toRadians(0-90));
     private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2EndPos;
 
     public void buildPaths(){
@@ -121,11 +120,11 @@ public class BlueNineBallAuto extends OpMode {
                     setPathState(PathState.ROW1COLLECT);
                     shooter1.setVelocity(lowVelocity);
                     shooter2.setVelocity(lowVelocity);
-                    sleep(200);
+                    sleep(500);
                     shoot();
-                    sleep(200);
+                    sleep(500);
                     shoot();
-                    sleep(200);
+                    sleep(500);
                     shoot();
                     sleep(100);
                     shooter1.setVelocity(0.0);
@@ -220,7 +219,7 @@ public class BlueNineBallAuto extends OpMode {
                 // all done
                 if (!follower.isBusy()){
                     telemetry.addLine("Done all Paths");
-               }
+                }
             default:
                 telemetry.addLine("DONE :)");
                 break;

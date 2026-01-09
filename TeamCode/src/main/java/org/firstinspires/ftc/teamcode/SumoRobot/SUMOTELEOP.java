@@ -20,7 +20,7 @@ public class SUMOTELEOP extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public static double LOW_VELOCITY  = 1850;
+    public static double LOW_VELOCITY  = 1750;
     public static double HIGH_VELOCITY = 2250;
 
     public static final double KICKER_OUT = 0.6;
@@ -77,14 +77,12 @@ public class SUMOTELEOP extends OpMode {
        moveDriveTrain();
         // Shooter and Intake
 
-        if (gamepad2.right_bumper) {
-           // intake.setPower(0.9);
-            //shooter1.setVelocity(highVelocity);
-            //shooter2.setVelocity(highVelocity);
+        if (gamepad2.triangle) {
+            shooter1.setVelocity(LOW_VELOCITY);
+            shooter2.setVelocity(LOW_VELOCITY);
         } else {
-           // intake.setPower(0.0);
-           //shooter1.setVelocity(0.0);
-           //shooter2.setVelocity(0.0);
+           shooter1.setVelocity(0.0);
+           shooter2.setVelocity(0.0);
         }
 
         // === KICKER CONTROL ===
