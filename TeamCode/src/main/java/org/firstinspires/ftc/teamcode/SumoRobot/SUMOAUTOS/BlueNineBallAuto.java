@@ -29,8 +29,7 @@ public class BlueNineBallAuto extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double highVelocity = 4000;//4000
-    public double lowVelocity = 1300;//2100
+    public double lowVelocity = 1800;//2100
 
     //software
     private Follower follower;

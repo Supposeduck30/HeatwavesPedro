@@ -12,6 +12,8 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
@@ -22,11 +24,12 @@ public class RedNineBallAuto extends OpMode {
 
     private TelemetryManager panelsTelemetry;
     //mechanisms
-    private DcMotor shooter;
+    private DcMotorEx shooter1;
+    private DcMotorEx shooter2;
     private DcMotor intake;
     private Servo kicker;
 
-
+    public double lowVelocity = 1880;//2100
 
     //software
     private Follower follower;
@@ -59,10 +62,10 @@ public class RedNineBallAuto extends OpMode {
     private final Pose startPose = new Pose(123.83525535420098,127.15650741350906,Math.toRadians(37));
     private final Pose shootPose1 = new Pose(89.91103789126852,91.09719934102142, Math.toRadians(42));
     private final Pose collectRow1 = new Pose(100.3492586490939,83.98023064250413, Math.toRadians(0));
-    private final Pose takeRow1 = new Pose(128.34266886326193,83.26853377265239, Math.toRadians(0));
+    private final Pose takeRow1 = new Pose(131.34266886326193,83.26853377265239, Math.toRadians(0));
     private final Pose shootpose2 = new Pose(91.80889621087314,92.52059308072488, Math.toRadians(42));
     private final Pose collectRow2 = new Pose(100.5864909390445,60.25700164744645, Math.toRadians(0));
-    private final Pose takeRow2 = new Pose(131.9011532125206,59.78253706754529, Math.toRadians(0));
+    private final Pose takeRow2 = new Pose(99.85265238879737,36.0648434925865, Math.toRadians(0));
     private final Pose shootpose3 = new Pose(87.53871499176277,86.82701812191105, Math.toRadians(42));
     private final Pose endPose = new Pose(85.64085667215816,121.22570016474465, Math.toRadians(270));
     private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2EndPos;
@@ -115,15 +118,17 @@ public class RedNineBallAuto extends OpMode {
                     // TODO add logic to flywheel shooter'
                     follower.followPath(driveStartPosShootPos,true);
                     setPathState(PathState.ROW1COLLECT);
-                    shooter.setPower(0.9);
-                    sleep(500);
+                    shooter1.setVelocity(lowVelocity);
+                    shooter2.setVelocity(lowVelocity);
+                    sleep(200);
                     shoot();
-                    sleep(500);
+                    sleep(200);
                     shoot();
-                    sleep(500);
+                    sleep(200);
                     shoot();
                     sleep(100);
-                    shooter.setPower(0.0);
+                    shooter1.setVelocity(0.0);
+                    shooter2.setVelocity(0.0);
                     intake.setPower(0.0);
 
                 }
@@ -152,15 +157,17 @@ public class RedNineBallAuto extends OpMode {
                 if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPoseCollectPose2,true);
-                    shooter.setPower(0.9);
-                    sleep(500);
+                    shooter1.setVelocity(lowVelocity);
+                    shooter2.setVelocity(lowVelocity);
+                    sleep(200);
                     shoot();
-                    sleep(500);
+                    sleep(200);
                     shoot();
-                    sleep(500);
+                    sleep(200);
                     shoot();
                     sleep(100);
-                    shooter.setPower(0.0);
+                    shooter1.setVelocity(0.0);
+                    shooter2.setVelocity(0.0);
                     intake.setPower(0.0);
                     setPathState(PathState.ROW2COLLECT);
                 }
@@ -192,15 +199,17 @@ public class RedNineBallAuto extends OpMode {
                 if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPose2EndPos,true);
-                    shooter.setPower(0.9);
-                    sleep(500);
+                    shooter1.setVelocity(lowVelocity);
+                    shooter2.setVelocity(lowVelocity);
+                    sleep(200);
                     shoot();
-                    sleep(500);
+                    sleep(200);
                     shoot();
-                    sleep(500);
+                    sleep(200);
                     shoot();
                     sleep(100);
-                    shooter.setPower(0.0);
+                    shooter1.setVelocity(0.0);
+                    shooter2.setVelocity(0.0);
                     intake.setPower(0.0);
                     setPathState(PathState.SHOOT_END);
                 }
@@ -223,15 +232,25 @@ public class RedNineBallAuto extends OpMode {
 
     @Override
     public void init() {
-        pathState = PathState.DRIVE_START_SHOOT_POS;
+        pathState = RedNineBallAuto.PathState.DRIVE_START_SHOOT_POS;
         pathTimer = new Timer();
         opModeTimer = new Timer();
         /*opModeTimer.resetTimer()*/;
         follower = Constants.createFollower(hardwareMap);
         // Todo add in other init mechanisms
-        shooter = hardwareMap.get(DcMotor.class, "Shooter");
+        // Other motors
+        shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
+        shooter2 = hardwareMap.get(DcMotorEx.class,"Shooter2");
         intake  = hardwareMap.get(DcMotor.class, "Intake");
         kicker  = hardwareMap.get(Servo.class, "Kicker");
+
+        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(25,0,0,15);
+        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 
         kicker.setPosition(0.31);
         buildPaths();
@@ -257,10 +276,12 @@ public class RedNineBallAuto extends OpMode {
     }
 
     public void shoot() throws InterruptedException {
-        shooter.setPower(0.9);
-        intake.setPower(0.6);
-        sleep(500);
+        shooter1.setVelocity(lowVelocity);
+        shooter2.setVelocity(lowVelocity);
+        intake.setPower(1);
+        sleep(550);
         kicker.setPosition(0.6);
+        intake.setPower(0.32);
         sleep(500);
         kicker.setPosition(0.31);
     }

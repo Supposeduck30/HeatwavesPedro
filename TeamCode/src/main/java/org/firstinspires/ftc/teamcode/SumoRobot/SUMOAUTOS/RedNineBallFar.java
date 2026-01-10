@@ -59,15 +59,15 @@ public class RedNineBallFar extends OpMode {
 
     PathState pathState;
 
-    private final Pose startPose = new Pose(144+56,8,Math.toRadians(90));
-    private final Pose shootPose1 = new Pose(144+60.56000000000002,18.24000000000001, Math.toRadians(116-90));
-    private final Pose collectRow1 = new Pose(144+40.6,34.96000000000001, Math.toRadians(180-90));
-    private final Pose takeRow1 = new Pose(144+13.599999999999996,35.28, Math.toRadians(180-90));
-    private final Pose shootpose2 = new Pose(144+60.4,18.07999999999999, Math.toRadians(116-90));
-    private final Pose collectRow2 = new Pose(144+41.519999999999996,59.68, Math.toRadians(180-90));
-    private final Pose takeRow2 = new Pose(144+12.12,59.88000000000001, Math.toRadians(180-90));
-    private final Pose shootpose3 = new Pose(144+60.44,17.919999999999987, Math.toRadians(116-90));
-    private final Pose endPose = new Pose(144+29.60000000000001,65.39999999999999, Math.toRadians(0-90));
+    private final Pose startPose = new Pose(88,8,Math.toRadians(90));
+    private final Pose shootPose1 = new Pose(88.2,15.94000000000001, Math.toRadians(67));
+    private final Pose collectRow1 = new Pose(95.92,36.16, Math.toRadians(0));
+    private final Pose takeRow1 = new Pose(135.2,36, Math.toRadians(0));
+    private final Pose shootpose2 = new Pose(88.2,15.94000000000001, Math.toRadians(67));
+    private final Pose collectRow2 = new Pose(95.92,59.07999999999999, Math.toRadians(0));
+    private final Pose takeRow2 = new Pose(137.32,59.12, Math.toRadians(0));
+    private final Pose shootpose3 = new Pose(88.2 ,15.94000000000001, Math.toRadians(67));
+    private final Pose endPose = new Pose(125.91999999999999,69.75999999999999, Math.toRadians(180));
     private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2EndPos;
 
     public void buildPaths(){
@@ -114,7 +114,7 @@ public class RedNineBallFar extends OpMode {
                 setPathState(PathState.SHOOT_PRELOAD); //reset timer and make new state
                 break;
             case SHOOT_PRELOAD:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(driveStartPosShootPos,true);
                     setPathState(PathState.ROW1COLLECT);
@@ -138,7 +138,7 @@ public class RedNineBallFar extends OpMode {
                 setPathState(PathState.INTAKEON);
                 break;
             case INTAKEON:
-                intake.setPower(0.8);
+                intake.setPower(1);
                 setPathState(PathState.TAKEROW1);
                 break;
             case TAKEROW1:
@@ -154,7 +154,7 @@ public class RedNineBallFar extends OpMode {
                 }
                 break;
             case SHOOTROW1:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPoseCollectPose2,true);
                     shooter1.setVelocity(lowVelocity);
@@ -180,7 +180,7 @@ public class RedNineBallFar extends OpMode {
                 }
                 break;
             case INTAKEON2:
-                intake.setPower(0.8);
+                intake.setPower(1);
                 setPathState(PathState.TAKEROW2);
                 break;
             case TAKEROW2:
@@ -196,7 +196,7 @@ public class RedNineBallFar extends OpMode {
                 }
                 break;
             case SHOOTROW2:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPose2EndPos,true);
                     shooter1.setVelocity(lowVelocity);
@@ -249,7 +249,7 @@ public class RedNineBallFar extends OpMode {
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(25,0,0,15);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(50,0,0,15);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 
@@ -279,12 +279,16 @@ public class RedNineBallFar extends OpMode {
     public void shoot() throws InterruptedException {
         shooter1.setVelocity(lowVelocity);
         shooter2.setVelocity(lowVelocity);
-        intake.setPower(0.7);
-        sleep(500);
+        intake.setPower(1);
+        sleep(550);
         kicker.setPosition(0.6);
+        intake.setPower(0.32);
         sleep(500);
         kicker.setPosition(0.31);
     }
 
+    public void shootLast() throws InterruptedException {
+
+    }
 
 }

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.SumoRobot;
 
+import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -28,7 +29,7 @@ public class SUMOTELEOP extends OpMode {
 
     boolean kickerActive = false;
 
-
+    private Follower follower;
 
     @Override
     public void init() {
@@ -67,12 +68,10 @@ public class SUMOTELEOP extends OpMode {
         motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorLeftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-
     }
 
     @Override
     public void loop() {
-
         // Drive controls
        moveDriveTrain();
         // Shooter and Intake
@@ -122,8 +121,6 @@ public class SUMOTELEOP extends OpMode {
             shooter2.setVelocity(0);
             intake.setPower(0);
         }
-
-
 
     }
 
