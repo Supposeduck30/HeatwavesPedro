@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp
+@TeleOp(name = "Sumo Teleop with Rumble")
 public class SUMOTELEOP extends OpMode {
 
     // =====================
@@ -25,6 +25,7 @@ public class SUMOTELEOP extends OpMode {
     public static final double LOW_VELOCITY  = 1700;
     public static final double HIGH_VELOCITY = 2300;
     private static final double VELOCITY_STEP = 50;
+    private static final double VELOCITY_TOLERANCE = 100; // Increased tolerance
 
     // =====================
     // Kicker Positions
@@ -42,6 +43,11 @@ public class SUMOTELEOP extends OpMode {
 
     private boolean dpadUpPrev = false;
     private boolean dpadDownPrev = false;
+
+    // Shooter rumble state
+    private boolean shooterReadyLast = false;
+    private long lastRumbleTime = 0; // for minimum interval
+    private static final long MIN_RUMBLE_INTERVAL = 250; // milliseconds
 
     // =====================
     // Init
@@ -133,10 +139,28 @@ public class SUMOTELEOP extends OpMode {
             intake.setPower(0);
         }
 
+        // === SHOOTER READY CHECK + RUMBLE ===
+        double currentVelocity =
+                (shooter1.getVelocity() + shooter2.getVelocity()) / 2.0;
+
+        boolean shooterReadyNow =
+                finalVelocity > 0 &&
+                        Math.abs(currentVelocity - finalVelocity) <= VELOCITY_TOLERANCE;
+
+        // Only rumble on false → true transition + respect minimum interval
+        long now = System.currentTimeMillis();
+        if (shooterReadyNow && !shooterReadyLast && (now - lastRumbleTime >= MIN_RUMBLE_INTERVAL)) {
+            gamepad2.rumble(200); // 200 ms rumble
+            lastRumbleTime = now;
+        }
+
+        shooterReadyLast = shooterReadyNow;
+
         // === TELEMETRY ===
-        telemetry.addData("Preset Velocity", targetVelocity);
-        telemetry.addData("Adjustment", velocityAdjustment);
-        telemetry.addData("Final Velocity", finalVelocity);
+        telemetry.addData("Target Velocity", finalVelocity);
+        telemetry.addData("Current Velocity", currentVelocity);
+        telemetry.addData("Shooter Ready", shooterReadyNow);
+        telemetry.addData("Velocity Adjustment", velocityAdjustment);
         telemetry.update();
     }
 
