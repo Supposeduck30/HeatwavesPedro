@@ -11,24 +11,41 @@ import com.qualcomm.robotcore.hardware.Servo;
 @TeleOp
 public class SUMOTELEOP extends OpMode {
 
-    // Drive motors
+    // =====================
+    // Hardware
+    // =====================
     private DcMotor fr, fl, br, bl;
-
-    // Mechanisms
     private DcMotorEx shooter1, shooter2;
     private DcMotor intake;
     private Servo kicker;
 
-    // Shooter velocities
+    // =====================
+    // Shooter Constants
+    // =====================
     public static final double LOW_VELOCITY  = 1700;
     public static final double HIGH_VELOCITY = 2300;
+    private static final double VELOCITY_STEP = 50;
 
-    // Kicker positions
+    // =====================
+    // Kicker Positions
+    // =====================
     public static final double KICKER_OUT = 0.60;
     public static final double KICKER_IN  = 0.31;
 
+    // =====================
+    // State Variables
+    // =====================
     private boolean kickerActive = false;
 
+    private double targetVelocity = 0;
+    private double velocityAdjustment = 0;
+
+    private boolean dpadUpPrev = false;
+    private boolean dpadDownPrev = false;
+
+    // =====================
+    // Init
+    // =====================
     @Override
     public void init() {
 
@@ -38,7 +55,7 @@ public class SUMOTELEOP extends OpMode {
         br = hardwareMap.get(DcMotor.class, "BR");
         bl = hardwareMap.get(DcMotor.class, "BL");
 
-        // Other motors
+        // Other hardware
         shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
         shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
         intake   = hardwareMap.get(DcMotor.class, "Intake");
@@ -67,50 +84,65 @@ public class SUMOTELEOP extends OpMode {
         kicker.setPosition(KICKER_IN);
     }
 
+    // =====================
+    // Loop
+    // =====================
     @Override
     public void loop() {
 
         drive();
 
-        // === KICKER CONTROL ===
-        kickerActive = gamepad2.dpad_up;
+        // === KICKER (PS5 Triangle) ===
+        kickerActive = gamepad2.triangle;
         kicker.setPosition(kickerActive ? KICKER_OUT : KICKER_IN);
 
         boolean lowGoal  = gamepad2.left_bumper;
         boolean highGoal = gamepad2.right_bumper;
 
+        // === PRESET SELECTION ===
         if (highGoal) {
-            setShooterVelocity(HIGH_VELOCITY);
-            intake.setPower(kickerActive ? 0.0 : 1.0);
-
+            targetVelocity = HIGH_VELOCITY;
         } else if (lowGoal) {
-            setShooterVelocity(LOW_VELOCITY);
-            intake.setPower(kickerActive ? 0.0 : 1.0);
-
-        } else if (gamepad2.triangle) {
-            setShooterVelocity(LOW_VELOCITY);
-            intake.setPower(0.0);
-
+            targetVelocity = LOW_VELOCITY;
         } else {
-            stopShooter();
-            intake.setPower(0.0);
+            targetVelocity = 0;
+            velocityAdjustment = 0;
         }
+
+        // === FINE TUNE (D-PAD) ===
+        if (gamepad2.dpad_up && !dpadUpPrev) {
+            velocityAdjustment += VELOCITY_STEP;
+        }
+        if (gamepad2.dpad_down && !dpadDownPrev) {
+            velocityAdjustment -= VELOCITY_STEP;
+        }
+
+        dpadUpPrev = gamepad2.dpad_up;
+        dpadDownPrev = gamepad2.dpad_down;
+
+        // === APPLY SHOOTER ===
+        double finalVelocity = targetVelocity + velocityAdjustment;
+
+        if (finalVelocity > 0) {
+            shooter1.setVelocity(finalVelocity);
+            shooter2.setVelocity(finalVelocity);
+            intake.setPower(kickerActive ? 0.0 : 1.0);
+        } else {
+            shooter1.setVelocity(0);
+            shooter2.setVelocity(0);
+            intake.setPower(0);
+        }
+
+        // === TELEMETRY ===
+        telemetry.addData("Preset Velocity", targetVelocity);
+        telemetry.addData("Adjustment", velocityAdjustment);
+        telemetry.addData("Final Velocity", finalVelocity);
+        telemetry.update();
     }
 
-    // =========================
-    // Helper Methods
-    // =========================
-
-    private void setShooterVelocity(double velocity) {
-        shooter1.setVelocity(velocity);
-        shooter2.setVelocity(velocity);
-    }
-
-    private void stopShooter() {
-        shooter1.setVelocity(0);
-        shooter2.setVelocity(0);
-    }
-
+    // =====================
+    // Drive Method
+    // =====================
     private void drive() {
         double vertical   = gamepad1.left_stick_y;
         double horizontal = gamepad1.left_stick_x;
