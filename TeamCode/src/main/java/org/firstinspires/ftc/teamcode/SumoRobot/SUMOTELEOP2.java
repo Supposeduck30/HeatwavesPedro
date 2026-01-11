@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "Sumo Teleop")
-public class SUMOTELEOP extends OpMode {
+public class SUMOTELEOP2 extends OpMode {
 
     private DcMotor motorRightFront;
     private DcMotor motorLeftFront;

@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "Sumo Teleop")
-public class SUMOTELEOP extends OpMode {
+public class SUMOTELEOP3PIDF extends OpMode {
 
     private DcMotor motorRightFront;
     private DcMotor motorLeftFront;
@@ -21,8 +21,8 @@ public class SUMOTELEOP extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public static double LOW_VELOCITY  = 1850;
-    public static double HIGH_VELOCITY = 2250;
+    public static double LOW_VELOCITY  = 1700;
+    public static double HIGH_VELOCITY = 2300;
 
     public static final double KICKER_OUT = 0.6;
     public static final double KICKER_IN  = 0.31;
@@ -58,7 +58,7 @@ public class SUMOTELEOP extends OpMode {
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(25,0,0,15);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(40,0,0,25);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 

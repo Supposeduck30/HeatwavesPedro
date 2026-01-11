@@ -10,14 +10,14 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "Sumo Teleop")
-public class SUMOTELEOP extends OpMode {
+public class SUMOTELEOP2Power extends OpMode {
 
     private DcMotor motorRightFront;
     private DcMotor motorLeftFront;
     private DcMotor motorRightBack;
     private DcMotor motorLeftBack;
-    private DcMotorEx shooter1;
-    private DcMotorEx shooter2;
+    private DcMotor shooter1;
+    private DcMotor shooter2;
     private DcMotor intake;
     private Servo kicker;
 
@@ -54,13 +54,13 @@ public class SUMOTELEOP extends OpMode {
         motorLeftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         motorLeftBack.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        //shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(25,0,0,15);
-        shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
-        shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+        //PIDFCoefficients pidfCoefficients = new PIDFCoefficients(25,0,0,15);
+        //shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
+        //shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 
         // Brake mode
         motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -77,11 +77,11 @@ public class SUMOTELEOP extends OpMode {
         // Shooter and Intake
 
         if (gamepad2.triangle) {
-            shooter1.setVelocity(LOW_VELOCITY);
-            shooter2.setVelocity(LOW_VELOCITY);
+            shooter1.setPower(1);
+            shooter2.setPower(1);
         } else {
-           shooter1.setVelocity(0.0);
-           shooter2.setVelocity(0.0);
+           shooter1.setPower(0.0);
+           shooter2.setPower(0.0);
         }
 
         // === KICKER CONTROL ===
@@ -97,8 +97,8 @@ public class SUMOTELEOP extends OpMode {
         boolean highGoal = gamepad2.right_bumper;
 
         if (highGoal) {
-            shooter1.setVelocity(HIGH_VELOCITY);
-            shooter2.setVelocity(HIGH_VELOCITY);
+            shooter1.setPower(1);
+            shooter2.setPower(1);
 
             if (!kickerActive) {
                 intake.setPower(1.0);
@@ -107,8 +107,8 @@ public class SUMOTELEOP extends OpMode {
             }
 
         } else if (lowGoal) {
-            shooter1.setVelocity(LOW_VELOCITY);
-            shooter2.setVelocity(LOW_VELOCITY);
+            shooter1.setPower(0.8);
+            shooter2.setPower(0.8);
 
             if (!kickerActive) {
                 intake.setPower(1.0);
@@ -117,8 +117,8 @@ public class SUMOTELEOP extends OpMode {
             }
 
         } else {
-            shooter1.setVelocity(0);
-            shooter2.setVelocity(0);
+            shooter1.setPower(0);
+            shooter2.setPower(0);
             intake.setPower(0);
         }
 

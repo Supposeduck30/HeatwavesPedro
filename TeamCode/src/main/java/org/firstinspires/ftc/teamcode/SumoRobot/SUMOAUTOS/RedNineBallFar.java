@@ -60,14 +60,14 @@ public class RedNineBallFar extends OpMode {
     PathState pathState;
 
     private final Pose startPose = new Pose(88,8,Math.toRadians(90));
-    private final Pose shootPose1 = new Pose(88.2,15.94000000000001, Math.toRadians(67));
+    private final Pose shootPose1 = new Pose(88.2,15.94000000000001, Math.toRadians(65));
     private final Pose collectRow1 = new Pose(95.92,36.16, Math.toRadians(0));
     private final Pose takeRow1 = new Pose(135.2,36, Math.toRadians(0));
-    private final Pose shootpose2 = new Pose(88.2,15.94000000000001, Math.toRadians(67));
+    private final Pose shootpose2 = new Pose(88.2,12.94000000000001, Math.toRadians(65));
     private final Pose collectRow2 = new Pose(95.92,59.07999999999999, Math.toRadians(0));
     private final Pose takeRow2 = new Pose(137.32,59.12, Math.toRadians(0));
-    private final Pose shootpose3 = new Pose(88.2 ,15.94000000000001, Math.toRadians(67));
-    private final Pose endPose = new Pose(125.91999999999999,69.75999999999999, Math.toRadians(180));
+    private final Pose shootpose3 = new Pose(88.2 ,12.94000000000001, Math.toRadians(65));
+    private final Pose endPose = new Pose(120.91999999999999,69.75999999999999, Math.toRadians(180));
     private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2EndPos;
 
     public void buildPaths(){

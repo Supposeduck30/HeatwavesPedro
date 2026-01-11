@@ -29,7 +29,7 @@ public class BlueNineBallAuto extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double lowVelocity = 1800;//2100
+    public double lowVelocity = 1400;//2100
 
     //software
     private Follower follower;
@@ -60,13 +60,13 @@ public class BlueNineBallAuto extends OpMode {
     PathState pathState;
 
     private final Pose startPose = new Pose(21.825370675453048,122.88632619439869,Math.toRadians(145));
-    private final Pose shootPose1 = new Pose(59.54530477759472,85.4036243822076, Math.toRadians(138));
+    private final Pose shootPose1 = new Pose(54.32619439868205,90.85996705107084, Math.toRadians(143));
     private final Pose collectRow1 = new Pose(47.92092257001647,83.50576606260297, Math.toRadians(180));
     private final Pose takeRow1 = new Pose(13.759472817133444,83.98023064250413, Math.toRadians(180));
-    private final Pose shootpose2 = new Pose(54.32619439868205,90.85996705107084, Math.toRadians(138));
+    private final Pose shootpose2 = new Pose(54.32619439868205,90.85996705107084, Math.toRadians(143));
     private final Pose collectRow2 = new Pose(48.158154859967055,59.54530477759474, Math.toRadians(180));
     private final Pose takeRow2 = new Pose(10.43822075782537,59.54530477759474, Math.toRadians(180));
-    private final Pose shootpose3 = new Pose(63.57825370675453,80.1845140032949, Math.toRadians(138));
+    private final Pose shootpose3 = new Pose(54.32619439868205,90.85996705107084, Math.toRadians(143));
     private final Pose endPose = new Pose(54.088962108731465,116.7182866556837, Math.toRadians(270));
     private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2EndPos;
 
@@ -114,7 +114,7 @@ public class BlueNineBallAuto extends OpMode {
                 setPathState(PathState.SHOOT_PRELOAD); //reset timer and make new state
                 break;
             case SHOOT_PRELOAD:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(driveStartPosShootPos,true);
                     setPathState(PathState.ROW1COLLECT);
@@ -154,7 +154,7 @@ public class BlueNineBallAuto extends OpMode {
                 }
                 break;
             case SHOOTROW1:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPoseCollectPose2,true);
                     shooter1.setVelocity(lowVelocity);
@@ -196,7 +196,7 @@ public class BlueNineBallAuto extends OpMode {
                 }
                 break;
             case SHOOTROW2:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPose2EndPos,true);
                     shooter1.setVelocity(lowVelocity);
@@ -223,6 +223,7 @@ public class BlueNineBallAuto extends OpMode {
             default:
                 telemetry.addLine("DONE :)");
                 break;
+
         }
     }
 
@@ -249,7 +250,7 @@ public class BlueNineBallAuto extends OpMode {
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(25,0,0,15);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(40,0,0,20);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 
@@ -279,9 +280,10 @@ public class BlueNineBallAuto extends OpMode {
     public void shoot() throws InterruptedException {
         shooter1.setVelocity(lowVelocity);
         shooter2.setVelocity(lowVelocity);
-        intake.setPower(0.7);
-        sleep(500);
+        intake.setPower(1);
+        sleep(550);
         kicker.setPosition(0.6);
+        intake.setPower(0.32);
         sleep(500);
         kicker.setPosition(0.31);
     }

@@ -29,7 +29,7 @@ public class RedNineBallAuto extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double lowVelocity = 1880;//2100
+    public double lowVelocity = 1700;//2100
 
     //software
     private Follower follower;
@@ -61,13 +61,13 @@ public class RedNineBallAuto extends OpMode {
 
     private final Pose startPose = new Pose(123.83525535420098,127.15650741350906,Math.toRadians(37));
     private final Pose shootPose1 = new Pose(89.91103789126852,91.09719934102142, Math.toRadians(42));
-    private final Pose collectRow1 = new Pose(100.3492586490939,83.98023064250413, Math.toRadians(0));
-    private final Pose takeRow1 = new Pose(131.34266886326193,83.26853377265239, Math.toRadians(0));
+    private final Pose collectRow1 = new Pose(98.92586490939044,86.35255354200987, Math.toRadians(0));
+    private final Pose takeRow1 = new Pose(128.34266886326193,83.26853377265239, Math.toRadians(0));
     private final Pose shootpose2 = new Pose(91.80889621087314,92.52059308072488, Math.toRadians(42));
-    private final Pose collectRow2 = new Pose(100.5864909390445,60.25700164744645, Math.toRadians(0));
-    private final Pose takeRow2 = new Pose(99.85265238879737,36.0648434925865, Math.toRadians(0));
+    private final Pose collectRow2 = new Pose(99.8664909390445,58.320395387149915, Math.toRadians(0));
+    private final Pose takeRow2 = new Pose(131.9011532125206,59.3025370675453, Math.toRadians(0));
     private final Pose shootpose3 = new Pose(87.53871499176277,86.82701812191105, Math.toRadians(42));
-    private final Pose endPose = new Pose(85.64085667215816,121.22570016474465, Math.toRadians(270));
+    private final Pose endPose = new Pose(87.37265238879736,120.78484349258652, Math.toRadians(270));
     private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2EndPos;
 
     public void buildPaths(){
@@ -114,7 +114,7 @@ public class RedNineBallAuto extends OpMode {
                 setPathState(PathState.SHOOT_PRELOAD); //reset timer and make new state
                 break;
             case SHOOT_PRELOAD:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(driveStartPosShootPos,true);
                     setPathState(PathState.ROW1COLLECT);
@@ -154,16 +154,16 @@ public class RedNineBallAuto extends OpMode {
                 }
                 break;
             case SHOOTROW1:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPoseCollectPose2,true);
                     shooter1.setVelocity(lowVelocity);
                     shooter2.setVelocity(lowVelocity);
-                    sleep(200);
+                    sleep(500);
                     shoot();
-                    sleep(200);
+                    sleep(500);
                     shoot();
-                    sleep(200);
+                    sleep(500);
                     shoot();
                     sleep(100);
                     shooter1.setVelocity(0.0);
@@ -196,20 +196,21 @@ public class RedNineBallAuto extends OpMode {
                 }
                 break;
             case SHOOTROW2:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > .5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(shootPose2EndPos,true);
                     shooter1.setVelocity(lowVelocity);
                     shooter2.setVelocity(lowVelocity);
-                    sleep(200);
+                    sleep(500);
                     shoot();
-                    sleep(200);
+                    sleep(500);
                     shoot();
-                    sleep(200);
+                    sleep(500);
                     shoot();
                     sleep(100);
                     shooter1.setVelocity(0.0);
                     shooter2.setVelocity(0.0);
+                    intake.setPower(0.0);
                     intake.setPower(0.0);
                     setPathState(PathState.SHOOT_END);
                 }
@@ -222,6 +223,7 @@ public class RedNineBallAuto extends OpMode {
             default:
                 telemetry.addLine("DONE :)");
                 break;
+
         }
     }
 
@@ -232,7 +234,7 @@ public class RedNineBallAuto extends OpMode {
 
     @Override
     public void init() {
-        pathState = RedNineBallAuto.PathState.DRIVE_START_SHOOT_POS;
+        pathState = PathState.DRIVE_START_SHOOT_POS;
         pathTimer = new Timer();
         opModeTimer = new Timer();
         /*opModeTimer.resetTimer()*/;
@@ -248,7 +250,7 @@ public class RedNineBallAuto extends OpMode {
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(25,0,0,15);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(40,0,0,25);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 

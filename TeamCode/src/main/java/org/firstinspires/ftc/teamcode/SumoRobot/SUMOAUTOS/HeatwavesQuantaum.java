@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous
 @Configurable
-public class BlueNineBallFar extends OpMode {
+public class HeatwavesQuantaum extends OpMode {
 
     private TelemetryManager panelsTelemetry;
     //mechanisms
@@ -59,15 +59,15 @@ public class BlueNineBallFar extends OpMode {
 
     PathState pathState;
 
-    private final Pose startPose = new Pose(54,8,Math.toRadians(90));
-    private final Pose shootPose1 = new Pose(60.56000000000002,18.24000000000001, Math.toRadians(119));
-    private final Pose collectRow1 = new Pose(47.08,35.28, Math.toRadians(180));
-    private final Pose takeRow1 = new Pose(13.599999999999996,35.28, Math.toRadians(180));
-    private final Pose shootpose2 = new Pose(60.56000000000002,18.24000000000001, Math.toRadians(119));
-    private final Pose collectRow2 = new Pose(46.800000000000026,59.88000000000001, Math.toRadians(180));
-    private final Pose takeRow2 = new Pose(12.12,59.88000000000001, Math.toRadians(180));
-    private final Pose shootpose3 = new Pose(60.56000000000002 ,18.24000000000001, Math.toRadians(121));
-    private final Pose endPose = new Pose(29.60000000000001,65.39999999999999, Math.toRadians(0));
+    private final Pose startPose = new Pose(88,8,Math.toRadians(90));
+    private final Pose shootPose1 = new Pose(84.08000000000001,13.680000000000014, Math.toRadians(57));
+    private final Pose collectRow1 = new Pose(99.87999999999998,34.879999999999995, Math.toRadians(0));
+    private final Pose takeRow1 = new Pose(136.4,34.879999999999995, Math.toRadians(0));
+    private final Pose shootpose2 = new Pose(84.08000000000001,13.680000000000014, Math.toRadians(59));
+    private final Pose collectRow2 = new Pose(136.27999999999997,35.08000000000001, Math.toRadians(270));
+    private final Pose takeRow2 = new Pose(136.03999999999996,12.480000000000024, Math.toRadians(270));
+    private final Pose shootpose3 = new Pose(84.47999999999999 ,13.439999999999996, Math.toRadians(59));
+    private final Pose endPose = new Pose(119.72,16.279999999999994, Math.toRadians(270));
     private PathChain driveStartPosShootPos, shootPoseCollectPose, collectPoseTakePose,takePoseShootPose, shootPoseCollectPose2, collectPose2TakePose2, takePose2ShootPose2, shootPose2EndPos;
 
     public void buildPaths(){
