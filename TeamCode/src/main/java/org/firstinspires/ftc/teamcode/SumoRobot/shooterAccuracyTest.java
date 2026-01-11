@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.SumoRobot;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
@@ -10,6 +11,7 @@ import com.pedropathing.geometry.Pose;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+@Disabled
 
 @TeleOp(name = "Shooter + Pedro Test")
 public class shooterAccuracyTest extends OpMode {
