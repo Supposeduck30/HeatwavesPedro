@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp(name = "Sumo Teleop")
+@TeleOp
 public class SUMOTELEOP2Power extends OpMode {
 
     private DcMotor motorRightFront;
