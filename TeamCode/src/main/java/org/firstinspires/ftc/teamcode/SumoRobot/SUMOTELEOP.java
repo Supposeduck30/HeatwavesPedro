@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "Sumo Teleop with Rumble")
+@TeleOp
 public class SUMOTELEOP extends OpMode {
 
     // =====================
