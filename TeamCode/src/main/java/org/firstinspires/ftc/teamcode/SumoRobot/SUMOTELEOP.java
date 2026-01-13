@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.SumoRobot;
 
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -7,6 +9,8 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @TeleOp(name = "Sumo Teleop with Rumble")
 public class SUMOTELEOP extends OpMode {
@@ -19,23 +23,20 @@ public class SUMOTELEOP extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    // =====================
+    private Follower follower;
+    private final Pose startPose = new Pose(54,8,Math.toRadians(90));
+    private final Pose parkPose = new Pose(104.67076923076922,33,Math.toRadians(360));
     // Shooter Constants
-    // =====================
     public static final double LOW_VELOCITY  = 1700;
     public static final double HIGH_VELOCITY = 2300;
     private static final double VELOCITY_STEP = 50;
     private static final double VELOCITY_TOLERANCE = 100; // Increased tolerance
 
-    // =====================
     // Kicker Positions
-    // =====================
     public static final double KICKER_OUT = 0.60;
     public static final double KICKER_IN  = 0.31;
 
-    // =====================
     // State Variables
-    // =====================
     private boolean kickerActive = false;
 
     private double targetVelocity = 0;
@@ -49,11 +50,11 @@ public class SUMOTELEOP extends OpMode {
     private long lastRumbleTime = 0; // for minimum interval
     private static final long MIN_RUMBLE_INTERVAL = 250; // milliseconds
 
-    // =====================
-    // Init
-    // =====================
     @Override
     public void init() {
+
+        follower = Constants.createFollower(hardwareMap);
+        follower.setPose(startPose);
 
         // Drive motors
         fr = hardwareMap.get(DcMotor.class, "FR");
@@ -83,21 +84,22 @@ public class SUMOTELEOP extends OpMode {
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(40, 0, 0, 25);
+        PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 15);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
         kicker.setPosition(KICKER_IN);
     }
 
-    // =====================
-    // Loop
-    // =====================
     @Override
     public void loop() {
 
-        drive();
-
+        if (gamepad1.triangle){
+            follower.holdPoint(parkPose);
+        } else {
+            follower.breakFollowing();
+            drive();
+        }
         // === KICKER (PS5 Triangle) ===
         kickerActive = gamepad2.triangle;
         kicker.setPosition(kickerActive ? KICKER_OUT : KICKER_IN);
@@ -105,7 +107,7 @@ public class SUMOTELEOP extends OpMode {
         boolean lowGoal  = gamepad2.left_bumper;
         boolean highGoal = gamepad2.right_bumper;
 
-        // === PRESET SELECTION ===
+        //PRESET SELECTION
         if (highGoal) {
             targetVelocity = HIGH_VELOCITY;
         } else if (lowGoal) {
@@ -115,7 +117,7 @@ public class SUMOTELEOP extends OpMode {
             velocityAdjustment = 0;
         }
 
-        // === FINE TUNE (D-PAD) ===
+        // FINE TUNE (D-PAD)
         if (gamepad2.dpad_up && !dpadUpPrev) {
             velocityAdjustment += VELOCITY_STEP;
         }
@@ -139,7 +141,7 @@ public class SUMOTELEOP extends OpMode {
             intake.setPower(0);
         }
 
-        // === SHOOTER READY CHECK + RUMBLE ===
+        // RUMBLE
         double currentVelocity =
                 (shooter1.getVelocity() + shooter2.getVelocity()) / 2.0;
 
@@ -164,9 +166,7 @@ public class SUMOTELEOP extends OpMode {
         telemetry.update();
     }
 
-    // =====================
     // Drive Method
-    // =====================
     private void drive() {
         double vertical   = gamepad1.left_stick_y;
         double horizontal = gamepad1.left_stick_x;
