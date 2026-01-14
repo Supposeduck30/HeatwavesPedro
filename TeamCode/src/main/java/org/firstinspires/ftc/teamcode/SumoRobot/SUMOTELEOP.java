@@ -10,90 +10,94 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-
 @TeleOp
 public class SUMOTELEOP extends OpMode {
 
-    // Hardware
+    // Drive motors
     private DcMotor fr, fl, br, bl;
+    // Shooter motors
     private DcMotorEx shooter1, shooter2;
+    // Intake and kicker
     private DcMotor intake;
     private Servo kicker;
 
-    private Follower follower;
+    // Kicker pulse state
+    private boolean kicking = false;
+    private long kickStartTime = 0;
+    private boolean kickerButtonLast = false;
+    private static final long KICK_TIME = 140; // milliseconds
 
-    // Poses
-    private final Pose startPose = new Pose(54, 8, Math.toRadians(90));
-    private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(360));
-
-    // Shooter Constants
+    // Shooter constants
     public static final double LOW_VELOCITY  = 1700;
     public static final double HIGH_VELOCITY = 2300;
     private static final double VELOCITY_TOLERANCE = 100;
 
-    // Kicker Positions
-    public static final double KICKER_OUT = 0.60;
-    public static final double KICKER_IN  = 0.31;
-
-    // Rumble State
-    private boolean shooterReadyLast = false;
-    private long lastRumbleTime = 0;
-    private static final long MIN_RUMBLE_INTERVAL = 250; // ms
+    // Kicker positions
+    public static final double KICKER_OUT = 0.52;
+    public static final double KICKER_IN  = 0.35;
 
     @Override
     public void init() {
-        follower.update();
-        follower = Constants.createFollower(hardwareMap);
-        follower.setPose(startPose);
-
+        // Initialize drive motors
         fr = hardwareMap.get(DcMotor.class, "FR");
         fl = hardwareMap.get(DcMotor.class, "FL");
         br = hardwareMap.get(DcMotor.class, "BR");
         bl = hardwareMap.get(DcMotor.class, "BL");
 
+        // Initialize shooter motors
         shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
         shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
 
+        // Initialize intake and kicker
         intake = hardwareMap.get(DcMotor.class, "Intake");
         kicker = hardwareMap.get(Servo.class, "Kicker");
 
+        // Set drive motor directions
         fr.setDirection(DcMotorSimple.Direction.FORWARD);
         br.setDirection(DcMotorSimple.Direction.FORWARD);
         fl.setDirection(DcMotorSimple.Direction.REVERSE);
         bl.setDirection(DcMotorSimple.Direction.FORWARD);
 
+        // Set brake behavior
         fr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         fl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         br.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         bl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+        // Shooter setup
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 15);
+        PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 20);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
+        // Set kicker to initial position
         kicker.setPosition(KICKER_IN);
     }
 
     @Override
     public void loop() {
 
-        // FOLLOWER vs DRIVER CONTROL
-        if (gamepad1.triangle) {
-            follower.holdPoint(parkPose);
-        } else {
-            follower.breakFollowing();
-            drive();
+        // Handle kicker pulse
+        boolean kickerButtonNow = gamepad2.triangle;
+
+        // Detect button press (false -> true) to start kicker pulse
+        if (kickerButtonNow && !kickerButtonLast && !kicking) {
+            kicking = true;
+            kickStartTime = System.currentTimeMillis();
+            kicker.setPosition(KICKER_OUT);
         }
 
-        // (PS5 TRIANGLE)
-        boolean kickerActive = gamepad2.triangle;
-        kicker.setPosition(kickerActive ? KICKER_OUT : KICKER_IN);
+        // Automatically retract kicker after KICK_TIME
+        if (kicking && System.currentTimeMillis() - kickStartTime >= KICK_TIME) {
+            kicker.setPosition(KICKER_IN);
+            kicking = false;
+        }
 
-        //SHOOTER PRESETS
+        kickerButtonLast = kickerButtonNow;
+
+        // Shooter presets
         boolean lowGoal  = gamepad2.left_bumper;
         boolean highGoal = gamepad2.right_bumper;
 
@@ -105,49 +109,40 @@ public class SUMOTELEOP extends OpMode {
             targetVelocity = LOW_VELOCITY;
         }
 
-        // APPLY SHOOTER
+        // Apply shooter power
         if (targetVelocity > 0) {
             shooter1.setVelocity(targetVelocity);
             shooter2.setVelocity(targetVelocity);
-            intake.setPower(kickerActive ? 0.0 : 1.0);
         } else {
-            shooter1.setVelocity(0);
-            shooter2.setVelocity(0);
+            shooter1.setVelocity(1000);
+            shooter2.setVelocity(1000);
+        }
+
+        // Intake always runs when shooter is active
+        if (targetVelocity > 0) {
+            intake.setPower(1.0);
+        } else {
             intake.setPower(0);
         }
 
-        // RUMBLE LOGIC
-        double currentVelocity =
-                (shooter1.getVelocity() + shooter2.getVelocity()) / 2.0;
-
-        boolean shooterReadyNow =
-                targetVelocity > 0 &&
-                        Math.abs(currentVelocity - targetVelocity) <= VELOCITY_TOLERANCE;
-
-        long now = System.currentTimeMillis();
-
-        if (shooterReadyNow && !shooterReadyLast &&
-                now - lastRumbleTime >= MIN_RUMBLE_INTERVAL) {
-            gamepad2.rumble(200);
-            lastRumbleTime = now;
-        }
-
-        shooterReadyLast = shooterReadyNow;
-
+        // Telemetry
+        double currentVelocity = (shooter1.getVelocity() + shooter2.getVelocity()) / 2.0;
         telemetry.addData("Target Velocity", targetVelocity);
         telemetry.addData("Current Velocity", currentVelocity);
-        telemetry.addData("Shooter Ready", shooterReadyNow);
         telemetry.update();
+
+        // Drive
+        drive();
     }
 
     private void drive() {
         double vertical   = gamepad1.left_stick_y;
-        double horizontal = gamepad1.left_stick_x;
+        double horizontal = -gamepad1.left_stick_x;
         double pivot      = gamepad1.right_stick_x * 0.75;
 
-        fr.setPower(pivot + vertical + horizontal);
-        br.setPower(-pivot - vertical + horizontal);
-        bl.setPower(pivot - vertical - horizontal);
-        fl.setPower(-pivot + vertical - horizontal);
+        fr.setPower(pivot + vertical - horizontal);
+        br.setPower(pivot +vertical + horizontal);
+        bl.setPower(pivot - vertical + horizontal);
+        fl.setPower(pivot + -vertical - horizontal);
     }
 }

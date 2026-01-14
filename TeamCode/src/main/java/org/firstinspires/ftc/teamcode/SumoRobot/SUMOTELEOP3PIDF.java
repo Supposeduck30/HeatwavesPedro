@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@Disabled
+
 @TeleOp
 public class SUMOTELEOP3PIDF extends OpMode {
 
