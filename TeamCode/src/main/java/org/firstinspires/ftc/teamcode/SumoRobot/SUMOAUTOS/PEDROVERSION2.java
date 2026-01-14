@@ -26,15 +26,14 @@ public class PEDROVERSION2 extends OpMode {
 
     /* ===================== CONSTANTS ===================== */
     public static double SHOOT_VELOCITY = 2300;
-
     public static double INTAKE_FAST = 1.0;
     public static double INTAKE_SLOW = 0.3;
 
-    public static double KICKER_IN  = 0.31;
-    public static double KICKER_OUT = 0.60;
+    // Kicker positions
+    public static final double KICKER_OUT = 0.52;
+    public static final double KICKER_IN  = 0.35;
 
     private static final double WAYPOINT_TOLERANCE = 1.5;
-
     private static final int SHOTS_PER_FIRE = 3;
 
     /* ===================== PEDRO ===================== */
@@ -62,11 +61,11 @@ public class PEDROVERSION2 extends OpMode {
     }
 
     private final Pose[] waypoints = {
-            new Pose(53.0,   8.500,  0),
-            new Pose(60.270, 15.835, 0),
-            new Pose(47.684, 60.257, 0),
-            new Pose(14.982, 60.130, 0),
-            new Pose(14.982, 70.002, 0)
+            new Pose(53.0, 8.500, 90),
+            new Pose(60.270, 15.835, 117),
+            new Pose(47.684, 60.257, 180),
+            new Pose(14.982, 60.130, 180),
+            new Pose(14.982, 70.002, 270)
     };
 
     private final Action[] actions = {
@@ -74,7 +73,7 @@ public class PEDROVERSION2 extends OpMode {
             Action.FIRE,
             Action.INTAKE_ON,
             Action.INTAKE_ON,
-            Action.NONE,
+            Action.NONE
     };
 
     private int waypointIndex = 0;
@@ -83,6 +82,7 @@ public class PEDROVERSION2 extends OpMode {
     /* ===================== INIT ===================== */
     @Override
     public void init() {
+
         follower = Constants.createFollower(hardwareMap);
 
         shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
@@ -105,7 +105,6 @@ public class PEDROVERSION2 extends OpMode {
 
     /* ===================== PATH ===================== */
     private void buildPath() {
-
         autoPath = follower.pathBuilder()
                 .addPath(new BezierLine(waypoints[0], waypoints[1]))
                 .addPath(new BezierLine(waypoints[1], waypoints[2]))
@@ -113,9 +112,6 @@ public class PEDROVERSION2 extends OpMode {
                 .addPath(new BezierLine(waypoints[3], waypoints[4]))
                 .build();
     }
-
-
-
 
     /* ===================== START ===================== */
     @Override
@@ -132,16 +128,16 @@ public class PEDROVERSION2 extends OpMode {
     /* ===================== LOOP ===================== */
     @Override
     public void loop() {
-        follower.update();
 
+        follower.update();
         Pose currentPose = follower.getPose();
 
         updateWaypointActions(currentPose);
         updateShooterFSM();
 
-        telemetry.addData("Waypoint", waypointIndex);
-        telemetry.addData("Shots Fired", shotsFired);
+        telemetry.addData("Waypoint Index", waypointIndex);
         telemetry.addData("Shooter State", shooterState);
+        telemetry.addData("Shots Fired", shotsFired);
         telemetry.update();
     }
 
@@ -152,24 +148,34 @@ public class PEDROVERSION2 extends OpMode {
 
         Pose target = waypoints[waypointIndex];
 
-        if (distanceTo(current, target) < WAYPOINT_TOLERANCE) {
+        if (distanceTo(current, target) < WAYPOINT_TOLERANCE && !actionExecuted) {
+            executeAction(actions[waypointIndex]);
+            actionExecuted = true;
 
-            if (!actionExecuted) {
-                executeAction(actions[waypointIndex]);
-                actionExecuted = true;
-            }
-
-        } else if (actionExecuted) {
+            // Advance immediately to prevent retrigger
             waypointIndex++;
-            actionExecuted = false;
         }
     }
 
     private void executeAction(Action action) {
-        if (action == Action.FIRE) {
-            shotsFired = 0;
-            shooterState = ShooterState.KICK_OUT;
-            shooterTimer.resetTimer();
+
+        switch (action) {
+
+            case FIRE:
+                if (shooterState == ShooterState.IDLE) {
+                    shotsFired = 0;
+                    shooterState = ShooterState.KICK_OUT;
+                    shooterTimer.resetTimer();
+                }
+                break;
+
+            case INTAKE_ON:
+                intake.setPower(INTAKE_FAST);
+                break;
+
+            case NONE:
+            default:
+                break;
         }
     }
 
