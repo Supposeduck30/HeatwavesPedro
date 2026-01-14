@@ -43,7 +43,7 @@ public class SUMOTELEOP extends OpMode {
 
     @Override
     public void init() {
-
+        follower.update();
         follower = Constants.createFollower(hardwareMap);
         follower.setPose(startPose);
 
@@ -89,11 +89,11 @@ public class SUMOTELEOP extends OpMode {
             drive();
         }
 
-        // === KICKER (PS5 TRIANGLE) ===
+        // (PS5 TRIANGLE)
         boolean kickerActive = gamepad2.triangle;
         kicker.setPosition(kickerActive ? KICKER_OUT : KICKER_IN);
 
-        // === SHOOTER PRESETS ===
+        //SHOOTER PRESETS
         boolean lowGoal  = gamepad2.left_bumper;
         boolean highGoal = gamepad2.right_bumper;
 
@@ -134,7 +134,6 @@ public class SUMOTELEOP extends OpMode {
 
         shooterReadyLast = shooterReadyNow;
 
-        // === TELEMETRY ===
         telemetry.addData("Target Velocity", targetVelocity);
         telemetry.addData("Current Velocity", currentVelocity);
         telemetry.addData("Shooter Ready", shooterReadyNow);
