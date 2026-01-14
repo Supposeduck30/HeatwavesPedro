@@ -19,34 +19,28 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 @Configurable
 public class HeatwavesQuantaumClean extends OpMode {
 
-    /* =====================
-       HARDWARE
-    ====================== */
+    /* ===================== HARDWARE ===================== */
     private DcMotorEx shooter1, shooter2;
     private DcMotor intake;
     private Servo kicker;
 
-    /* =====================
-       CONSTANTS
-    ====================== */
+    /* ===================== CONSTANTS ===================== */
     public static double SHOOT_VELOCITY = 2250;
+
     public static double KICKER_IN  = 0.31;
     public static double KICKER_OUT = 0.60;
 
-    /* =====================
-       PEDRO
-    ====================== */
+    public static double INTAKE_FAST = 1.0;
+    public static double INTAKE_SLOW = 0.3;
+
+    /* ===================== PEDRO ===================== */
     private Follower follower;
     private PathChain autoPath;
 
-    /* =====================
-       TIMERS
-    ====================== */
+    /* ===================== TIMERS ===================== */
     private final Timer shooterTimer = new Timer();
 
-    /* =====================
-       SHOOTER STATE MACHINE
-    ====================== */
+    /* ===================== SHOOTER STATE ===================== */
     private enum ShooterState {
         IDLE,
         SPINUP,
@@ -56,22 +50,18 @@ public class HeatwavesQuantaumClean extends OpMode {
 
     private ShooterState shooterState = ShooterState.IDLE;
 
-    /* =====================
-       POSES
-    ====================== */
-    private final Pose startPose     = new Pose(88, 8, Math.toRadians(90));
-    private final Pose shootPose1    = new Pose(84.08, 13.68, Math.toRadians(57));
-    private final Pose collectRow1   = new Pose(99.88, 34.88, Math.toRadians(0));
-    private final Pose takeRow1      = new Pose(136.4, 34.88, Math.toRadians(0));
-    private final Pose shootPose2    = new Pose(84.08, 13.68, Math.toRadians(59));
-    private final Pose collectRow2   = new Pose(136.28, 35.08, Math.toRadians(270));
-    private final Pose takeRow2      = new Pose(136.04, 12.48, Math.toRadians(270));
-    private final Pose shootPose3    = new Pose(84.48, 13.44, Math.toRadians(59));
-    private final Pose endPose       = new Pose(119.72, 16.28, Math.toRadians(270));
+    /* ===================== POSES ===================== */
+    private final Pose startPose   = new Pose(88, 8, Math.toRadians(90));
+    private final Pose shootPose1  = new Pose(84.08, 13.68, Math.toRadians(57));
+    private final Pose collectRow1 = new Pose(99.88, 34.88, Math.toRadians(0));
+    private final Pose takeRow1    = new Pose(136.4, 34.88, Math.toRadians(0));
+    private final Pose shootPose2  = new Pose(84.08, 13.68, Math.toRadians(59));
+    private final Pose collectRow2 = new Pose(136.28, 35.08, Math.toRadians(270));
+    private final Pose takeRow2    = new Pose(136.04, 12.48, Math.toRadians(270));
+    private final Pose shootPose3  = new Pose(84.48, 13.44, Math.toRadians(59));
+    private final Pose endPose     = new Pose(119.72, 16.28, Math.toRadians(270));
 
-    /* =====================
-       INIT
-    ====================== */
+    /* ===================== INIT ===================== */
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
@@ -94,9 +84,7 @@ public class HeatwavesQuantaumClean extends OpMode {
         follower.setPose(startPose);
     }
 
-    /* =====================
-       BUILD PATH
-    ====================== */
+    /* ===================== BUILD PATH ===================== */
     private void buildPath() {
         autoPath = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, shootPose1))
@@ -110,25 +98,24 @@ public class HeatwavesQuantaumClean extends OpMode {
                 .build();
     }
 
-    /* =====================
-       START
-    ====================== */
+    /* ===================== START ===================== */
     @Override
     public void start() {
         follower.followPath(autoPath, true);
     }
 
-    /* =====================
-       LOOP
-    ====================== */
+    /* ===================== LOOP ===================== */
     @Override
     public void loop() {
         follower.update();
-        updateShooter();
 
         Pose pose = follower.getPose();
 
-        // Trigger shooting at each shoot pose
+        // Intake runs ALL THE TIME by default
+        intake.setPower(INTAKE_FAST);
+
+        updateShooter();
+
         tryShootAt(pose, shootPose1);
         tryShootAt(pose, shootPose2);
         tryShootAt(pose, shootPose3);
@@ -137,13 +124,10 @@ public class HeatwavesQuantaumClean extends OpMode {
         telemetry.update();
     }
 
-    /* =====================
-       SHOOTER LOGIC
-    ====================== */
+    /* ===================== SHOOT TRIGGERS ===================== */
     private void tryShootAt(Pose current, Pose target) {
         if (distanceTo(current, target) < 1.5 &&
                 shooterState == ShooterState.IDLE) {
-
             shooterState = ShooterState.SPINUP;
             shooterTimer.resetTimer();
         }
@@ -156,15 +140,16 @@ public class HeatwavesQuantaumClean extends OpMode {
         );
     }
 
-
+    /* ===================== SHOOTER LOGIC ===================== */
     private void updateShooter() {
         switch (shooterState) {
+
             case SPINUP:
                 shooter1.setVelocity(SHOOT_VELOCITY);
                 shooter2.setVelocity(SHOOT_VELOCITY);
-                intake.setPower(1.0);
 
                 if (shooterTimer.getElapsedTimeSeconds() > 0.6) {
+                    intake.setPower(INTAKE_SLOW);   // 👈 slow intake
                     kicker.setPosition(KICKER_OUT);
                     shooterState = ShooterState.FIRE;
                     shooterTimer.resetTimer();
@@ -174,6 +159,7 @@ public class HeatwavesQuantaumClean extends OpMode {
             case FIRE:
                 if (shooterTimer.getElapsedTimeSeconds() > 0.35) {
                     kicker.setPosition(KICKER_IN);
+                    intake.setPower(INTAKE_FAST);  // 👈 resume full intake
                     shooterState = ShooterState.RESET;
                     shooterTimer.resetTimer();
                 }
@@ -183,7 +169,6 @@ public class HeatwavesQuantaumClean extends OpMode {
                 if (shooterTimer.getElapsedTimeSeconds() > 0.25) {
                     shooter1.setVelocity(0);
                     shooter2.setVelocity(0);
-                    intake.setPower(0);
                     shooterState = ShooterState.IDLE;
                 }
                 break;
