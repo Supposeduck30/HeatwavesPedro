@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous
 @Configurable
-public class PEDROVERSION2 extends OpMode {
+public class PEDROVERSION2BLUEFAR extends OpMode {
 
     /* ===================== HARDWARE ===================== */
     private DcMotorEx shooter1, shooter2;
@@ -27,7 +27,7 @@ public class PEDROVERSION2 extends OpMode {
     /* ===================== CONSTANTS ===================== */
     public static double SHOOT_VELOCITY = 2300;
     public static double INTAKE_FAST = 1.0;
-    public static double INTAKE_SLOW = 0.3;
+    public static double INTAKE_SLOW = 0.6;
 
     // Kicker positions
     public static final double KICKER_OUT = 0.52;
@@ -177,10 +177,10 @@ public class PEDROVERSION2 extends OpMode {
         if (distanceTo(current, target) < WAYPOINT_TOLERANCE && !actionExecuted) {
             executeAction(actions[waypointIndex]);
             actionExecuted = true;
-
-            // Advance immediately to prevent retrigger
             waypointIndex++;
+            actionExecuted = false; // ← ADD THIS
         }
+
     }
 
     private void executeAction(Action action) {
