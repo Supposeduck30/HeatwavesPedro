@@ -17,7 +17,7 @@ import com.pedropathing.geometry.Pose;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @TeleOp
-public class SUMOTELEOP extends OpMode {
+public class SUMOTELEOPPOSITION extends OpMode {
 
     // Drive motors
     private DcMotor fr, fl, br, bl;
@@ -27,12 +27,15 @@ public class SUMOTELEOP extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
+    private Follower follower;
+    private final Pose startPose = new Pose(54,8, Math.toRadians(90));
+    private final Pose parkPose = new Pose(104.67, 33, Math.toRadians(360.));
 
     // Kicker pulse state
     private boolean kicking = false;
     private long kickStartTime = 0;
     private boolean kickerButtonLast = false;
-    private static final long KICK_TIME = 140; // milliseconds
+    private static final long KICK_TIME = 130; // milliseconds
 
     // Shooter constants
     public static final double LOW_VELOCITY  = 1700;
@@ -46,7 +49,8 @@ public class SUMOTELEOP extends OpMode {
     @Override
     public void init() {
         // Initialize drive motors
-
+        follower = Constants.createFollower(hardwareMap);
+        follower.setPose(startPose);
         fr = hardwareMap.get(DcMotor.class, "FR");
         fl = hardwareMap.get(DcMotor.class, "FL");
         br = hardwareMap.get(DcMotor.class, "BR");
@@ -76,7 +80,7 @@ public class SUMOTELEOP extends OpMode {
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(120, 0, 0, 14);
+        PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 20);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
@@ -86,7 +90,14 @@ public class SUMOTELEOP extends OpMode {
 
     @Override
     public void loop() {
-
+        follower.update();
+        if (gamepad1.square) {
+            follower.holdPoint(parkPose);
+        }
+        else {
+            follower.breakFollowing();
+            drive();
+        }
         // Handle kicker pulse
         boolean kickerButtonNow = gamepad2.triangle;
 
@@ -139,8 +150,6 @@ public class SUMOTELEOP extends OpMode {
         telemetry.addData("Current Velocity", currentVelocity);
         telemetry.update();
 
-        // Drive
-        drive();
     }
 
     private void drive() {
