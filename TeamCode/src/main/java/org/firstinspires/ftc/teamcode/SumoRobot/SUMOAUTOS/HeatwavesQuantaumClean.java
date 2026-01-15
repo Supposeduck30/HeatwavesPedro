@@ -27,8 +27,8 @@ public class HeatwavesQuantaumClean extends OpMode {
     /* ===================== CONSTANTS ===================== */
     public static double SHOOT_VELOCITY = 2250;
 
-    public static double KICKER_IN  = 0.31;
-    public static double KICKER_OUT = 0.60;
+    public static final double KICKER_OUT = 0.52;
+    public static final double KICKER_IN  = 0.35;
 
     public static double INTAKE_FAST = 1.0;
     public static double INTAKE_SLOW = 0.3;
@@ -59,7 +59,7 @@ public class HeatwavesQuantaumClean extends OpMode {
     private final Pose collectRow2 = new Pose(136.28, 35.08, Math.toRadians(270));
     private final Pose takeRow2    = new Pose(136.04, 12.48, Math.toRadians(270));
     private final Pose shootPose3  = new Pose(84.48, 13.44, Math.toRadians(59));
-    private final Pose endPose     = new Pose(119.72, 16.28, Math.toRadians(270));
+    private final Pose endPose     = new Pose(119.72, 16.28, Math.toRadians(90));
 
     /* ===================== INIT ===================== */
     @Override
