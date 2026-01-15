@@ -25,13 +25,15 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
     private Servo kicker;
 
     /* ===================== CONSTANTS ===================== */
-    public static double SHOOT_VELOCITY = 2300;
-    public static double INTAKE_FAST = 1.0;
-    public static double INTAKE_SLOW = 0.6;
+    public static double HIGH_VELOCITY = 2300;
+    public static double INTAKE_POWER = 1.0;
 
-    // Kicker positions
+    // Kicker positions - MATCHING TELEOP
     public static final double KICKER_OUT = 0.52;
     public static final double KICKER_IN  = 0.35;
+
+    // Kicker timing - MATCHING TELEOP
+    private static final long KICK_TIME = 130; // milliseconds
 
     private static final double WAYPOINT_TOLERANCE = 1.5;
     private static final int SHOTS_PER_FIRE = 3;
@@ -41,17 +43,17 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
     private PathChain autoPath;
 
     /* ===================== TIMERS ===================== */
-    private final Timer shooterTimer = new Timer();
+    private long kickStartTime = 0;
 
     /* ===================== SHOOTER FSM ===================== */
     private enum ShooterState {
         IDLE,
-        KICK_OUT,
-        KICK_IN
+        KICKING
     }
 
     private ShooterState shooterState = ShooterState.IDLE;
     private int shotsFired = 0;
+    private int targetShots = 0;
 
     /* ===================== WAYPOINT ACTIONS ===================== */
     private enum Action {
@@ -61,20 +63,19 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
     }
 
     private final Pose[] waypoints = {
-            new Pose(53.0, 8.500, 90),
-            new Pose(60.270, 15.835, 117),
-            new Pose(47.684, 60.257, 180),
-            new Pose(14.982, 60.257, 180),
-            new Pose(14.982, 70.002, 270),
-            new Pose(60.270, 15.835, 117),
-            new Pose(47.684, 34.754, 180),
-            new Pose(12.431, 34.754, 180),
-            new Pose(60.270, 15.835, 117),
-            new Pose(6.9, 31, 270),
-            new Pose(6.9, 10, 270),
-            new Pose(60.270, 15.835, 117),
-            new Pose(38, 33, 90),
-
+            new Pose(53.0, 8.500, Math.toRadians(90)),
+            new Pose(60.270, 15.835, Math.toRadians(117)),
+            new Pose(47.684, 60.257, Math.toRadians(180)),
+            new Pose(14.982, 60.257, Math.toRadians(180)),
+            new Pose(14.982, 70.002, Math.toRadians(270)),
+            new Pose(60.270, 15.835, Math.toRadians(117)),
+            new Pose(47.684, 34.754, Math.toRadians(180)),
+            new Pose(12.431, 34.754, Math.toRadians(180)),
+            new Pose(60.270, 15.835, Math.toRadians(117)),
+            new Pose(6.9, 31, Math.toRadians(270)),
+            new Pose(6.9, 10, Math.toRadians(270)),
+            new Pose(60.270, 15.835, Math.toRadians(117)),
+            new Pose(38, 33, Math.toRadians(90)),
     };
 
     private final Action[] actions = {
@@ -82,7 +83,6 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
             Action.FIRE,
             Action.INTAKE_ON,
             Action.INTAKE_ON,
-            Action.NONE,
             Action.NONE,
             Action.FIRE,
             Action.INTAKE_ON,
@@ -100,8 +100,8 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
     /* ===================== INIT ===================== */
     @Override
     public void init() {
-
         follower = Constants.createFollower(hardwareMap);
+        follower.setMaxPower(1);
 
         shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
         shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
@@ -111,7 +111,8 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 20);
+        // MATCHING TELEOP PIDF
+        PIDFCoefficients pidf = new PIDFCoefficients(120, 0, 0, 15);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
@@ -125,17 +126,29 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
     private void buildPath() {
         autoPath = follower.pathBuilder()
                 .addPath(new BezierLine(waypoints[0], waypoints[1]))
+                .setLinearHeadingInterpolation(waypoints[0].getHeading(), waypoints[1].getHeading())
                 .addPath(new BezierLine(waypoints[1], waypoints[2]))
+                .setLinearHeadingInterpolation(waypoints[1].getHeading(), waypoints[2].getHeading())
                 .addPath(new BezierLine(waypoints[2], waypoints[3]))
+                .setLinearHeadingInterpolation(waypoints[2].getHeading(), waypoints[3].getHeading())
                 .addPath(new BezierLine(waypoints[3], waypoints[4]))
+                .setLinearHeadingInterpolation(waypoints[3].getHeading(), waypoints[4].getHeading())
                 .addPath(new BezierLine(waypoints[4], waypoints[5]))
+                .setLinearHeadingInterpolation(waypoints[4].getHeading(), waypoints[5].getHeading())
                 .addPath(new BezierLine(waypoints[5], waypoints[6]))
+                .setLinearHeadingInterpolation(waypoints[5].getHeading(), waypoints[6].getHeading())
                 .addPath(new BezierLine(waypoints[6], waypoints[7]))
+                .setLinearHeadingInterpolation(waypoints[6].getHeading(), waypoints[7].getHeading())
                 .addPath(new BezierLine(waypoints[7], waypoints[8]))
+                .setLinearHeadingInterpolation(waypoints[7].getHeading(), waypoints[8].getHeading())
                 .addPath(new BezierLine(waypoints[8], waypoints[9]))
+                .setLinearHeadingInterpolation(waypoints[8].getHeading(), waypoints[9].getHeading())
                 .addPath(new BezierLine(waypoints[9], waypoints[10]))
+                .setLinearHeadingInterpolation(waypoints[9].getHeading(), waypoints[10].getHeading())
                 .addPath(new BezierLine(waypoints[10], waypoints[11]))
+                .setLinearHeadingInterpolation(waypoints[10].getHeading(), waypoints[11].getHeading())
                 .addPath(new BezierLine(waypoints[11], waypoints[12]))
+                .setLinearHeadingInterpolation(waypoints[11].getHeading(), waypoints[12].getHeading())
                 .build();
     }
 
@@ -144,17 +157,16 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
     public void start() {
         follower.followPath(autoPath, true);
 
-        // Shooter ALWAYS running
-        shooter1.setVelocity(SHOOT_VELOCITY);
-        shooter2.setVelocity(SHOOT_VELOCITY);
+        // Shooter ALWAYS running at HIGH_VELOCITY
+        shooter1.setVelocity(HIGH_VELOCITY);
+        shooter2.setVelocity(HIGH_VELOCITY);
 
-        intake.setPower(INTAKE_FAST);
+        intake.setPower(INTAKE_POWER);
     }
 
     /* ===================== LOOP ===================== */
     @Override
     public void loop() {
-
         follower.update();
         Pose currentPose = follower.getPose();
 
@@ -163,13 +175,13 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
 
         telemetry.addData("Waypoint Index", waypointIndex);
         telemetry.addData("Shooter State", shooterState);
-        telemetry.addData("Shots Fired", shotsFired);
+        telemetry.addData("Shots Fired", shotsFired + "/" + targetShots);
+        telemetry.addData("Pose", currentPose);
         telemetry.update();
     }
 
     /* ===================== WAYPOINT LOGIC ===================== */
     private void updateWaypointActions(Pose current) {
-
         if (waypointIndex >= waypoints.length) return;
 
         Pose target = waypoints[waypointIndex];
@@ -178,25 +190,24 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
             executeAction(actions[waypointIndex]);
             actionExecuted = true;
             waypointIndex++;
-            actionExecuted = false; // ← ADD THIS
+            actionExecuted = false;
         }
-
     }
 
     private void executeAction(Action action) {
-
         switch (action) {
-
             case FIRE:
                 if (shooterState == ShooterState.IDLE) {
                     shotsFired = 0;
-                    shooterState = ShooterState.KICK_OUT;
-                    shooterTimer.resetTimer();
+                    targetShots = SHOTS_PER_FIRE;
+                    shooterState = ShooterState.KICKING;
+                    kickStartTime = System.currentTimeMillis();
+                    kicker.setPosition(KICKER_OUT);
                 }
                 break;
 
             case INTAKE_ON:
-                intake.setPower(INTAKE_FAST);
+                intake.setPower(INTAKE_POWER);
                 break;
 
             case NONE:
@@ -205,40 +216,24 @@ public class PEDROVERSION2BLUEFAR extends OpMode {
         }
     }
 
-    /* ===================== SHOOTER FSM (3 SHOTS) ===================== */
+    /* ===================== SHOOTER FSM - MATCHING TELEOP ===================== */
     private void updateShooterFSM() {
-
-        switch (shooterState) {
-
-            case KICK_OUT:
-                intake.setPower(INTAKE_SLOW);
-                kicker.setPosition(KICKER_OUT);
-
-                if (shooterTimer.getElapsedTimeSeconds() > 0.25) {
-                    shooterState = ShooterState.KICK_IN;
-                    shooterTimer.resetTimer();
-                }
-                break;
-
-            case KICK_IN:
+        if (shooterState == ShooterState.KICKING) {
+            // Check if kick time has elapsed
+            if (System.currentTimeMillis() - kickStartTime >= KICK_TIME) {
                 kicker.setPosition(KICKER_IN);
+                shotsFired++;
 
-                if (shooterTimer.getElapsedTimeSeconds() > 0.25) {
-                    shotsFired++;
-
-                    if (shotsFired >= SHOTS_PER_FIRE) {
-                        intake.setPower(INTAKE_FAST);
-                        shooterState = ShooterState.IDLE;
-                    } else {
-                        shooterState = ShooterState.KICK_OUT;
-                    }
-
-                    shooterTimer.resetTimer();
+                // Check if we've fired all shots
+                if (shotsFired >= targetShots) {
+                    shooterState = ShooterState.IDLE;
+                    intake.setPower(INTAKE_POWER);
+                } else {
+                    // Prepare for next shot
+                    kickStartTime = System.currentTimeMillis();
+                    kicker.setPosition(KICKER_OUT);
                 }
-                break;
-
-            case IDLE:
-                break;
+            }
         }
     }
 

@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.SumoRobot;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -7,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-
+@Disabled
 @TeleOp
 public class SUMOTELEOPRAPID extends OpMode {
 
@@ -25,6 +26,8 @@ public class SUMOTELEOPRAPID extends OpMode {
 
     public static final double KICKER_OUT  = 0.52;
     public static final double KICKER_IN   = 0.35;
+
+
 
     @Override
     public void init() {
