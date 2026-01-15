@@ -64,8 +64,17 @@ public class PEDROVERSION2 extends OpMode {
             new Pose(53.0, 8.500, 90),
             new Pose(60.270, 15.835, 117),
             new Pose(47.684, 60.257, 180),
-            new Pose(14.982, 60.130, 180),
-            new Pose(14.982, 70.002, 270)
+            new Pose(14.982, 60.257, 180),
+            new Pose(14.982, 70.002, 270),
+            new Pose(60.270, 15.835, 117),
+            new Pose(47.684, 34.754, 180),
+            new Pose(12.431, 34.754, 180),
+            new Pose(60.270, 15.835, 117),
+            new Pose(6.9, 31, 270),
+            new Pose(6.9, 10, 270),
+            new Pose(60.270, 15.835, 117),
+            new Pose(38, 33, 90),
+
     };
 
     private final Action[] actions = {
@@ -73,6 +82,15 @@ public class PEDROVERSION2 extends OpMode {
             Action.FIRE,
             Action.INTAKE_ON,
             Action.INTAKE_ON,
+            Action.NONE,
+            Action.NONE,
+            Action.FIRE,
+            Action.INTAKE_ON,
+            Action.INTAKE_ON,
+            Action.FIRE,
+            Action.INTAKE_ON,
+            Action.INTAKE_ON,
+            Action.FIRE,
             Action.NONE
     };
 
@@ -110,6 +128,14 @@ public class PEDROVERSION2 extends OpMode {
                 .addPath(new BezierLine(waypoints[1], waypoints[2]))
                 .addPath(new BezierLine(waypoints[2], waypoints[3]))
                 .addPath(new BezierLine(waypoints[3], waypoints[4]))
+                .addPath(new BezierLine(waypoints[4], waypoints[5]))
+                .addPath(new BezierLine(waypoints[5], waypoints[6]))
+                .addPath(new BezierLine(waypoints[6], waypoints[7]))
+                .addPath(new BezierLine(waypoints[7], waypoints[8]))
+                .addPath(new BezierLine(waypoints[8], waypoints[9]))
+                .addPath(new BezierLine(waypoints[9], waypoints[10]))
+                .addPath(new BezierLine(waypoints[10], waypoints[11]))
+                .addPath(new BezierLine(waypoints[11], waypoints[12]))
                 .build();
     }
 
