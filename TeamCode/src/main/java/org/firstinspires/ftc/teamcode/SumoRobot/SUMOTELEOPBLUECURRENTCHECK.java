@@ -11,23 +11,24 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
+
 import java.util.concurrent.TimeUnit;
 
 @TeleOp
-public class SUMOTELEOPBLUE extends OpMode {
+public class SUMOTELEOPBLUECURRENTCHECK extends OpMode {
 
-    private DcMotor fr, fl, br, bl;
+
+    private DcMotorEx fr, fl, br, bl;
     private DcMotorEx shooter1, shooter2;
-    private DcMotor intake;
+    private DcMotorEx intake;
     private Servo kicker;
 
     private Follower follower;
 
     private final Pose startPose = new Pose(54, 8, Math.toRadians(90));
     private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(0));
-    private final Pose shootFar = new Pose(66, 18, Math.toRadians(117));
-    private final Pose resetPose = new Pose(7, 9, Math.toRadians(90));
-    private final Pose shootClose = new Pose(62, 108, Math.toRadians(145));
+    private final Pose shootFar = new Pose(63.7, 23, Math.toRadians(117));
+    private final Pose shootClose = new Pose(60.1, 120.2, Math.toRadians(170));
     private final Pose emptyGate = new Pose(14.7, 70.5, Math.toRadians(270));
 
 
@@ -35,6 +36,7 @@ public class SUMOTELEOPBLUE extends OpMode {
     private long kickStartTime = 0;
     private boolean kickerButtonLast = false;
     private static final long KICK_TIME = 130;
+
     private boolean holdingEmptyGate = false;
     private boolean holdingPark = false;
     private boolean holdingShootFar = false;
@@ -50,15 +52,17 @@ public class SUMOTELEOPBLUE extends OpMode {
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setMaxPower(1);
-        fr = hardwareMap.get(DcMotor.class, "FR");
-        fl = hardwareMap.get(DcMotor.class, "FL");
-        br = hardwareMap.get(DcMotor.class, "BR");
-        bl = hardwareMap.get(DcMotor.class, "BL");
+
+        // Changed to DcMotorEx for current monitoring
+        fr = hardwareMap.get(DcMotorEx.class, "FR");
+        fl = hardwareMap.get(DcMotorEx.class, "FL");
+        br = hardwareMap.get(DcMotorEx.class, "BR");
+        bl = hardwareMap.get(DcMotorEx.class, "BL");
 
         shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
         shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
 
-        intake = hardwareMap.get(DcMotor.class, "Intake");
+        intake = hardwareMap.get(DcMotorEx.class, "Intake");
         kicker = hardwareMap.get(Servo.class, "Kicker");
 
         fr.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -90,13 +94,6 @@ public class SUMOTELEOPBLUE extends OpMode {
     @Override
     public void loop() {
         follower.update();
-
-        // Reset position button - Press OPTIONS (or BACK) on gamepad1 to reset to start pose
-        if (gamepad1.triangle) {
-            follower.setPose(resetPose);
-            telemetry.addLine("⚠️ POSITION RESET TO START POSE!");
-            telemetry.update();
-        }
 
 
         boolean leftBumperNow = gamepad1.left_bumper;
@@ -174,21 +171,66 @@ public class SUMOTELEOPBLUE extends OpMode {
 
         kickerButtonLast = kickerButtonNow;
 
-        double targetVelocity = 0;
-        if (gamepad2.right_bumper) targetVelocity = HIGH_VELOCITY;
-        else if (gamepad2.left_bumper) targetVelocity = LOW_VELOCITY;
+        // Modified: Left bumper = single shooter (LOW_VELOCITY), Right bumper = both shooters (HIGH_VELOCITY)
+        if (gamepad2.left_bumper) {
+            // Low velocity - only shooter1
+            shooter1.setVelocity(LOW_VELOCITY);
+            shooter2.setVelocity(0);
+            intake.setPower(1.0);
+        } else if (gamepad2.right_bumper) {
+            // High velocity - both shooters
+            shooter1.setVelocity(HIGH_VELOCITY);
+            shooter2.setVelocity(HIGH_VELOCITY);
+            intake.setPower(1.0);
+        } else {
+            // Off
+            shooter1.setVelocity(0);
+            shooter2.setVelocity(0);
+            intake.setPower(0.0);
+        }
 
-        shooter1.setVelocity(targetVelocity);
-        shooter2.setVelocity(targetVelocity);
+        // Get current draw from all motors (in Amps)
+        double frCurrent = fr.getCurrent(org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit.AMPS);
+        double flCurrent = fl.getCurrent(org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit.AMPS);
+        double brCurrent = br.getCurrent(org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit.AMPS);
+        double blCurrent = bl.getCurrent(org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit.AMPS);
+        double shooter1Current = shooter1.getCurrent(org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit.AMPS);
+        double shooter2Current = shooter2.getCurrent(org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit.AMPS);
+        double intakeCurrent = intake.getCurrent(org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit.AMPS);
 
-        intake.setPower(targetVelocity > 0 ? 1.0 : 0.0);
+        // Calculate totals
+        double drivetrainCurrent = frCurrent + flCurrent + brCurrent + blCurrent;
+        double shooterCurrent = shooter1Current + shooter2Current;
+        double totalCurrent = drivetrainCurrent + shooterCurrent + intakeCurrent;
 
-
+        // Telemetry
         telemetry.addData("Pose", follower.getPose());
         telemetry.addData("Holding Empty Gate", holdingEmptyGate);
         telemetry.addData("Holding Park", holdingPark);
         telemetry.addData("Holding Shoot Far", holdingShootFar);
         telemetry.addData("Holding Shoot Close", holdingShootClose);
+
+        telemetry.addLine("\n--- DRIVETRAIN CURRENT (A) ---");
+        telemetry.addData("FR", String.format("%.2f", frCurrent));
+        telemetry.addData("FL", String.format("%.2f", flCurrent));
+        telemetry.addData("BR", String.format("%.2f", brCurrent));
+        telemetry.addData("BL", String.format("%.2f", blCurrent));
+        telemetry.addData("Drivetrain Total", String.format("%.2f", drivetrainCurrent));
+
+        telemetry.addLine("\n--- MECHANISM CURRENT (A) ---");
+        telemetry.addData("Shooter1", String.format("%.2f", shooter1Current));
+        telemetry.addData("Shooter2", String.format("%.2f", shooter2Current));
+        telemetry.addData("Shooter Total", String.format("%.2f", shooterCurrent));
+        telemetry.addData("Intake", String.format("%.2f", intakeCurrent));
+
+        telemetry.addLine("\n--- TOTAL ---");
+        telemetry.addData("All Motors", String.format("%.2f A", totalCurrent));
+
+        // Warning if current is too high
+        if (totalCurrent > 20.0) {
+            telemetry.addLine("\n⚠️ WARNING: HIGH CURRENT DRAW!");
+        }
+
         telemetry.update();
     }
 }
