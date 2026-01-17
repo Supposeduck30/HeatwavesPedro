@@ -25,24 +25,23 @@ public class SUMOTELEOPBLUE extends OpMode {
 
     private final Pose startPose = new Pose(54, 8, Math.toRadians(90));
     private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(0));
-    private final Pose shootFar = new Pose(66, 18, Math.toRadians(115));
-    private final Pose resetPose = new Pose(54.5, 8, Math.toRadians(90));
-    private final Pose shootClose = new Pose(62, 108, Math.toRadians(148));
+    private final Pose shootFar = new Pose(66, 18, Math.toRadians(117));
+    private final Pose resetPose = new Pose(7, 9, Math.toRadians(90));
+    private final Pose shootClose = new Pose(62, 108, Math.toRadians(145));
     private final Pose emptyGate = new Pose(14.7, 70.5, Math.toRadians(270));
 
 
     private boolean kicking = false;
     private long kickStartTime = 0;
     private boolean kickerButtonLast = false;
-    private boolean resetButtonLast = false;
-    private static final long KICK_TIME = 135;
+    private static final long KICK_TIME = 130;
     private boolean holdingEmptyGate = false;
     private boolean holdingPark = false;
     private boolean holdingShootFar = false;
     private boolean holdingShootClose = false;
 
-    public static final double LOW_VELOCITY  = 1450;  // Close shot - shooter1 only
-    public static final double HIGH_VELOCITY = 1800;  // Far shot - both shooters
+    public static final double LOW_VELOCITY  = 1500;
+    public static final double HIGH_VELOCITY = 1850;
 
     public static final double KICKER_OUT = 0.52;
     public static final double KICKER_IN  = 0.35;
@@ -50,7 +49,7 @@ public class SUMOTELEOPBLUE extends OpMode {
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
-        follower.setMaxPower(0.8);
+        follower.setMaxPower(1);
         fr = hardwareMap.get(DcMotor.class, "FR");
         fl = hardwareMap.get(DcMotor.class, "FL");
         br = hardwareMap.get(DcMotor.class, "BR");
@@ -92,27 +91,12 @@ public class SUMOTELEOPBLUE extends OpMode {
     public void loop() {
         follower.update();
 
-        // Reset position button - Press TRIANGLE on gamepad1 to relocalize
-        boolean resetButtonNow = gamepad1.triangle;
-        if (resetButtonNow && !resetButtonLast) {
-            // Break any ongoing path following
-            follower.breakFollowing();
-
-            // Reset all hold point flags
-            holdingEmptyGate = false;
-            holdingPark = false;
-            holdingShootFar = false;
-            holdingShootClose = false;
-
-            // Relocalize to reset position
+        // Reset position button - Press OPTIONS (or BACK) on gamepad1 to reset to start pose
+        if (gamepad1.triangle) {
             follower.setPose(resetPose);
-
-            // Restart teleop drive
-            follower.startTeleopDrive();
-
-            telemetry.addLine("⚠️ POSITION RESET!");
+            telemetry.addLine("⚠️ POSITION RESET TO START POSE!");
+            telemetry.update();
         }
-        resetButtonLast = resetButtonNow;
 
 
         boolean leftBumperNow = gamepad1.left_bumper;
@@ -190,28 +174,14 @@ public class SUMOTELEOPBLUE extends OpMode {
 
         kickerButtonLast = kickerButtonNow;
 
-        // Shooter and intake control - FIXED LOGIC
-        if (gamepad2.right_bumper) {
-            // Far shot - BOTH shooters run at HIGH_VELOCITY
-            shooter1.setVelocity(HIGH_VELOCITY);
-            shooter2.setVelocity(HIGH_VELOCITY);
-            intake.setPower(1.0);
-        } else if (gamepad2.left_bumper) {
-            // Close shot - both shooters run at LOW_VELOCITY
-            shooter1.setVelocity(LOW_VELOCITY);
-            shooter2.setVelocity(LOW_VELOCITY);
-            intake.setPower(1.0);
-        } else if (gamepad2.x) {
-            // Manual intake only (no shooting)
-            shooter1.setVelocity(0);
-            shooter2.setVelocity(0);
-            intake.setPower(1.0);
-        } else {
-            // Nothing pressed - turn everything off
-            shooter1.setVelocity(0);
-            shooter2.setVelocity(0);
-            intake.setPower(0.0);
-        }
+        double targetVelocity = 0;
+        if (gamepad2.right_bumper) targetVelocity = HIGH_VELOCITY;
+        else if (gamepad2.left_bumper) targetVelocity = LOW_VELOCITY;
+
+        shooter1.setVelocity(targetVelocity);
+        shooter2.setVelocity(targetVelocity);
+
+        intake.setPower(targetVelocity > 0 ? 1.0 : 0.0);
 
 
         telemetry.addData("Pose", follower.getPose());
@@ -219,9 +189,6 @@ public class SUMOTELEOPBLUE extends OpMode {
         telemetry.addData("Holding Park", holdingPark);
         telemetry.addData("Holding Shoot Far", holdingShootFar);
         telemetry.addData("Holding Shoot Close", holdingShootClose);
-        telemetry.addData("Shooter1 Velocity", shooter1.getVelocity());
-        telemetry.addData("Shooter2 Velocity", shooter2.getVelocity());
-        telemetry.addData("Intake Power", intake.getPower());
         telemetry.update();
     }
 }
