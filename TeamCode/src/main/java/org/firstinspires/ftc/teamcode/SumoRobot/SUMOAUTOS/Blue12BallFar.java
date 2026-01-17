@@ -30,7 +30,7 @@ public class Blue12BallFar extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double shootVelocity = 2250; // Adjust as needed
+    public double shootVelocity = 1875; // Adjust as needed
 
     // Software
     public Follower follower;
@@ -62,18 +62,18 @@ public class Blue12BallFar extends OpMode {
     PathState pathState;
 
     // Poses from your original paths
-    private final Pose startPose = new Pose(53.000, 8.500, Math.toRadians(90));
-    private final Pose pose1End = new Pose(60.270, 15.835, Math.toRadians(117));
+    private final Pose startPose = new Pose(54.5, 8, Math.toRadians(90));
+    private final Pose pose1End = new Pose(60.270, 15.611, Math.toRadians(119));
     private final Pose pose2End = new Pose(47.684, 60.257, Math.toRadians(180));
     private final Pose pose3End = new Pose(14.982, 60.130, Math.toRadians(180));
     private final Pose pose4End = new Pose(14.982, 70.002, Math.toRadians(270));
-    private final Pose pose5End = new Pose(60.040, 15.608, Math.toRadians(117));
+    private final Pose pose5End = new Pose(60.040, 15.611, Math.toRadians(115));
     private final Pose pose6End = new Pose(47.853, 34.755, Math.toRadians(180));
     private final Pose pose7End = new Pose(11.720, 35.761, Math.toRadians(180));
-    private final Pose pose8End = new Pose(60.318, 15.957, Math.toRadians(117));
+    private final Pose pose8End = new Pose(60.040, 15.611, Math.toRadians(117));
     private final Pose pose9End = new Pose(6.900, 31.000, Math.toRadians(270));
     private final Pose pose10End = new Pose(6.900, 10.000, Math.toRadians(270));
-    private final Pose pose11End = new Pose(60.236, 15.611, Math.toRadians(117));
+    private final Pose pose11End = new Pose(60.040, 15.611, Math.toRadians(117));
     private final Pose pose12End = new Pose(38.712, 32.526, Math.toRadians(90));
 
     private PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9, path10, path11, path12;
@@ -149,18 +149,12 @@ public class Blue12BallFar extends OpMode {
 
             case SHOOT_PATH1:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5) {
-                    shooter1.setVelocity(shootVelocity);
-                    shooter2.setVelocity(shootVelocity);
-                    sleep(800);
+                    sleep(300);
                     shoot();
-                    sleep(200);
+                    sleep(150);
                     shoot();
-                    sleep(200);
+                    sleep(160);
                     shoot();
-                    sleep(200);
-                    shooter1.setVelocity(0.0);
-                    shooter2.setVelocity(0.0);
-                    intake.setPower(0.0);
                     setPathState(PathState.DRIVE_PATH2);
                 }
                 break;
@@ -198,18 +192,11 @@ public class Blue12BallFar extends OpMode {
 
             case SHOOT_PATH5:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5) {
-                    shooter1.setVelocity(shootVelocity);
-                    shooter2.setVelocity(shootVelocity);
-                    sleep(800);
                     shoot();
-                    sleep(200);
+                    sleep(150);
                     shoot();
-                    sleep(200);
+                    sleep(160);
                     shoot();
-                    sleep(200);
-                    shooter1.setVelocity(0.0);
-                    shooter2.setVelocity(0.0);
-                    intake.setPower(0.0);
                     setPathState(PathState.DRIVE_PATH6);
                 }
                 break;
@@ -240,18 +227,11 @@ public class Blue12BallFar extends OpMode {
 
             case SHOOT_PATH8:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5) {
-                    shooter1.setVelocity(shootVelocity);
-                    shooter2.setVelocity(shootVelocity);
-                    sleep(800);
                     shoot();
-                    sleep(200);
+                    sleep(150);
                     shoot();
-                    sleep(200);
+                    sleep(160);
                     shoot();
-                    sleep(200);
-                    shooter1.setVelocity(0.0);
-                    shooter2.setVelocity(0.0);
-                    intake.setPower(0.0);
                     setPathState(PathState.DRIVE_PATH9);
                 }
                 break;
@@ -277,18 +257,11 @@ public class Blue12BallFar extends OpMode {
 
             case SHOOT_PATH11:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5) {
-                    shooter1.setVelocity(shootVelocity);
-                    shooter2.setVelocity(shootVelocity);
-                    sleep(800);
                     shoot();
-                    sleep(200);
+                    sleep(150);
                     shoot();
-                    sleep(200);
+                    sleep(160);
                     shoot();
-                    sleep(200);
-                    shooter1.setVelocity(0.0);
-                    shooter2.setVelocity(0.0);
-                    intake.setPower(0.0);
                     setPathState(PathState.DRIVE_PATH12);
                 }
                 break;
@@ -334,7 +307,7 @@ public class Blue12BallFar extends OpMode {
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(100, 0, 0, 20);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(110, 0, 0, 20);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidfCoefficients);
 
@@ -350,11 +323,19 @@ public class Blue12BallFar extends OpMode {
     public void start() {
         opModeTimer.resetTimer();
         setPathState(pathState);
+
+        // Start shooters running at the beginning and keep them running throughout
+        shooter1.setVelocity(shootVelocity);
+        shooter2.setVelocity(shootVelocity);
     }
 
     @Override
     public void loop() {
         follower.update();
+
+        // Keep shooters running constantly throughout the auto
+        shooter1.setVelocity(shootVelocity);
+        shooter2.setVelocity(shootVelocity);
 
         try {
             statePathUpdate();
@@ -367,17 +348,16 @@ public class Blue12BallFar extends OpMode {
         panelsTelemetry.debug("X", follower.getPose().getX());
         panelsTelemetry.debug("Y", follower.getPose().getY());
         panelsTelemetry.debug("Heading", follower.getPose().getHeading());
+        panelsTelemetry.debug("Shooter1 Velocity", shooter1.getVelocity());
+        panelsTelemetry.debug("Shooter2 Velocity", shooter2.getVelocity());
         panelsTelemetry.update(telemetry);
     }
 
     public void shoot() throws InterruptedException {
-        shooter1.setVelocity(shootVelocity);
-        shooter2.setVelocity(shootVelocity);
+        // Shooters are already running, just kick and intake
         intake.setPower(1);
-        sleep(200);
-        kicker.setPosition(0.6);
-        intake.setPower(0.32);
-        sleep(200);
-        kicker.setPosition(0.31);
+        kicker.setPosition(0.6);  // Kick out
+        sleep(140);                // Wait for kick (matching your teleop KICK_TIME)
+        kicker.setPosition(0.31);  // Retract
     }
 }
