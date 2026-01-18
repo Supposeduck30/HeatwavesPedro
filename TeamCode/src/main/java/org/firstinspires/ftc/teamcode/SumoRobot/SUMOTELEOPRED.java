@@ -1,3 +1,4 @@
+
 package org.firstinspires.ftc.teamcode.SumoRobot;
 
 import com.pedropathing.follower.Follower;
@@ -9,26 +10,34 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-import java.util.concurrent.TimeUnit;
-
 @TeleOp
-public class SUMOTELEOPBLUE extends OpMode {
+public class SUMOTELEOPRED extends OpMode {
 
     private DcMotor fr, fl, br, bl;
     private DcMotorEx shooter1, shooter2;
     private DcMotor intake;
     private Servo kicker;
 
+    
+
     private Follower follower;
 
-    private final Pose startPose = new Pose(54, 8, Math.toRadians(90));
-    private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(0));
-    private final Pose shootFar = new Pose(66, 18, Math.toRadians(118));
-    private final Pose resetPose = new Pose(7, 9, Math.toRadians(90));
-    private final Pose shootClose = new Pose(62, 108, Math.toRadians(145));
-    private final Pose emptyGate = new Pose(14.7, 70.5, Math.toRadians(270));
+    private final Pose startPose = new Pose(90, 8, Math.toRadians(90));
+
+    private final Pose parkPose  = new Pose(39.33, 33, Math.toRadians(180));
+
+    private final Pose shootFar  = new Pose(78, 18, Math.toRadians(62));
+
+    private final Pose resetPose = new Pose(137, 9, Math.toRadians(90));
+
+    private final Pose shootClose = new Pose(82, 108, Math.toRadians(35));
+
+    private final Pose emptyGate = new Pose(130.5, 70.5, Math.toRadians(-90));
+
+
 
 
     private boolean kicking = false;
@@ -106,7 +115,7 @@ public class SUMOTELEOPBLUE extends OpMode {
 
         // Open gate position (square button)
         if (squareNow && !holdingEmptyGate && !holdingPark && !holdingShootFar && !holdingShootClose) {
-            follower.holdPoint(emptyGate);
+            follower.holdPoint(parkPose);
             holdingEmptyGate = true;
         }
 
@@ -118,7 +127,7 @@ public class SUMOTELEOPBLUE extends OpMode {
 
         // Park position (circle button)
         if (circleNow && !holdingPark && !holdingEmptyGate && !holdingShootFar && !holdingShootClose) {
-            follower.holdPoint(parkPose);
+            follower.holdPoint(emptyGate);
             holdingPark = true;
         }
 
@@ -130,7 +139,7 @@ public class SUMOTELEOPBLUE extends OpMode {
 
         // Handle shoot far position (left bumper)
         if (leftBumperNow && !holdingShootFar && !holdingEmptyGate && !holdingPark && !holdingShootClose) {
-            follower.holdPoint(shootFar);
+            follower.holdPoint(shootClose);
             holdingShootFar = true;
         }
 
@@ -142,7 +151,7 @@ public class SUMOTELEOPBLUE extends OpMode {
 
         // Handle shoot close position (right bumper)
         if (rightBumperNow && !holdingShootClose && !holdingEmptyGate && !holdingPark && !holdingShootFar) {
-            follower.holdPoint(shootClose);
+            follower.holdPoint(shootFar);
             holdingShootClose = true;
         }
 
