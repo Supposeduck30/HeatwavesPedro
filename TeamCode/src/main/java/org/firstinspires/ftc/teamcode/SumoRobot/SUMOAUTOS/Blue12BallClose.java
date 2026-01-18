@@ -1,28 +1,29 @@
-package org.firstinspires.ftc.teamcode.SumoRobot.SUMOAUTOS;
+ package org.firstinspires.ftc.teamcode.SumoRobot.SUMOAUTOS;
 
 import static java.lang.Thread.sleep;
 
+import com.bylazar.configurables.annotations.Configurable;
+import com.bylazar.telemetry.PanelsTelemetry;
+import com.bylazar.telemetry.TelemetryManager;
+import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.pedropathing.geometry.BezierLine;
+import com.pedropathing.geometry.Pose;
+import com.pedropathing.paths.PathChain;
+import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.bylazar.configurables.annotations.Configurable;
-import com.bylazar.telemetry.TelemetryManager;
-import com.bylazar.telemetry.PanelsTelemetry;
+
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.follower.Follower;
-import com.pedropathing.paths.PathChain;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.util.Timer;
 
 
 @Autonomous
 @Configurable
-public class Blue12BallFar extends OpMode {
+public class Blue12BallClose extends OpMode {
     private TelemetryManager panelsTelemetry;
 
     // Mechanisms
@@ -31,9 +32,9 @@ public class Blue12BallFar extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double shootVelocity = 1830;
+    public double shootVelocity = 1460;
     public double idleVelocity = 1000;
-    public double firstSpinUpTime = 0.57;
+    public double firstSpinUpTime = 0.55;
 
     // Software
     public Follower follower;
@@ -82,21 +83,35 @@ public class Blue12BallFar extends OpMode {
     PathState pathState;
 
     // Poses from your original paths
-    private final Pose startPose = new Pose(54.5, 8, Math.toRadians(90));
-    private final Pose pose1End = new Pose(59.6, 19, Math.toRadians(116));
-    private final Pose pose2End = new Pose(47.684, 58.257, Math.toRadians(180));
-    private final Pose pose3End = new Pose(14.982, 58.257  , Math.toRadians(180));
+    private final Pose startPose = new Pose(24.6, 126.7, Math.toRadians(135));
+
+    private final Pose pose1End = new Pose(55.8, 89.9, Math.toRadians(138));
+
+    private final Pose pose2End = new Pose(48.3, 61.6, Math.toRadians(180));
+
+    private final Pose pose3End = new Pose(15.8, 61.6  , Math.toRadians(180));
+
     private final Pose bezierIntakeToGate = new Pose(34.2,67.1, Math.toRadians(180));
+
     private final Pose pose4End = new Pose(16.2 , 71.5, Math.toRadians(180));
-    private final Pose bezierGateToShoot = new Pose(70, 40, Math.toRadians(270));
-    private final Pose pose5End = new Pose(59.6, 19.8, Math.toRadians(116));
-    private final Pose pose6End = new Pose(47.853, 34.755, Math.toRadians(180));
-    private final Pose pose7End = new Pose(15.720, 34.755, Math.toRadians(180));
-    private final Pose pose8End = new Pose(59.6, 19.8, Math.toRadians(116));
-    private final Pose pose9End = new Pose(8, 31.000, Math.toRadians(270));
-    private final Pose pose10End = new Pose(8, 10.000, Math.toRadians(270));
-    private final Pose pose11End = new Pose(59.6, 19.8, Math.toRadians(116));
-    private final Pose pose12End = new Pose(38.712, 32.526, Math.toRadians(90));
+
+    private final Pose bezierGateToShoot = new Pose(61.4, 61.3, Math.toRadians(180));
+
+    private final Pose pose5End = new Pose(55.8, 89.9, Math.toRadians(138));
+
+    private final Pose pose6End = new Pose(48, 83.5, Math.toRadians(180));
+
+    private final Pose pose7End = new Pose(14.9, 83.5, Math.toRadians(180));
+
+    private final Pose pose8End = new Pose(55.8, 89.9, Math.toRadians(138));
+
+    private final Pose pose9End = new Pose(47.4, 36.5, Math.toRadians(180));
+
+    private final Pose pose10End = new Pose(14.9, 36.5, Math.toRadians(180));
+
+    private final Pose pose11End = new Pose(55.8, 89.9, Math.toRadians(138));
+
+    private final Pose pose12End = new Pose(57.3, 110.2, Math.toRadians(270));
 
     private PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9, path10, path11, path12;
 
@@ -117,7 +132,7 @@ public class Blue12BallFar extends OpMode {
                 .build();
 
         path4 = follower.pathBuilder()
-                .addPath(new BezierCurve(pose3End,bezierIntakeToGate, pose4End))
+                .addPath(new BezierCurve(pose3End, bezierIntakeToGate, pose4End))
                 .setLinearHeadingInterpolation(pose3End.getHeading(), pose4End.getHeading())
                 .build();
 

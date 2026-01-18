@@ -32,7 +32,7 @@ public class Red12BallFar extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double shootVelocity = 1850;
+    public double shootVelocity = 1830;
     public double idleVelocity = 1000;
     public double firstSpinUpTime = 0.57;
 
@@ -91,21 +91,23 @@ public class Red12BallFar extends OpMode {
 
     private final Pose pose3End = new Pose(129.018, 58.257, Math.toRadians(0));
 
-    private final Pose pose4End = new Pose(129.018, 70.002, Math.toRadians(-90));
+    private final Pose bezierIntakeToGate = new Pose(109.8, 67.1, Math.toRadians(0));
 
-    private final Pose bezierGateToShoot = new Pose(74, 40, Math.toRadians(-90));
+    private final Pose pose4End = new Pose(127.8, 71.5, Math.toRadians(0));
+
+    private final Pose bezierGateToShoot = new Pose(74.0, 40, Math.toRadians(-90));
 
     private final Pose pose5End = new Pose(84.4, 19.8, Math.toRadians(64));
 
     private final Pose pose6End = new Pose(96.147, 34.755, Math.toRadians(0));
 
-    private final Pose pose7End = new Pose(128.28, 34.755, Math.toRadians(0));
+    private final Pose pose7End = new Pose(128.280, 34.755, Math.toRadians(0));
 
     private final Pose pose8End = new Pose(84.4, 19.8, Math.toRadians(64));
 
-    private final Pose pose9End = new Pose(136, 31.000, Math.toRadians(-90));
+    private final Pose pose9End = new Pose(136.0, 31.000, Math.toRadians(-90));
 
-    private final Pose pose10End = new Pose(136, 10.000, Math.toRadians(-90));
+    private final Pose pose10End = new Pose(136.0, 10.000, Math.toRadians(-90));
 
     private final Pose pose11End = new Pose(84.4, 19.8, Math.toRadians(64));
 
@@ -131,7 +133,8 @@ public class Red12BallFar extends OpMode {
                 .build();
 
         path4 = follower.pathBuilder()
-                .addPath(new BezierLine(pose3End, pose4End))
+                .addPath(new BezierCurve(pose3End,bezierIntakeToGate,
+                        pose4End))
                 .setLinearHeadingInterpolation(pose3End.getHeading(), pose4End.getHeading())
                 .build();
 
