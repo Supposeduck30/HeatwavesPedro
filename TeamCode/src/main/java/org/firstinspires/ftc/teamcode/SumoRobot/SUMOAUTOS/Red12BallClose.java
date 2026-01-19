@@ -93,7 +93,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
      private final Pose bezierIntakeToGate = new Pose(109.8, 67.1, Math.toRadians(0));
 
-     private final Pose pose4End = new Pose(128, 71.5, Math.toRadians(0));
+     private final Pose pose4End = new Pose(129.5, 71.5, Math.toRadians(0));
 
      private final Pose bezierGateToShoot = new Pose(82.6, 61.3, Math.toRadians(0));
 
@@ -101,7 +101,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
      private final Pose pose6End = new Pose(96.0, 83.5, Math.toRadians(0));
 
-     private final Pose pose7End = new Pose(129.1, 83.5, Math.toRadians(0));
+     private final Pose pose7End = new Pose(127.1, 83.5, Math.toRadians(0));
 
      private final Pose pose8End = new Pose(88.2, 89.9, Math.toRadians(42));
 

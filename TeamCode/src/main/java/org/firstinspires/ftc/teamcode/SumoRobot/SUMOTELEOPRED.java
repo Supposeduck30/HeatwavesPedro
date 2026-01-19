@@ -31,11 +31,11 @@ public class SUMOTELEOPRED extends OpMode {
 
     private final Pose shootFar  = new Pose(78, 18, Math.toRadians(62));
 
-    private final Pose resetPose = new Pose(137, 9, Math.toRadians(90));
+    private final Pose resetPose = new Pose(7.1, 8.8, Math.toRadians(90));
 
-    private final Pose shootClose = new Pose(82, 108, Math.toRadians(35));
+    private final Pose shootClose = new Pose(82, 108, Math.toRadians(32.5));
 
-    private final Pose emptyGate = new Pose(130.5, 70.5, Math.toRadians(-90));
+    private final Pose emptyGate = new Pose(132.5, 70.5, Math.toRadians(-90));
 
 
 
@@ -49,7 +49,7 @@ public class SUMOTELEOPRED extends OpMode {
     private boolean holdingShootFar = false;
     private boolean holdingShootClose = false;
 
-    public static final double LOW_VELOCITY  = 1500;
+    public static final double LOW_VELOCITY  = 1450;
     public static final double HIGH_VELOCITY = 1875;
 
     public static final double KICKER_OUT = 0.52;

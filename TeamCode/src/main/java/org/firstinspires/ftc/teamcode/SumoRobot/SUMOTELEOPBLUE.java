@@ -26,9 +26,9 @@ public class SUMOTELEOPBLUE extends OpMode {
     private final Pose startPose = new Pose(54, 8, Math.toRadians(90));
     private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(0));
     private final Pose shootFar = new Pose(66, 18, Math.toRadians(118));
-    private final Pose resetPose = new Pose(7, 9, Math.toRadians(90));
+    private final Pose resetPose = new Pose(137.6, 8.9, Math.toRadians(90));
     private final Pose shootClose = new Pose(62, 108, Math.toRadians(145));
-    private final Pose emptyGate = new Pose(14.7, 70.5, Math.toRadians(270));
+    private final Pose emptyGate = new Pose(1.7, 70.5, Math.toRadians(270));
 
 
     private boolean kicking = false;

@@ -58,6 +58,8 @@ public class Red12BallFar extends OpMode {
         DRIVE_PATH2,
         DRIVE_PATH3,
         INTAKE_ON_PATH3,
+        GATEOPEN,
+
         DRIVE_PATH4,
         DRIVE_PATH5,
         SHOOT_PATH5,
@@ -93,7 +95,7 @@ public class Red12BallFar extends OpMode {
 
     private final Pose bezierIntakeToGate = new Pose(109.8, 67.1, Math.toRadians(0));
 
-    private final Pose pose4End = new Pose(127.8, 71.5, Math.toRadians(0));
+    private final Pose pose4End = new Pose(128.8, 71.5, Math.toRadians(0));
 
     private final Pose bezierGateToShoot = new Pose(74.0, 40, Math.toRadians(-90));
 
@@ -239,6 +241,8 @@ public class Red12BallFar extends OpMode {
                 follower.followPath(path4, true);
                 setPathState(PathState.DRIVE_PATH4);
                 break;
+            case GATEOPEN:
+                sleep(1500);
 
             case DRIVE_PATH4:
                 if (!follower.isBusy()) {

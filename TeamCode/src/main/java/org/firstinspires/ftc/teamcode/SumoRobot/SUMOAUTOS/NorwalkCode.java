@@ -30,7 +30,7 @@ public class NorwalkCode extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double lowVelocity = 2250;//2100
+    public double lowVelocity = 1875;//2100
 
     //software
     private Follower follower;
@@ -50,7 +50,7 @@ public class NorwalkCode extends OpMode {
     PathState pathState;
 
     private final Pose startPose = new Pose(88,8,Math.toRadians(90));
-    private final Pose shootPose = new Pose(84.08000000000001,13.680000000000014, Math.toRadians(63));
+    private final Pose shootPose = new Pose(84.08000000000001,13.680000000000014, Math.toRadians(65));
     private final Pose endPose = new Pose(119.72,16.279999999999994, Math.toRadians(270));
     private PathChain driveStartPosShootPos, driveShootPosEndPos;
 
@@ -74,13 +74,13 @@ public class NorwalkCode extends OpMode {
                 setPathState(PathState.SHOOT_PRELOAD); //reset timer and make new state
                 break;
             case SHOOT_PRELOAD:
-                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 5){
+                if(!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 0.5){
                     // TODO add logic to flywheel shooter'
                     follower.followPath(driveShootPosEndPos,true);
                     setPathState(PathState.SHOOT_END);
                     shooter1.setVelocity(lowVelocity);
                     shooter2.setVelocity(lowVelocity);
-                    sleep(500);
+                    sleep(1000);
                     shoot();
                     sleep(500);
                     shoot();
@@ -129,7 +129,7 @@ public class NorwalkCode extends OpMode {
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
 
-        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(50,0,0,15);
+        PIDFCoefficients pidfCoefficients = new PIDFCoefficients(100,0,0,15);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,pidfCoefficients);
 

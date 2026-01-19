@@ -87,7 +87,7 @@ public class Blue12BallFar extends OpMode {
     private final Pose pose2End = new Pose(47.684, 58.257, Math.toRadians(180));
     private final Pose pose3End = new Pose(14.982, 58.257  , Math.toRadians(180));
     private final Pose bezierIntakeToGate = new Pose(34.2,67.1, Math.toRadians(180));
-    private final Pose pose4End = new Pose(16.2 , 71.5, Math.toRadians(180));
+    private final Pose pose4End = new Pose(14.2 , 71.5, Math.toRadians(180));
     private final Pose bezierGateToShoot = new Pose(70, 40, Math.toRadians(270));
     private final Pose pose5End = new Pose(59.6, 19.8, Math.toRadians(116));
     private final Pose pose6End = new Pose(47.853, 34.755, Math.toRadians(180));
