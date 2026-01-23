@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.SumoRobot;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,6 +14,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.concurrent.TimeUnit;
 
+@Disabled
 @TeleOp
 public class SUMOTELEOPBLUE extends OpMode {
 
@@ -23,18 +25,18 @@ public class SUMOTELEOPBLUE extends OpMode {
 
     private Follower follower;
 
-    private final Pose startPose = new Pose(54, 8, Math.toRadians(90));
+    private final Pose startPose = new Pose(38.712, 32.526, Math.toRadians(90));
     private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(0));
     private final Pose shootFar = new Pose(66, 18, Math.toRadians(118));
-    private final Pose resetPose = new Pose(137.6, 8.9, Math.toRadians(90));
-    private final Pose shootClose = new Pose(62, 108, Math.toRadians(145));
-    private final Pose emptyGate = new Pose(1.7, 70.5, Math.toRadians(270));
+    private final Pose resetPose = new Pose(137, 9, Math.toRadians(90));
+    private final Pose shootClose = new Pose(62, 108, Math.toRadians(149));
+    private final Pose emptyGate = new Pose(14.7, 70.5, Math.toRadians(270));
 
 
     private boolean kicking = false;
     private long kickStartTime = 0;
     private boolean kickerButtonLast = false;
-    private static final long KICK_TIME = 130;
+    private static final long KICK_TIME = 135;
     private boolean holdingEmptyGate = false;
     private boolean holdingPark = false;
     private boolean holdingShootFar = false;

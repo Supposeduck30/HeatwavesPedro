@@ -1,9 +1,10 @@
-
 package org.firstinspires.ftc.teamcode.SumoRobot;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -14,53 +15,60 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@Disabled
-@TeleOp
-public class SUMOTELEOPRED extends OpMode {
+import java.util.List;
+
+@TeleOp(name = "SUMOTELEOPRED", group = "TeleOp")
+public class FlywheelRegressionRed extends OpMode {
 
     private DcMotor fr, fl, br, bl;
     private DcMotorEx shooter1, shooter2;
     private DcMotor intake;
     private Servo kicker;
 
-    
-
     private Follower follower;
+    private Limelight3A limelight;
 
     private final Pose startPose = new Pose(90, 8, Math.toRadians(90));
-
     private final Pose parkPose  = new Pose(39.33, 33, Math.toRadians(180));
-
     private final Pose shootFar  = new Pose(78, 18, Math.toRadians(62));
-
     private final Pose resetPose = new Pose(7, 9, Math.toRadians(90));
-
     private final Pose shootClose = new Pose(82, 108, Math.toRadians(35));
-
-    private final Pose emptyGate = new Pose(130.5, 70.5, Math.toRadians(-90));
-
-
-
+    private final Pose emptyGate = new Pose(132.5, 70.5, Math.toRadians(-90));
 
     private boolean kicking = false;
     private long kickStartTime = 0;
     private boolean kickerButtonLast = false;
     private static final long KICK_TIME = 135;
+
     private boolean holdingEmptyGate = false;
     private boolean holdingPark = false;
     private boolean holdingShootFar = false;
     private boolean holdingShootClose = false;
-
-    public static final double LOW_VELOCITY  = 1500;
-    public static final double HIGH_VELOCITY = 1875;
+    private boolean aligningToTag = false;
 
     public static final double KICKER_OUT = 0.52;
     public static final double KICKER_IN  = 0.35;
+
+    private static final double VELOCITY_SLOPE = 6.58626;
+    private static final double VELOCITY_INTERCEPT = 1165.72046;
+
+    private static final double GOAL_X = 129.5;
+    private static final double GOAL_Y = 128.8;
+
+    private static final double ALIGN_KP = 0.025;
+    private static final double ALIGN_MAX_POWER = 0.45;
+    private static final double ALIGN_TOLERANCE = 1.0;
+    private static final int TARGET_TAG_ID = 24;
 
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setMaxPower(1);
+
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(1);
+        limelight.start();
+
         fr = hardwareMap.get(DcMotor.class, "FR");
         fl = hardwareMap.get(DcMotor.class, "FL");
         br = hardwareMap.get(DcMotor.class, "BR");
@@ -102,74 +110,90 @@ public class SUMOTELEOPRED extends OpMode {
     public void loop() {
         follower.update();
 
-        // Reset position button - Press OPTIONS (or BACK) on gamepad1 to reset to start pose
         if (gamepad1.triangle) {
             follower.setPose(resetPose);
-            telemetry.addLine("⚠️ POSITION RESET TO START POSE!");
-            telemetry.update();
         }
 
-
-        boolean leftBumperNow = gamepad1.left_bumper;
+        boolean leftBumperNow  = gamepad1.left_bumper;
         boolean rightBumperNow = gamepad1.right_bumper;
-        boolean squareNow = gamepad1.square;
-        boolean circleNow = gamepad1.circle;
+        boolean squareNow      = gamepad1.square;
+        boolean circleNow      = gamepad1.circle;
+        boolean xButtonNow     = gamepad1.cross;
 
-        // Open gate position (square button)
-        if (squareNow && !holdingEmptyGate && !holdingPark && !holdingShootFar && !holdingShootClose) {
-            follower.holdPoint(parkPose);
+        /* ---------- HOLD POSITIONS ---------- */
+
+        if (squareNow && !holdingEmptyGate && !holdingPark && !holdingShootFar && !holdingShootClose && !aligningToTag) {
+            follower.holdPoint(emptyGate);
             holdingEmptyGate = true;
         }
-
         if (!squareNow && holdingEmptyGate) {
             follower.breakFollowing();
             follower.startTeleopDrive();
             holdingEmptyGate = false;
         }
 
-        // Park position (circle button)
-        if (circleNow && !holdingPark && !holdingEmptyGate && !holdingShootFar && !holdingShootClose) {
-            follower.holdPoint(emptyGate);
+        if (circleNow && !holdingPark && !holdingEmptyGate && !holdingShootFar && !holdingShootClose && !aligningToTag) {
+            follower.holdPoint(parkPose);
             holdingPark = true;
         }
-
         if (!circleNow && holdingPark) {
             follower.breakFollowing();
             follower.startTeleopDrive();
             holdingPark = false;
         }
 
-        // Handle shoot far position (left bumper)
-        if (leftBumperNow && !holdingShootFar && !holdingEmptyGate && !holdingPark && !holdingShootClose) {
-            follower.holdPoint(shootClose);
+        if (leftBumperNow && !holdingShootFar && !holdingEmptyGate && !holdingPark && !holdingShootClose && !aligningToTag) {
+            follower.holdPoint(shootFar);
             holdingShootFar = true;
         }
-
         if (!leftBumperNow && holdingShootFar) {
             follower.breakFollowing();
             follower.startTeleopDrive();
             holdingShootFar = false;
         }
 
-        // Handle shoot close position (right bumper)
-        if (rightBumperNow && !holdingShootClose && !holdingEmptyGate && !holdingPark && !holdingShootFar) {
-            follower.holdPoint(shootFar);
+        if (rightBumperNow && !holdingShootClose && !holdingEmptyGate && !holdingPark && !holdingShootFar && !aligningToTag) {
+            follower.holdPoint(shootClose);
             holdingShootClose = true;
         }
-
         if (!rightBumperNow && holdingShootClose) {
             follower.breakFollowing();
             follower.startTeleopDrive();
             holdingShootClose = false;
         }
 
-        boolean holdingPoint = holdingEmptyGate || holdingPark || holdingShootFar || holdingShootClose;
+        /* ---------- APRILTAG ALIGN ---------- */
 
-        double driveForward = holdingPoint ? 0 : -gamepad1.left_stick_y;
-        double driveStrafe  = holdingPoint ? 0 : -gamepad1.left_stick_x;
-        double driveTurn    = holdingPoint ? 0 : -gamepad1.right_stick_x;
+        if (xButtonNow && !aligningToTag) aligningToTag = true;
+        if (!xButtonNow && aligningToTag) aligningToTag = false;
+
+        boolean holdingPoint =
+                holdingEmptyGate || holdingPark || holdingShootFar || holdingShootClose;
+
+        double driveForward = (holdingPoint || aligningToTag) ? 0 : -gamepad1.left_stick_y;
+        double driveStrafe  = (holdingPoint || aligningToTag) ? 0 : -gamepad1.left_stick_x;
+        double driveTurn    = aligningToTag ? 0 : -gamepad1.right_stick_x;
+
+        if (aligningToTag) {
+            LLResult result = limelight.getLatestResult();
+            if (result != null && result.isValid()) {
+                for (LLResultTypes.FiducialResult fiducial : result.getFiducialResults()) {
+                    if (fiducial.getFiducialId() == TARGET_TAG_ID) {
+                        double tx = fiducial.getTargetXDegrees();
+                        if (Math.abs(tx) > ALIGN_TOLERANCE) {
+                            driveTurn = -tx * ALIGN_KP;
+                            driveTurn = Math.max(-ALIGN_MAX_POWER,
+                                    Math.min(ALIGN_MAX_POWER, driveTurn));
+                        }
+                        break;
+                    }
+                }
+            }
+        }
 
         follower.setTeleOpDrive(driveForward, driveStrafe, driveTurn, true);
+
+        /* ---------- KICKER ---------- */
 
         boolean kickerButtonNow = gamepad2.triangle;
         if (kickerButtonNow && !kickerButtonLast && !kicking) {
@@ -177,29 +201,42 @@ public class SUMOTELEOPRED extends OpMode {
             kickStartTime = System.currentTimeMillis();
             kicker.setPosition(KICKER_OUT);
         }
-
         if (kicking && System.currentTimeMillis() - kickStartTime >= KICK_TIME) {
             kicker.setPosition(KICKER_IN);
             kicking = false;
         }
-
         kickerButtonLast = kickerButtonNow;
 
+        /* ---------- SHOOTER + INTAKE ---------- */
+
         double targetVelocity = 0;
-        if (gamepad2.right_bumper) targetVelocity = HIGH_VELOCITY;
-        else if (gamepad2.left_bumper) targetVelocity = LOW_VELOCITY;
+        double intakePower = 0;
+
+        if (gamepad2.cross) {               // X → intake reverse
+            intakePower = -1.0;
+        }
+        else if (gamepad2.left_bumper) {    // LB → intake only
+            intakePower = 1.0;
+        }
+        else if (gamepad2.right_bumper) {   // RB → shooter + intake
+            Pose pose = follower.getPose();
+            double dx = pose.getX() - GOAL_X;
+            double dy = pose.getY() - GOAL_Y;
+            double distance = Math.sqrt(dx * dx + dy * dy);
+
+            targetVelocity = VELOCITY_SLOPE * distance + VELOCITY_INTERCEPT;
+            intakePower = 1.0;
+
+            telemetry.addData("Distance", "%.2f", distance);
+            telemetry.addData("Velocity", "%.1f", targetVelocity);
+        }
 
         shooter1.setVelocity(targetVelocity);
         shooter2.setVelocity(targetVelocity);
+        intake.setPower(intakePower);
 
-        intake.setPower(targetVelocity > 0 ? 1.0 : 0.0);
-
-
+        telemetry.addData("Aligning", aligningToTag);
         telemetry.addData("Pose", follower.getPose());
-        telemetry.addData("Holding Empty Gate", holdingEmptyGate);
-        telemetry.addData("Holding Park", holdingPark);
-        telemetry.addData("Holding Shoot Far", holdingShootFar);
-        telemetry.addData("Holding Shoot Close", holdingShootClose);
         telemetry.update();
     }
 }
