@@ -464,6 +464,7 @@ public class Red12BallFar extends OpMode {
             throw new RuntimeException(e);
         }
 
+
         // Log values
 
         panelsTelemetry.debug("Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
@@ -476,6 +477,14 @@ public class Red12BallFar extends OpMode {
         panelsTelemetry.debug("Shooter2 Velocity", shooter2.getVelocity());
         panelsTelemetry.update(telemetry);
     }
+
+    @Override
+  public void stop() {
+      Pose finalPose = follower.getPose();
+      org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.saveCurrentPose(finalPose);
+      super.stop();
+    }
+
 
     public void shoot() throws InterruptedException {
         intake.setPower(1);

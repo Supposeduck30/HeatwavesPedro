@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.SumoRobot;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -13,6 +14,7 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import java.util.List;
@@ -28,7 +30,17 @@ public class FlywheelRegression extends OpMode {
     private Follower follower;
     private Limelight3A limelight;
 
-    private final Pose startPose = new Pose(54.2, 8, Math.toRadians(90));
+    private Servo rgbIndicator;
+    private Rev2mDistanceSensor distanceSensor;
+
+    // RGB Indicator positions (these control the color)
+    private static final double RED = 0.277;;
+    private static final double BLUE = 0.5;
+
+    // Detection threshold in centimeters
+    private static final double DETECTION_DISTANCE = 11.0;
+
+    //private final Pose startPose = new Pose(54.2, 8, Math.toRadians(90));
     private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(0));
     private final Pose shootFar  = new Pose(66, 18, Math.toRadians(118));
     private final Pose resetPose = new Pose(137, 9, Math.toRadians(90));
@@ -56,7 +68,7 @@ public class FlywheelRegression extends OpMode {
     private static final double GOAL_X = 15.2;
     private static final double GOAL_Y = 128.8;
 
-    private static final double ALIGN_KP = 0.025;
+    private static final double ALIGN_KP = 0.015;
     private static final double ALIGN_MAX_POWER = 0.45;
     private static final double ALIGN_TOLERANCE = 1.0;
     private static final int TARGET_TAG_ID = 20;
@@ -65,6 +77,18 @@ public class FlywheelRegression extends OpMode {
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setMaxPower(1);
+        Pose startPose = org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.getTeleOpStartPose();
+        follower.setStartingPose(startPose);
+
+        rgbIndicator = hardwareMap.get(Servo.class, "RGB");
+        distanceSensor = hardwareMap.get(Rev2mDistanceSensor.class, "distanceSensor");
+
+        // Start with indicator off
+        rgbIndicator.setPosition(RED);
+
+        telemetry.addData("Status", "Initialized");
+        telemetry.addData("Detection Distance", DETECTION_DISTANCE + " cm");
+        telemetry.update();
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(0);
@@ -103,13 +127,29 @@ public class FlywheelRegression extends OpMode {
 
     @Override
     public void start() {
-        follower.setPose(startPose);
         follower.startTeleopDrive();
     }
 
     @Override
     public void loop() {
         follower.update();
+
+        double Balldistance = distanceSensor.getDistance(DistanceUnit.CM);
+
+        // Check if something is detected within range
+        if (Balldistance <= DETECTION_DISTANCE) {
+            // Object detected - turn green
+            rgbIndicator.setPosition(BLUE);
+        } else {
+            // Nothing detected - turn off (or you could use RED)
+            rgbIndicator.setPosition(RED);
+        }
+
+        // Display telemetry
+        telemetry.addData("Distance (cm)", "%.2f", Balldistance);
+        telemetry.addData("Object Detected", Balldistance < DETECTION_DISTANCE);
+        telemetry.addData("Indicator Color", Balldistance < DETECTION_DISTANCE ? "GREEN" : "OFF");
+        telemetry.update();
 
         if (gamepad1.triangle) {
             follower.setPose(resetPose);
@@ -214,7 +254,7 @@ public class FlywheelRegression extends OpMode {
         double intakePower = 0;
 
         if (gamepad2.cross) {               // X → intake reverse
-            intakePower = -1.0;
+            intakePower = -0.6;
         }
         else if (gamepad2.left_bumper) {    // LB → intake only
             intakePower = 1.0;

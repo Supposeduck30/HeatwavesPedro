@@ -2,10 +2,10 @@ package org.firstinspires.ftc.teamcode.SumoRobot;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
+import com.qualcomm.hardware.rev.Rev2mDistanceSensor;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -17,10 +17,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-import java.util.List;
-
-@TeleOp(name = "SUMOTELEOPRED", group = "TeleOp")
-public class FlywheelRegressionRed extends OpMode {
+@TeleOp(name = "SUMOTELEOPBLUEFIXED", group = "TeleOp")
+public class FlywheelRegressionFix extends OpMode {
 
     private DcMotor fr, fl, br, bl;
     private DcMotorEx shooter1, shooter2;
@@ -31,21 +29,19 @@ public class FlywheelRegressionRed extends OpMode {
     private Limelight3A limelight;
 
     private Servo rgbIndicator;
-    private Rev2mDistanceSensor distanceSensor;
-
     // RGB Indicator positions (these control the color)
-    private static final double RED = 0.277;
+    private static final double RED = 0.277;;
     private static final double BLUE = 0.5;
 
     // Detection threshold in centimeters
     private static final double DETECTION_DISTANCE = 11.0;
 
-    //private final Pose startPose = new Pose(90, 8, Math.toRadians(90));
-    private final Pose parkPose  = new Pose(39.33, 33, Math.toRadians(180));
-    private final Pose shootFar  = new Pose(78, 18, Math.toRadians(62));
-    private final Pose resetPose = new Pose(7, 9, Math.toRadians(90));
-    private final Pose shootClose = new Pose(82, 108, Math.toRadians(35));
-    private final Pose emptyGate = new Pose(132.5, 70.5, Math.toRadians(-90));
+    //private final Pose startPose = new Pose(54.2, 8, Math.toRadians(90));
+    private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(0));
+    private final Pose shootFar  = new Pose(66, 18, Math.toRadians(118));
+    private final Pose resetPose = new Pose(137, 9, Math.toRadians(90));
+    private final Pose shootClose = new Pose(62, 108, Math.toRadians(149));
+    private final Pose emptyGate = new Pose(14.2, 68.5, Math.toRadians(0));
 
     private boolean kicking = false;
     private long kickStartTime = 0;
@@ -61,16 +57,17 @@ public class FlywheelRegressionRed extends OpMode {
     public static final double KICKER_OUT = 0.52;
     public static final double KICKER_IN  = 0.35;
 
+    // Regression: velocity = m * distance + b
     private static final double VELOCITY_SLOPE = 6.58626;
     private static final double VELOCITY_INTERCEPT = 1165.72046;
 
-    private static final double GOAL_X = 129.5;
+    private static final double GOAL_X = 15.2;
     private static final double GOAL_Y = 128.8;
 
     private static final double ALIGN_KP = 0.015;
     private static final double ALIGN_MAX_POWER = 0.45;
     private static final double ALIGN_TOLERANCE = 1.0;
-    private static final int TARGET_TAG_ID = 24;
+    private static final int TARGET_TAG_ID = 20;
 
     @Override
     public void init() {
@@ -80,9 +77,8 @@ public class FlywheelRegressionRed extends OpMode {
         follower.setStartingPose(startPose);
 
         rgbIndicator = hardwareMap.get(Servo.class, "RGB");
-        distanceSensor = hardwareMap.get(Rev2mDistanceSensor.class, "distanceSensor");
 
-        // Start with indicator at RED for red alliance
+        // Start with indicator off
         rgbIndicator.setPosition(RED);
 
         telemetry.addData("Status", "Initialized");
@@ -90,7 +86,7 @@ public class FlywheelRegressionRed extends OpMode {
         telemetry.update();
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(1);
+        limelight.pipelineSwitch(0);
         limelight.start();
 
         fr = hardwareMap.get(DcMotor.class, "FR");
@@ -133,21 +129,8 @@ public class FlywheelRegressionRed extends OpMode {
     public void loop() {
         follower.update();
 
-        double Balldistance = distanceSensor.getDistance(DistanceUnit.CM);
 
         // Check if something is detected within range
-        if (Balldistance <= DETECTION_DISTANCE) {
-            // Object detected - turn blue
-            rgbIndicator.setPosition(BLUE);
-        } else {
-            // Nothing detected - show red
-            rgbIndicator.setPosition(RED);
-        }
-
-        // Display telemetry
-        telemetry.addData("Distance (cm)", "%.2f", Balldistance);
-        telemetry.addData("Object Detected", Balldistance < DETECTION_DISTANCE);
-        telemetry.addData("Indicator Color", Balldistance < DETECTION_DISTANCE ? "BLUE" : "RED");
 
         if (gamepad1.triangle) {
             follower.setPose(resetPose);
@@ -159,7 +142,7 @@ public class FlywheelRegressionRed extends OpMode {
         boolean circleNow      = gamepad1.circle;
         boolean xButtonNow     = gamepad1.cross;
 
-        /* ---------- HOLD POSITIONS ---------- */
+        /* ---------- HOLD POINTS ---------- */
 
         if (squareNow && !holdingEmptyGate && !holdingPark && !holdingShootFar && !holdingShootClose && !aligningToTag) {
             follower.holdPoint(emptyGate);
@@ -201,8 +184,6 @@ public class FlywheelRegressionRed extends OpMode {
             holdingShootClose = false;
         }
 
-        /* ---------- APRILTAG ALIGN ---------- */
-
         if (xButtonNow && !aligningToTag) aligningToTag = true;
         if (!xButtonNow && aligningToTag) aligningToTag = false;
 
@@ -211,7 +192,7 @@ public class FlywheelRegressionRed extends OpMode {
 
         double driveForward = (holdingPoint || aligningToTag) ? 0 : -gamepad1.left_stick_y;
         double driveStrafe  = (holdingPoint || aligningToTag) ? 0 : -gamepad1.left_stick_x;
-        double driveTurn    = aligningToTag ? 0 : -gamepad1.right_stick_x;
+        double driveTurn    = 0;
 
         if (aligningToTag) {
             LLResult result = limelight.getLatestResult();
@@ -228,6 +209,8 @@ public class FlywheelRegressionRed extends OpMode {
                     }
                 }
             }
+        } else {
+            driveTurn = holdingPoint ? 0 : -gamepad1.right_stick_x;
         }
 
         follower.setTeleOpDrive(driveForward, driveStrafe, driveTurn, true);

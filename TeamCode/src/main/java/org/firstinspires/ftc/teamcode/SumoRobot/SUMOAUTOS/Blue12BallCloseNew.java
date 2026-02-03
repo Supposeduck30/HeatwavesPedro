@@ -23,7 +23,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
  @Autonomous
  @Configurable
- public class Red12BallClose extends OpMode {
+ public class Blue12BallCloseNew extends OpMode {
      private TelemetryManager panelsTelemetry;
 
      // Mechanisms
@@ -83,36 +83,35 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
      PathState pathState;
 
      // Poses from your original paths
-     private final Pose startPose = new Pose(119.4, 126.7, Math.toRadians(45));
+     private final Pose startPose = new Pose(24.6, 126.7, Math.toRadians(135));
 
-     private final Pose pose1End = new Pose(88.2, 89.9, Math.toRadians(42));
+     private final Pose pose1End = new Pose(55.8, 89.9, Math.toRadians(138));
 
-     private final Pose pose2End = new Pose(95.7, 61.6, Math.toRadians(0));
+     private final Pose pose2End = new Pose(48.3, 61.6, Math.toRadians(180));
 
-     private final Pose pose3End = new Pose(128.8, 61.6, Math.toRadians(0));
+     private final Pose pose3End = new Pose(15.8, 61.6  , Math.toRadians(180));
 
-     private final Pose bezierIntakeToGate = new Pose(109.8, 67.1, Math.toRadians(0));
+     private final Pose bezierIntakeToGate = new Pose(34.2,67.1, Math.toRadians(180));
 
-     private final Pose pose4End = new Pose(129.5, 71.5, Math.toRadians(0));
+     private final Pose pose4End = new Pose(16.2 , 71.5, Math.toRadians(180));
 
-     private final Pose bezierGateToShoot = new Pose(82.6, 61.3, Math.toRadians(0));
+     private final Pose bezierGateToShoot = new Pose(61.4, 61.3, Math.toRadians(180));
 
-     private final Pose pose5End = new Pose(88.2, 89.9, Math.toRadians(42));
+     private final Pose pose5End = new Pose(55.8, 89.9, Math.toRadians(138));
 
-     private final Pose pose6End = new Pose(96.0, 83.5, Math.toRadians(0));
+     private final Pose pose6End = new Pose(48, 83.5, Math.toRadians(180));
 
-     private final Pose pose7End = new Pose(127.1, 83.5, Math.toRadians(0));
+     private final Pose pose7End = new Pose(14.9, 83.5, Math.toRadians(180));
 
-     private final Pose pose8End = new Pose(88.2, 89.9, Math.toRadians(42));
+     private final Pose pose8End = new Pose(55.8, 89.9, Math.toRadians(138));
 
-     private final Pose pose9End = new Pose(96.6, 36.5, Math.toRadians(0));
+     private final Pose pose9End = new Pose(47.4, 36.5, Math.toRadians(180));
 
-     private final Pose pose10End = new Pose(130, 36.5, Math.toRadians(0));
+     private final Pose pose10End = new Pose(14.9, 36.5, Math.toRadians(180));
 
-     private final Pose pose11End = new Pose(88.2, 89.9, Math.toRadians(42));
+     private final Pose pose11End = new Pose(55.8, 89.9, Math.toRadians(138));
 
-     private final Pose pose12End = new Pose(90.7, 110.2, Math.toRadians(-90));
-
+     private final Pose pose12End = new Pose(57.3, 110.2, Math.toRadians(270));
 
      private PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9, path10, path11, path12;
 
@@ -473,17 +472,18 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
      }
 
      @Override
-    public void stop() {
-      Pose finalPose = follower.getPose();
-      org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.saveCurrentPose(finalPose);
+     public void stop() {
+         Pose finalPose = follower.getPose();
+     org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.saveCurrentPose(finalPose);
       super.stop();
-    }
+     }
+
 
 
      public void shoot() throws InterruptedException {
          intake.setPower(1);
          kicker.setPosition(0.6);
-         sleep(160);
+         sleep(140);
          kicker.setPosition(0.31);
      }
  }

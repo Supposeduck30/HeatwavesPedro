@@ -23,7 +23,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
  @Autonomous
  @Configurable
- public class Red12BallClose extends OpMode {
+ public class Red12BallCloseNew extends OpMode {
      private TelemetryManager panelsTelemetry;
 
      // Mechanisms
@@ -483,7 +483,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
      public void shoot() throws InterruptedException {
          intake.setPower(1);
          kicker.setPosition(0.6);
-         sleep(160);
+         sleep(140);
          kicker.setPosition(0.31);
      }
  }

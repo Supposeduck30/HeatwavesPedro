@@ -456,6 +456,15 @@ public class Blue12BallFar extends OpMode {
         panelsTelemetry.update(telemetry);
     }
 
+
+    @Override
+    public void stop() {
+        Pose finalPose = follower.getPose();
+      org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.saveCurrentPose(finalPose);
+      super.stop();
+    }
+
+
     public void shoot() throws InterruptedException {
         intake.setPower(1);
         kicker.setPosition(0.6);
