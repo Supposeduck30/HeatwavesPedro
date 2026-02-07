@@ -46,7 +46,7 @@ public class FlywheelRegressionFix extends OpMode {
     private boolean kicking = false;
     private long kickStartTime = 0;
     private boolean kickerButtonLast = false;
-    private static final long KICK_TIME = 135;
+    private static final long KICK_TIME = 110;
 
     private boolean holdingEmptyGate = false;
     private boolean holdingPark = false;
@@ -55,7 +55,7 @@ public class FlywheelRegressionFix extends OpMode {
     private boolean aligningToTag = false;
 
     public static final double KICKER_OUT = 0.52;
-    public static final double KICKER_IN  = 0.35;
+    public static final double KICKER_IN  = 0.36;
 
     // Regression: velocity = m * distance + b
     private static final double VELOCITY_SLOPE = 6.58626;

@@ -384,7 +384,6 @@ public class SevenSeasWR extends OpMode {
 
     @Override
     public void init() {
-        panelsTelemetry = PanelsTelemetry.INSTANCE.getTelemetry();
 
         pathState = PathState.DRIVE_TO_SHOOT1;
         pathTimer = new Timer();
