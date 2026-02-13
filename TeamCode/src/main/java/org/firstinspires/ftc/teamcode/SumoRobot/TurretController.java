@@ -32,7 +32,7 @@ public class TurretController {
     private long lastTime = 0;
 
     // PID Coefficients - TUNED FOR SPEED AND SMOOTHNESS
-    private static final double KP = 0.025;      // INCREASED - faster response
+    private static final double KP = 0.035;      // INCREASED - faster response
     private static final double KI = 0.0;        // DISABLED - causes jitter
     private static final double KD = 0.008;      // Low - minimal damping
 
@@ -94,8 +94,18 @@ public class TurretController {
         double absAngle = calculateAbsoluteAngleToGoal(currentPose);
         double heading = Math.toDegrees(currentPose.getHeading());
 
+        // Normalize both angles to 0-360 range first
+        while (absAngle < 0) absAngle += 360;
+        while (absAngle >= 360) absAngle -= 360;
+        while (heading < 0) heading += 360;
+        while (heading >= 360) heading -= 360;
+
         // Angle relative to robot forward
         double relativeAngle = absAngle - heading;
+
+        // Normalize to -180 to 180 (shortest path)
+        while (relativeAngle > 180) relativeAngle -= 360;
+        while (relativeAngle < -180) relativeAngle += 360;
 
         // Convert to turret frame (add 90 because 0° = right, 90° = front)
         double turretAngle = relativeAngle + 90.0;

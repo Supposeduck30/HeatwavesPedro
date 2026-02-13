@@ -42,7 +42,7 @@ public class SumoTeleOpWithTurret extends OpMode {
     private boolean kicking = false;
     private long kickStartTime = 0;
     private boolean kickerButtonLast = false;
-    private static final long KICK_TIME = 135;
+    private static final long KICK_TIME = 129;
 
     private boolean holdingEmptyGate = false;
     private boolean holdingPark = false;
@@ -50,8 +50,8 @@ public class SumoTeleOpWithTurret extends OpMode {
     private boolean holdingShootClose = false;
     private boolean aligningToTag = false;
 
-    public static final double KICKER_OUT = 0.52;
-    public static final double KICKER_IN  = 0.35;
+    public static final double KICKER_OUT = 0.67;
+    public static final double KICKER_IN  = 0.36;
 
     // Regression: velocity = m * distance + b
     private static final double VELOCITY_SLOPE = 6.58626;
@@ -103,7 +103,8 @@ public class SumoTeleOpWithTurret extends OpMode {
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter2.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 15);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
