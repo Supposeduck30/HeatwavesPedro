@@ -15,8 +15,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "SUMO WITH TURRET", group = "TeleOp")
-public class SumoTeleOpWithTurret extends OpMode {
+@TeleOp
+public class RegressionTest extends OpMode {
 
     private DcMotor fr, fl, br, bl;
     private DcMotorEx shooter1, shooter2;
@@ -33,16 +33,16 @@ public class SumoTeleOpWithTurret extends OpMode {
     private static final double RED = 0.277;
     private static final double BLUE = 0.5;
 
-    private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(0));
-    private final Pose shootFar  = new Pose(66, 18, Math.toRadians(118));
-    private final Pose resetPose = new Pose(137, 9, Math.toRadians(90));
-    private final Pose shootClose = new Pose(62, 108, Math.toRadians(149));
-    private final Pose emptyGate = new Pose(14.2, 68.5, Math.toRadians(0));
+    private final Pose parkPose  = new Pose(39.33, 33, Math.toRadians(180));
+    private final Pose shootFar  = new Pose(78, 18, Math.toRadians(64));
+    private final Pose resetPose = new Pose(7, 9, Math.toRadians(90));
+    private final Pose shootClose = new Pose(82, 108, Math.toRadians(30.5));
+    private final Pose emptyGate = new Pose(132.5, 68.5, Math.toRadians(180));
 
     private boolean kicking = false;
     private long kickStartTime = 0;
     private boolean kickerButtonLast = false;
-    private static final long KICK_TIME = 115;
+    private static final long KICK_TIME = 129;
 
     private boolean holdingEmptyGate = false;
     private boolean holdingPark = false;
@@ -53,9 +53,9 @@ public class SumoTeleOpWithTurret extends OpMode {
     public static final double KICKER_OUT = 0.58;
     public static final double KICKER_IN  = 0.36;
 
-    // Regression: velocity = m * distance + b
-    private static final double VELOCITY_SLOPE = 6.58626;
-    private static final double VELOCITY_INTERCEPT = 1165.72046;
+    // SINGLE CONFIGURABLE SHOOTER VELOCITY
+    // Adjust this value in the configuration panel
+    public static double SHOOTER_VELOCITY = 900; // Default value
 
     private static final double ALIGN_KP = 0.015;
     private static final double ALIGN_MAX_POWER = 0.45;
@@ -105,14 +105,18 @@ public class SumoTeleOpWithTurret extends OpMode {
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
 
-
-        PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 15);
+        PIDFCoefficients pidf = new PIDFCoefficients(80, 0, 0, 15);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
         kicker.setPosition(KICKER_IN);
 
+        // Read configuration values
+        SHOOTER_VELOCITY = getShooterVelocityFromConfig();
+
         telemetry.addData("Status", "Initialized with Turret");
+        telemetry.addData("Shooter Velocity", "%.0f (configurable)", SHOOTER_VELOCITY);
+        telemetry.addData("Controls", "RB: Shoot + Intake | LB: Intake Only | X: Reverse Intake");
         telemetry.update();
     }
 
@@ -245,7 +249,7 @@ public class SumoTeleOpWithTurret extends OpMode {
         }
         kickerButtonLast = kickerButtonNow;
 
-        /* ---------- SHOOTER + INTAKE ---------- */
+        /* ---------- SIMPLIFIED SHOOTER + INTAKE ---------- */
         double targetVelocity = 0;
         double intakePower = 0;
 
@@ -253,11 +257,10 @@ public class SumoTeleOpWithTurret extends OpMode {
             intakePower = -0.4;
         }
         else if (gamepad2.left_bumper) {    // LB → intake only
-            intakePower = 0.74;
+            intakePower = 0.69;
         }
         else if (gamepad2.right_bumper) {   // RB → shooter + intake + auto aim turret
-            double distance = turretController.getDistanceToGoal(currentPose);
-            targetVelocity = VELOCITY_SLOPE * distance + VELOCITY_INTERCEPT;
+            targetVelocity = SHOOTER_VELOCITY;  // Use the single configurable velocity
             intakePower = 1.0;
         }
 
@@ -273,6 +276,10 @@ public class SumoTeleOpWithTurret extends OpMode {
         int rawTicks = turretController.getRawTicks();
         double rawAngle = turretController.getRawAngle();
 
+        telemetry.addData("--- SHOOTER CONFIG ---", "");
+        telemetry.addData("Current Velocity", "%.0f", targetVelocity);
+        telemetry.addData("Configurable Value", "%.0f (adjust in panel)", SHOOTER_VELOCITY);
+
         telemetry.addData("--- TURRET ---", "");
         telemetry.addData("Target Angle (0=right, 180=left)", "%.2f°", targetAngle);
         telemetry.addData("Current Angle", "%.2f°", currentAngle);
@@ -287,5 +294,20 @@ public class SumoTeleOpWithTurret extends OpMode {
         telemetry.addData("Motor Mode", turretController.isBusy() ? "MOVING" : "STOPPED");
 
         telemetry.update();
+    }
+
+    /**
+     * Read shooter velocity from configuration
+     * This value can be adjusted in the FTC Dashboard or configuration panel
+     */
+    private double getShooterVelocityFromConfig() {
+        // Try to read from preferences or use default
+        try {
+            // You can implement reading from a configuration file here
+            // For now, return the default value
+            return SHOOTER_VELOCITY;
+        } catch (Exception e) {
+            return 1400; // Default fallback
+        }
     }
 }

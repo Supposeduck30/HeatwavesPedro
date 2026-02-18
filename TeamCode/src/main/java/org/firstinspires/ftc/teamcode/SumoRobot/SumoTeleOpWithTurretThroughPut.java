@@ -15,14 +15,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "SUMO WITH TURRET", group = "TeleOp")
-public class SumoTeleOpWithTurret extends OpMode {
+@TeleOp(name = "SUMO WITH thru", group = "TeleOp")
+public class SumoTeleOpWithTurretThroughPut extends OpMode {
 
     private DcMotor fr, fl, br, bl;
     private DcMotorEx shooter1, shooter2;
     private DcMotor intake;
     private Servo kicker;
-
     private Follower follower;
     private Limelight3A limelight;
 
@@ -33,16 +32,11 @@ public class SumoTeleOpWithTurret extends OpMode {
     private static final double RED = 0.277;
     private static final double BLUE = 0.5;
 
-    private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(0));
-    private final Pose shootFar  = new Pose(66, 18, Math.toRadians(118));
-    private final Pose resetPose = new Pose(137, 9, Math.toRadians(90));
-    private final Pose shootClose = new Pose(62, 108, Math.toRadians(149));
-    private final Pose emptyGate = new Pose(14.2, 68.5, Math.toRadians(0));
-
-    private boolean kicking = false;
-    private long kickStartTime = 0;
-    private boolean kickerButtonLast = false;
-    private static final long KICK_TIME = 115;
+    private final Pose parkPose  = new Pose(39.33, 33, Math.toRadians(180));
+    private final Pose shootFar  = new Pose(78, 18, Math.toRadians(64));
+    private final Pose resetPose = new Pose(7, 9, Math.toRadians(90));
+    private final Pose shootClose = new Pose(82, 108, Math.toRadians(30.5));
+    private final Pose emptyGate = new Pose(132.5, 68.5, Math.toRadians(180));
 
     private boolean holdingEmptyGate = false;
     private boolean holdingPark = false;
@@ -50,8 +44,9 @@ public class SumoTeleOpWithTurret extends OpMode {
     private boolean holdingShootClose = false;
     private boolean aligningToTag = false;
 
-    public static final double KICKER_OUT = 0.58;
-    public static final double KICKER_IN  = 0.36;
+    // KICKER AS BLOCKER
+    public static final double KICKER_BLOCK = 0.15;  // Blocks balls (default)
+    public static final double KICKER_OPEN = 0.25;   // Lets balls through (when triangle held)
 
     // Regression: velocity = m * distance + b
     private static final double VELOCITY_SLOPE = 6.58626;
@@ -105,12 +100,12 @@ public class SumoTeleOpWithTurret extends OpMode {
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
 
-
         PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 15);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
-        kicker.setPosition(KICKER_IN);
+        // Start with blocker blocking
+        kicker.setPosition(KICKER_BLOCK);
 
         telemetry.addData("Status", "Initialized with Turret");
         telemetry.update();
@@ -232,28 +227,23 @@ public class SumoTeleOpWithTurret extends OpMode {
             turretController.resetEncoder();
         }
 
-        /* ---------- KICKER ---------- */
-        boolean kickerButtonNow = gamepad2.triangle;
-        if (kickerButtonNow && !kickerButtonLast && !kicking) {
-            kicking = true;
-            kickStartTime = System.currentTimeMillis();
-            kicker.setPosition(KICKER_OUT);
+        /* ---------- BLOCKER CONTROL (SIMPLE) ---------- */
+        // Hold triangle to let balls through, release to block
+        if (gamepad2.triangle) {
+            kicker.setPosition(KICKER_OPEN);   // Let balls through
+        } else {
+            kicker.setPosition(KICKER_BLOCK);  // Block balls
         }
-        if (kicking && System.currentTimeMillis() - kickStartTime >= KICK_TIME) {
-            kicker.setPosition(KICKER_IN);
-            kicking = false;
-        }
-        kickerButtonLast = kickerButtonNow;
 
         /* ---------- SHOOTER + INTAKE ---------- */
         double targetVelocity = 0;
         double intakePower = 0;
 
         if (gamepad2.cross) {               // X → intake reverse
-            intakePower = -0.4;
+            intakePower = -0.9;
         }
         else if (gamepad2.left_bumper) {    // LB → intake only
-            intakePower = 0.74;
+            intakePower = 1.0;
         }
         else if (gamepad2.right_bumper) {   // RB → shooter + intake + auto aim turret
             double distance = turretController.getDistanceToGoal(currentPose);
@@ -265,26 +255,17 @@ public class SumoTeleOpWithTurret extends OpMode {
         shooter2.setVelocity(targetVelocity);
         intake.setPower(intakePower);
 
-        /* ---------- FIXED TELEMETRY ---------- */
+        /* ---------- TELEMETRY ---------- */
         double targetAngle = turretController.calculateTurretAngle(currentPose);
         double currentAngle = turretController.getCurrentAngle();
-
-        /* ---------- TURRET DEBUG TELEMETRY ---------- */
-        int rawTicks = turretController.getRawTicks();
-        double rawAngle = turretController.getRawAngle();
 
         telemetry.addData("--- TURRET ---", "");
         telemetry.addData("Target Angle (0=right, 180=left)", "%.2f°", targetAngle);
         telemetry.addData("Current Angle", "%.2f°", currentAngle);
         telemetry.addData("Distance to Goal", "%.2f in", turretController.getDistanceToGoal(currentPose));
-        telemetry.addData("Goal Reachable", turretController.isGoalReachable(currentPose));
 
-        telemetry.addData("--- TURRET DEBUG ---", "");
-        telemetry.addData("Raw Encoder Ticks", rawTicks);
-        telemetry.addData("Raw Angle (deg)", "%.2f", rawAngle);
-        telemetry.addData("Motor Power", "%.2f", turretController.getMotorPower());
-        telemetry.addData("Is Busy", turretController.isBusy());
-        telemetry.addData("Motor Mode", turretController.isBusy() ? "MOVING" : "STOPPED");
+        telemetry.addData("--- BLOCKER ---", "");
+        telemetry.addData("Status", gamepad2.triangle ? "OPEN" : "BLOCKING");
 
         telemetry.update();
     }
