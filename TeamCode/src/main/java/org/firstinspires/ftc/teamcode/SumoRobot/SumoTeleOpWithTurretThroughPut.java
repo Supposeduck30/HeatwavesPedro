@@ -64,12 +64,9 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
         Pose startPose = new Pose(54.5, 8, Math.toRadians(90));
         follower.setStartingPose(startPose);
 
-        rgbIndicator = hardwareMap.get(Servo.class, "RGB");
-        rgbIndicator.setPosition(RED);
-
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(1);
-        limelight.start();
+        //limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        //limelight.pipelineSwitch(1);
+        //limelight.start();
 
         fr = hardwareMap.get(DcMotor.class, "FR");
         fl = hardwareMap.get(DcMotor.class, "FL");
@@ -98,7 +95,9 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooter1.setDirection(DcMotorSimple.Direction.FORWARD);
+        shooter2.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 15);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
@@ -196,31 +195,41 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
 
         /* ---------- TURRET CONTROL WITH PREDICTIVE AIMING ---------- */
         Pose currentPose = follower.getPose();
-
-        // Calculate velocity manually
         Pose velocity;
-        if (lastPose == null) {
-            // First loop - no velocity yet
+
+        long currentTime = System.currentTimeMillis();
+
+        if (lastPose == null || lastTime == 0) {
             velocity = new Pose(0, 0, 0);
         } else {
-            long currentTime = System.currentTimeMillis();
-            double dt = (currentTime - lastTime) / 1000.0; // Convert to seconds
+            double dt = (currentTime - lastTime) / 1000.0;
 
-            if (dt > 0) {
+            // Prevent huge spikes if dt is tiny
+            if (dt > 0.005) {
                 double velX = (currentPose.getX() - lastPose.getX()) / dt;
                 double velY = (currentPose.getY() - lastPose.getY()) / dt;
-                double velHeading = (currentPose.getHeading() - lastPose.getHeading()) / dt;
+
+                // FIX HEADING WRAP AROUND
+                // If heading jumps 359 -> 1, diff is -358. Real diff is +2.
+                double diffHeading = currentPose.getHeading() - lastPose.getHeading();
+                while (diffHeading > Math.PI) diffHeading -= 2 * Math.PI;
+                while (diffHeading < -Math.PI) diffHeading += 2 * Math.PI;
+
+                double velHeading = diffHeading / dt;
+
                 velocity = new Pose(velX, velY, velHeading);
             } else {
-                velocity = new Pose(0, 0, 0);
+                // If loop is too fast, keep previous velocity or 0
+                velocity = new Pose(0,0,0);
             }
         }
 
-        // Update for next loop
-        lastPose = new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading());
-        lastTime = System.currentTimeMillis();
+        lastPose = currentPose; // Objects are passed by reference, verify Pose is immutable or clone it
+        // Safer to do:
+        // lastPose = new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading());
+        lastTime = currentTime;
 
-        // Use predictive aiming
+        // Update Turret
         turretController.aimAtGoalWithPrediction(currentPose, velocity);
 
         if (gamepad2.options) {

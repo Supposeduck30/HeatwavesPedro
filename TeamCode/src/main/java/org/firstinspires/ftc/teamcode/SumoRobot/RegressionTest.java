@@ -273,8 +273,8 @@ public class RegressionTest extends OpMode {
         double currentAngle = turretController.getCurrentAngle();
 
         /* ---------- TURRET DEBUG TELEMETRY ---------- */
-        int rawTicks = turretController.getRawTicks();
-        double rawAngle = turretController.getRawAngle();
+        //int rawTicks = turretController.getRawTicks();
+       // double rawAngle = turretController.getRawAngle();
 
         telemetry.addData("--- SHOOTER CONFIG ---", "");
         telemetry.addData("Current Velocity", "%.0f", targetVelocity);
@@ -284,14 +284,14 @@ public class RegressionTest extends OpMode {
         telemetry.addData("Target Angle (0=right, 180=left)", "%.2f°", targetAngle);
         telemetry.addData("Current Angle", "%.2f°", currentAngle);
         telemetry.addData("Distance to Goal", "%.2f in", turretController.getDistanceToGoal(currentPose));
-        telemetry.addData("Goal Reachable", turretController.isGoalReachable(currentPose));
+        //telemetry.addData("Goal Reachable", turretController.isGoalReachable(currentPose));
 
         telemetry.addData("--- TURRET DEBUG ---", "");
-        telemetry.addData("Raw Encoder Ticks", rawTicks);
-        telemetry.addData("Raw Angle (deg)", "%.2f", rawAngle);
-        telemetry.addData("Motor Power", "%.2f", turretController.getMotorPower());
-        telemetry.addData("Is Busy", turretController.isBusy());
-        telemetry.addData("Motor Mode", turretController.isBusy() ? "MOVING" : "STOPPED");
+       // telemetry.addData("Raw Encoder Ticks", rawTicks);
+        //telemetry.addData("Raw Angle (deg)", "%.2f", rawAngle);
+       // telemetry.addData("Motor Power", "%.2f", turretController.getMotorPower());
+        //telemetry.addData("Is Busy", turretController.isBusy());
+       // telemetry.addData("Motor Mode", turretController.isBusy() ? "MOVING" : "STOPPED");
 
         telemetry.update();
     }
