@@ -16,17 +16,17 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-    .mass(10.47)
-   .forwardZeroPowerAcceleration(-29.07)
-   .lateralZeroPowerAcceleration(-75.39)
-   .translationalPIDFCoefficients(new PIDFCoefficients(0.07,0,0.007,0.01))
-    .headingPIDFCoefficients(new PIDFCoefficients(0.6, 0, 0.0001, 0.02))
-    .useSecondaryHeadingPIDF(false)
-    .secondaryHeadingPIDFCoefficients(new PIDFCoefficients(0.8, 0, 0, 0.07))
+            .mass(12.97)
+            .forwardZeroPowerAcceleration(-32.44)
+           .lateralZeroPowerAcceleration(-70.03)
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.06,0,0.005,0.02))
+            .headingPIDFCoefficients(new PIDFCoefficients(0.7, 0, 0.03, 0.01))
+            //.useSecondaryHeadingPIDF(false)
+            //.secondaryHeadingPIDFCoefficients(new PIDFCoefficients(0.8, 0, 0, 0.07))
 
-    .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.1, 0, 0.000001, 0.6,0.025))
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.1, 0, 0.0001, 0.6,0.025))
             //    .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.1, 0, 0.000001, 0.6,0.025))
-           // .headingPIDFCoefficients(new PIDFCoefficients(0.5, 0, 0.0001, 0.02))
+            // .headingPIDFCoefficients(new PIDFCoefficients(0.5, 0, 0.0001, 0.02))
 
             .centripetalScaling(0.0005);
 
@@ -61,12 +61,11 @@ public class Constants {
             .leftFrontMotorName("FL")
             .leftFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
             .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .rightFrontMotorDirection(DcMotorSimple.Direction.REVERSE)
+            .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity(79.86)
-            .yVelocity(64.1);
+            .xVelocity(81.54)
+            .yVelocity(57.75);
 
 
 }
-
 

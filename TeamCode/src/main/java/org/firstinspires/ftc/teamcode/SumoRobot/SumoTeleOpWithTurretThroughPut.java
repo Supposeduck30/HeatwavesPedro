@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "SUMO WITH thru", group = "TeleOp")
+@TeleOp(name = "StateTeleOp", group = "TeleOp")
 public class SumoTeleOpWithTurretThroughPut extends OpMode {
 
     private DcMotor fr, fl, br, bl;
@@ -95,11 +95,12 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter1.setDirection(DcMotorSimple.Direction.FORWARD);
-        shooter2.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
 
-        PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 15);
+        PIDFCoefficients pidf = new PIDFCoefficients(400, 0, 0, 25);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
@@ -224,9 +225,9 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
             }
         }
 
-        lastPose = currentPose; // Objects are passed by reference, verify Pose is immutable or clone it
+        //lastPose = currentPose;  Objects are passed by reference, verify Pose is immutable or clone it
         // Safer to do:
-        // lastPose = new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading());
+        lastPose = new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading());
         lastTime = currentTime;
 
         // Update Turret
@@ -245,7 +246,7 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
         }
 
         /* ---------- SHOOTER + INTAKE ---------- */
-        double targetVelocity = 0;
+        double targetVelocity = 1400;
         double intakePower = 0;
 
         if (gamepad2.cross) {               // X → intake reverse
@@ -275,7 +276,7 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
 
         telemetry.addData("--- BLOCKER ---", "");
         telemetry.addData("Status", gamepad2.triangle ? "OPEN" : "BLOCKING");
-
+        telemetry.addData("Motor direction of front right", fr.getDirection());
         telemetry.update();
     }
 }

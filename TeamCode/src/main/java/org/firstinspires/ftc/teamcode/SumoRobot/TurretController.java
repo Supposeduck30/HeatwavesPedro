@@ -44,14 +44,14 @@ public class TurretController {
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // Hub doesn't fight custom PID
 
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        turretMotor.setDirection(DcMotorSimple.Direction.FORWARD);
+        turretMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         lastTime = System.currentTimeMillis();
     }
 
     // ================= GETTERS =================
     public double getCurrentAngle() {
-        return -1.0 * turretMotor.getCurrentPosition() / COUNTS_PER_DEGREE;
+        return 1.0 * turretMotor.getCurrentPosition() / COUNTS_PER_DEGREE;
     }
 
     public void resetEncoder() {
@@ -136,8 +136,13 @@ public class TurretController {
 
         double power = p + d;
 
+        double currentMaxPower = MAX_POWER;
+        if ((currentAngle<10.0 && power <0) || (currentAngle > 170.0 && power>0 )) {
+            currentMaxPower=0.25;
+        }
+
         // Safety Clamp
-        power = Range.clip(power, -MAX_POWER, MAX_POWER);
+        power = Range.clip(power, -currentMaxPower, currentMaxPower);
 
         turretMotor.setPower(power);
         previousAngle = currentAngle;

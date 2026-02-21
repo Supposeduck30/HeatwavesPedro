@@ -15,14 +15,13 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "SUMO WITH TURRET", group = "TeleOp")
-public class SumoTeleOpWithTurret extends OpMode {
+@TeleOp(name = "Quadratic", group = "TeleOp")
+public class Quadratic extends OpMode {
 
     private DcMotor fr, fl, br, bl;
     private DcMotorEx shooter1, shooter2;
     private DcMotor intake;
     private Servo kicker;
-
     private Follower follower;
     private Limelight3A limelight;
 
@@ -33,34 +32,39 @@ public class SumoTeleOpWithTurret extends OpMode {
     private static final double RED = 0.277;
     private static final double BLUE = 0.5;
 
-    private final Pose parkPose  = new Pose(104.67, 33, Math.toRadians(0));
-    private final Pose shootFar  = new Pose(66, 18, Math.toRadians(118));
-    private final Pose resetPose = new Pose(137, 9, Math.toRadians(90));
-    private final Pose shootClose = new Pose(62, 108, Math.toRadians(149));
-    private final Pose emptyGate = new Pose(14.2, 68.5, Math.toRadians(0));
+    private final Pose parkPose   = new Pose(39.33, 33, Math.toRadians(180));
+    private final Pose shootFar   = new Pose(78, 18, Math.toRadians(64));
+    private final Pose resetPose  = new Pose(7, 9, Math.toRadians(90));
+    private final Pose shootClose = new Pose(82, 108, Math.toRadians(30.5));
+    private final Pose emptyGate  = new Pose(132.5, 68.5, Math.toRadians(180));
 
-    private boolean kicking = false;
-    private long kickStartTime = 0;
-    private boolean kickerButtonLast = false;
-    private static final long KICK_TIME = 115;
-
-    private boolean holdingEmptyGate = false;
-    private boolean holdingPark = false;
-    private boolean holdingShootFar = false;
+    private boolean holdingEmptyGate  = false;
+    private boolean holdingPark       = false;
+    private boolean holdingShootFar   = false;
     private boolean holdingShootClose = false;
-    private boolean aligningToTag = false;
+    private boolean aligningToTag     = false;
 
-    public static final double KICKER_OUT = 0.58;
-    public static final double KICKER_IN  = 0.36;
+    // KICKER AS BLOCKER
+    public static final double KICKER_BLOCK = 0.15;
+    public static final double KICKER_OPEN  = 0.25;
 
-    // Regression: velocity = m * distance + b
-    private static final double VELOCITY_SLOPE = 6.58626;
-    private static final double VELOCITY_INTERCEPT = 1165.72046;
+    // Quadratic velocity regression: v = A*d^2 + B*d + C
+    // Anchored at: 50in → 1495 ticks/s (same as before), 125in → 2200 ticks/s (+211 vs linear)
+    // This gives the same close-shot velocity but scales much steeper at far distances.
+    // Velocity comparison vs old linear (6.58626*d + 1165.72):
+    //   50 in:  1495 (same)
+    //   75 in:  1668 (+8)
+    //   100 in: 1902 (+78)
+    //   125 in: 2200 (+211)
+    //   130 in: 2267 (+245)
+    private static final double VELOCITY_A = 0.05;
+    private static final double VELOCITY_B = 0.65;
+    private static final double VELOCITY_C = 1337.5;
 
-    private static final double ALIGN_KP = 0.015;
+    private static final double ALIGN_KP        = 0.015;
     private static final double ALIGN_MAX_POWER = 0.45;
     private static final double ALIGN_TOLERANCE = 1.0;
-    private static final int TARGET_TAG_ID = 24;
+    private static final int    TARGET_TAG_ID   = 24;
 
     @Override
     public void init() {
@@ -69,12 +73,9 @@ public class SumoTeleOpWithTurret extends OpMode {
         Pose startPose = new Pose(54.5, 8, Math.toRadians(90));
         follower.setStartingPose(startPose);
 
-        rgbIndicator = hardwareMap.get(Servo.class, "RGB");
-        rgbIndicator.setPosition(RED);
-
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(1);
-        limelight.start();
+        //limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        //limelight.pipelineSwitch(1);
+        //limelight.start();
 
         fr = hardwareMap.get(DcMotor.class, "FR");
         fl = hardwareMap.get(DcMotor.class, "FL");
@@ -89,7 +90,7 @@ public class SumoTeleOpWithTurret extends OpMode {
 
         // INITIALIZE TURRET
         turretController = new TurretController(hardwareMap, "Turret");
-        turretController.resetEncoder(); // starts at 0° (right)
+        turretController.resetEncoder();
 
         fr.setDirection(DcMotorSimple.Direction.FORWARD);
         br.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -103,16 +104,15 @@ public class SumoTeleOpWithTurret extends OpMode {
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter1.setDirection(DcMotorSimple.Direction.FORWARD);
-        shooter2.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-
-        PIDFCoefficients pidf = new PIDFCoefficients(100, 0, 0, 15);
+        PIDFCoefficients pidf = new PIDFCoefficients(400, 0, 0, 35);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
-        kicker.setPosition(KICKER_IN);
+        kicker.setPosition(KICKER_BLOCK);
 
         telemetry.addData("Status", "Initialized with Turret");
         telemetry.update();
@@ -120,7 +120,6 @@ public class SumoTeleOpWithTurret extends OpMode {
 
     private boolean firstLoop = true;
 
-    // For velocity calculation
     private Pose lastPose = null;
     private long lastTime = 0;
 
@@ -133,7 +132,6 @@ public class SumoTeleOpWithTurret extends OpMode {
     public void loop() {
         follower.update();
 
-        // Skip turret aiming on first loop
         if (firstLoop) {
             firstLoop = false;
             telemetry.addData("Status", "Initializing...");
@@ -203,63 +201,62 @@ public class SumoTeleOpWithTurret extends OpMode {
 
         /* ---------- TURRET CONTROL WITH PREDICTIVE AIMING ---------- */
         Pose currentPose = follower.getPose();
-
-        // Calculate velocity manually
         Pose velocity;
-        if (lastPose == null) {
-            // First loop - no velocity yet
+
+        long currentTime = System.currentTimeMillis();
+
+        if (lastPose == null || lastTime == 0) {
             velocity = new Pose(0, 0, 0);
         } else {
-            long currentTime = System.currentTimeMillis();
-            double dt = (currentTime - lastTime) / 1000.0; // Convert to seconds
+            double dt = (currentTime - lastTime) / 1000.0;
 
-            if (dt > 0) {
+            if (dt > 0.005) {
                 double velX = (currentPose.getX() - lastPose.getX()) / dt;
                 double velY = (currentPose.getY() - lastPose.getY()) / dt;
-                double velHeading = (currentPose.getHeading() - lastPose.getHeading()) / dt;
+
+                double diffHeading = currentPose.getHeading() - lastPose.getHeading();
+                while (diffHeading > Math.PI)  diffHeading -= 2 * Math.PI;
+                while (diffHeading < -Math.PI) diffHeading += 2 * Math.PI;
+
+                double velHeading = diffHeading / dt;
                 velocity = new Pose(velX, velY, velHeading);
             } else {
                 velocity = new Pose(0, 0, 0);
             }
         }
 
-        // Update for next loop
         lastPose = new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading());
-        lastTime = System.currentTimeMillis();
+        lastTime = currentTime;
 
-        // Use predictive aiming
         turretController.aimAtGoalWithPrediction(currentPose, velocity);
 
         if (gamepad2.options) {
             turretController.resetEncoder();
         }
 
-        /* ---------- KICKER ---------- */
-        boolean kickerButtonNow = gamepad2.triangle;
-        if (kickerButtonNow && !kickerButtonLast && !kicking) {
-            kicking = true;
-            kickStartTime = System.currentTimeMillis();
-            kicker.setPosition(KICKER_OUT);
+        /* ---------- BLOCKER CONTROL ---------- */
+        if (gamepad2.triangle) {
+            kicker.setPosition(KICKER_OPEN);
+        } else {
+            kicker.setPosition(KICKER_BLOCK);
         }
-        if (kicking && System.currentTimeMillis() - kickStartTime >= KICK_TIME) {
-            kicker.setPosition(KICKER_IN);
-            kicking = false;
-        }
-        kickerButtonLast = kickerButtonNow;
 
         /* ---------- SHOOTER + INTAKE ---------- */
-        double targetVelocity = 0;
+        double targetVelocity = 1400; // Idle velocity
         double intakePower = 0;
 
         if (gamepad2.cross) {               // X → intake reverse
-            intakePower = -0.4;
+            intakePower = -0.9;
         }
         else if (gamepad2.left_bumper) {    // LB → intake only
-            intakePower = 0.74;
+            intakePower = 1.0;
         }
         else if (gamepad2.right_bumper) {   // RB → shooter + intake + auto aim turret
             double distance = turretController.getDistanceToGoal(currentPose);
-            targetVelocity = VELOCITY_SLOPE * distance + VELOCITY_INTERCEPT;
+            // Quadratic regression: steeper velocity scaling at far distances
+            targetVelocity = VELOCITY_A * distance * distance
+                    + VELOCITY_B * distance
+                    + VELOCITY_C;
             intakePower = 1.0;
         }
 
@@ -267,25 +264,24 @@ public class SumoTeleOpWithTurret extends OpMode {
         shooter2.setVelocity(targetVelocity);
         intake.setPower(intakePower);
 
-        /* ---------- FIXED TELEMETRY ---------- */
-        double targetAngle = turretController.calculateTurretAngle(currentPose);
+        /* ---------- TELEMETRY ---------- */
+        double targetAngle  = turretController.calculateTurretAngle(currentPose);
         double currentAngle = turretController.getCurrentAngle();
-
-        /* ---------- TURRET DEBUG TELEMETRY ---------- */
-        //int rawTicks = turretController.getRawTicks();
-        //double rawAngle = turretController.getRawAngle();
 
         telemetry.addData("--- TURRET ---", "");
         telemetry.addData("Target Angle (0=right, 180=left)", "%.2f°", targetAngle);
         telemetry.addData("Current Angle", "%.2f°", currentAngle);
         telemetry.addData("Distance to Goal", "%.2f in", turretController.getDistanceToGoal(currentPose));
 
+        telemetry.addData("--- SHOOTER ---", "");
+        telemetry.addData("Target Velocity", "%.0f ticks/s", targetVelocity);
+        telemetry.addData("Shooter1 Actual", "%.0f ticks/s", shooter1.getVelocity());
+        telemetry.addData("Shooter2 Actual", "%.0f ticks/s", shooter2.getVelocity());
+        telemetry.addData("Velocity Error S1", "%.0f ticks/s", targetVelocity - shooter1.getVelocity());
 
-        telemetry.addData("--- TURRET DEBUG ---", "");
-       // telemetry.addData("Raw Encoder Ticks", rawTicks);
-       // telemetry.addData("Raw Angle (deg)", "%.2f", rawAngle);
-
-
+        telemetry.addData("--- BLOCKER ---", "");
+        telemetry.addData("Status", gamepad2.triangle ? "OPEN" : "BLOCKING");
+        telemetry.addData("Motor direction of front right", fr.getDirection());
         telemetry.update();
     }
 }
