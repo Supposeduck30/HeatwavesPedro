@@ -46,6 +46,9 @@ public class Blue18BallCloseTurret extends OpMode {
         INTAKECLOSE2,
         DRIVE_SHOOT2_TO_GATE,
         INTAKE1,
+        GATE_TO_SHOOT3,
+        SPIN_UP3,
+        SHOOT3,
         DONE
     }
     PathState pathState;
@@ -54,14 +57,20 @@ public class Blue18BallCloseTurret extends OpMode {
     private final Pose shoot1Pose = new Pose(48.600, 93.400, Math.toRadians(180));
     private final Pose intakeSpike2Pose = new Pose(16.500, 57.900, Math.toRadians(180));
     private final Pose shoot2Pose = new Pose(48.700, 93.400, Math.toRadians(180));
-    private final Pose gateIntakePose = new Pose(13.75, 55, Math.toRadians(140.58));
+    private final Pose gateIntakePose = new Pose(10, 58, Math.toRadians(140.58));
+    private final Pose shoot3Pose = new Pose(48.7,93.4,Math.toRadians(180));
+
     private final Pose bezierShoot1ToSpike = new Pose(87.200, 52.400, Math.toRadians(180));
     private final Pose bezierSpikeToShoot2 = new Pose(50.100, 66.500, Math.toRadians(180));
     private final Pose bezierShoot2ToGate = new Pose(39.800, 45.600, Math.toRadians(180));
+    private final Pose bezierGateToShoot3 = new Pose(64.7,65.6, Math.toRadians(180));
+
     private PathChain preloadToShoot1;
     private PathChain shoot1ToSpike2;
     private PathChain spike2ToShoot2;
     private PathChain shoot2ToGate;
+    private PathChain gateToShoot3;
+
     public void buildPaths() {
         preloadToShoot1 = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, shoot1Pose))
@@ -77,8 +86,13 @@ public class Blue18BallCloseTurret extends OpMode {
                 .build();
         shoot2ToGate = follower.pathBuilder()
                 .addPath(new BezierCurve(shoot2Pose, bezierShoot2ToGate, gateIntakePose))
-                .setLinearHeadingInterpolation(shoot2Pose.getHeading(), gateIntakePose.getHeading())
+                .setConstantHeadingInterpolation(gateIntakePose.getHeading())
                 .build();
+        gateToShoot3 = follower.pathBuilder()
+                .addPath(new BezierCurve(gateIntakePose, bezierGateToShoot3, shoot3Pose))
+                .setLinearHeadingInterpolation(gateIntakePose.getHeading(),shoot3Pose.getHeading())
+                .build();
+
     }
     // Only resets timer — does NOT reset ballsShot
     public void setPathState(PathState newState) {
@@ -161,6 +175,7 @@ public class Blue18BallCloseTurret extends OpMode {
             case INTAKECLOSE2:
                 kicker.setPosition(0.15);
                 setPathState(PathState.DRIVE_SHOOT2_TO_GATE);
+                break;
             case DRIVE_SHOOT2_TO_GATE:
                 if (!follower.isBusy()) {
                     setPathState(PathState.INTAKE1);
@@ -169,9 +184,32 @@ public class Blue18BallCloseTurret extends OpMode {
             case INTAKE1:
                 intake.setPower(1.0);
                 if (pathTimer.getElapsedTimeSeconds() > 0.4) {
-                    setPathState(PathState.DONE);
+                    setPathState(PathState.GATE_TO_SHOOT3);
                 }
 
+                break;
+            case GATE_TO_SHOOT3:
+                if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    follower.followPath(gateToShoot3, true);
+                    setPathState(PathState.SHOOT3);
+                }
+                break;
+            case SHOOT3:
+                if (!shooting && pathTimer.getElapsedTimeSeconds() > 0.1) {
+                    intake.setPower(1);
+                    kicker.setPosition(0.25);
+                    shooting = true;
+                    kickTimer.resetTimer();
+                } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.14) {
+                    shooting = false;
+                    ballsShot++;
+                    if (ballsShot >= 3) {
+                        intake.setPower(1); // Ensure intake is full speed
+                        setPathState(PathState.DONE);
+                    } else {
+                        pathTimer.resetTimer();
+                    }
+                }
                 break;
             case DONE:
                 shooter1.setVelocity(0);
