@@ -89,7 +89,7 @@ public class Quadratic extends OpMode {
         kicker = hardwareMap.get(Servo.class, "Kicker");
 
         // INITIALIZE TURRET
-        turretController = new TurretController(hardwareMap, "Turret");
+       // turretController = new TurretController(hardwareMap, "Turret");
         turretController.resetEncoder();
 
         fr.setDirection(DcMotorSimple.Direction.FORWARD);

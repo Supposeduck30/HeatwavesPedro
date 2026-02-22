@@ -98,7 +98,7 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(400, 0, 0, 25);
+        PIDFCoefficients pidf = new PIDFCoefficients(80, 0, 0, 15);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
