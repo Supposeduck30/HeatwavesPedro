@@ -34,9 +34,10 @@ public class TurretController {
     private static final double MIN_VELOCITY_FOR_PREDICTION = 2.0;
 
     // ================= PID CONTROL =================
-    private static final double KP        = 0.032;
-    private static final double KD        = 0.006;
+    private static final double KP        = 0.06;
+    private static final double KD        = 0.008;
     private static final double MAX_POWER = 1;
+    private static final double DEADBAND = 0.8;
     // Deadband removed — motor corrects continuously for tighter tracking.
     // If jitter/chatter becomes a problem, add back a small value (0.1 +r 0.2).
 
@@ -145,11 +146,21 @@ public class TurretController {
 
         if (dt <= 0.001) dt = 0.001;
 
+        if (Math.abs(error)<DEADBAND){
+            turretMotor.setPower(0);
+            previousAngle = currentAngle;
+            return;
+        }
+
         double p = KP * error;
         double derivative = (currentAngle - previousAngle) / dt;
         double d = -KD * derivative;
 
         double power = p + d;
+
+        if (Math.abs(power) <0.05 && Math.abs(power) > 0.01){
+            power=Math.signum(power) * 0.05;
+        }
 
         double currentMaxPower = MAX_POWER;
         if ((currentAngle < 10.0 && power < 0) || (currentAngle > 170.0 && power > 0)) {

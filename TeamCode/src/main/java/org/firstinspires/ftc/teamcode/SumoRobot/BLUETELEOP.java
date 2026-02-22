@@ -2,8 +2,6 @@ package org.firstinspires.ftc.teamcode.SumoRobot;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
-import com.qualcomm.hardware.limelightvision.LLResult;
-import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -12,11 +10,12 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
-@TeleOp(name = "StateTeleOp", group = "TeleOp")
-public class SumoTeleOpWithTurretThroughPut extends OpMode {
+@TeleOp
+public class BLUETELEOP extends OpMode {
 
     private DcMotor fr, fl, br, bl;
     private DcMotorEx shooter1, shooter2;
@@ -49,8 +48,13 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
     public static final double KICKER_OPEN  = 0.25;
 
     // Regression: velocity = m * distance + b
-    private static final double VELOCITY_SLOPE     = 6.58626;
-    private static final double VELOCITY_INTERCEPT = 1165.72046;
+    //private static final double VELOCITY_SLOPE     = 6.58626;
+    //private static final double VELOCITY_INTERCEPT = 1165.72046;
+
+    private static final double VEL_A = 0.0168765;
+    private static final double VEL_B = 1.60873;
+    private static final double VEL_C = 1331.50868;
+    private static final double MAX_SHOOTER_VELOCITY = 2600;
 
     private static final double ALIGN_KP        = 0.015;
     private static final double ALIGN_MAX_POWER = 0.45;
@@ -98,7 +102,7 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(80, 0, 0, 15);
+        PIDFCoefficients pidf = new PIDFCoefficients(120, 0, 0, 20);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
@@ -213,7 +217,8 @@ public class SumoTeleOpWithTurretThroughPut extends OpMode {
         // Target velocity is always distance-based — shooter runs continuously,
         // no idle speed switching. Intake and kicker control when balls actually fire.
         double distance = turretController.getDistanceToGoal(currentPose);
-        double targetVelocity = VELOCITY_SLOPE * distance + VELOCITY_INTERCEPT;
+        double targetVelocity = (VEL_A*distance*distance)+(VEL_B*distance)+VEL_C;
+        targetVelocity= Range.clip(targetVelocity,0,MAX_SHOOTER_VELOCITY);
 
         double intakePower = 0;
         if (gamepad2.cross) {               // X → intake reverse
