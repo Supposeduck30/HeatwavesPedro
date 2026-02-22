@@ -1,4 +1,6 @@
 package org.firstinspires.ftc.teamcode.SumoRobot.SUMOAUTOS;
+import static java.lang.Thread.sleep;
+
 import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
@@ -52,7 +54,7 @@ public class Blue18BallCloseTurret extends OpMode {
     private final Pose shoot1Pose = new Pose(48.600, 93.400, Math.toRadians(180));
     private final Pose intakeSpike2Pose = new Pose(16.500, 57.900, Math.toRadians(180));
     private final Pose shoot2Pose = new Pose(48.700, 93.400, Math.toRadians(180));
-    private final Pose gateIntakePose = new Pose(12.75, 54, Math.toRadians(140.58));
+    private final Pose gateIntakePose = new Pose(13.75, 55, Math.toRadians(140.58));
     private final Pose bezierShoot1ToSpike = new Pose(87.200, 52.400, Math.toRadians(180));
     private final Pose bezierSpikeToShoot2 = new Pose(50.100, 66.500, Math.toRadians(180));
     private final Pose bezierShoot2ToGate = new Pose(39.800, 45.600, Math.toRadians(180));
@@ -148,7 +150,8 @@ public class Blue18BallCloseTurret extends OpMode {
                     shooting = false;
                     ballsShot++;
                     if (ballsShot >= 3) {
-                        follower.followPath(shoot2ToGate, true);
+                        intake.setPower(1); // Ensure intake is full speed
+                        follower.followPath(shoot2ToGate, 0.8, true); // Slower speed for going to gate
                         setPathState(PathState.INTAKECLOSE2);
                     } else {
                         pathTimer.resetTimer();
@@ -165,7 +168,10 @@ public class Blue18BallCloseTurret extends OpMode {
                 break;
             case INTAKE1:
                 intake.setPower(1.0);
-                setPathState(PathState.INTAKE1);
+                if (pathTimer.getElapsedTimeSeconds() > 0.4) {
+                    setPathState(PathState.DONE);
+                }
+
                 break;
             case DONE:
                 shooter1.setVelocity(0);
