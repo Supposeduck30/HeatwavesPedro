@@ -122,6 +122,7 @@ public class Blue18BallCloseTurret extends OpMode {
                 } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.14) {
                     shooting = false;
                     ballsShot++;
+
                     if (ballsShot >= 3) {
                         intake.setPower(1);
                         follower.followPath(shoot1ToSpike2, 0.8, true); // Slower speed for this path
