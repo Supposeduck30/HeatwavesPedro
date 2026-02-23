@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.util.Range;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @TeleOp
-public class BLUETELEOP extends OpMode {
+public class REDTELEOP extends OpMode {
 
     private DcMotor fr, fl, br, bl;
     private DcMotorEx shooter1, shooter2;
@@ -25,7 +25,7 @@ public class BLUETELEOP extends OpMode {
     private Limelight3A limelight;
 
     // TURRET CONTROLLER
-    private TurretController turretController;
+    private TurretControllerRED turretController;
 
     private Servo rgbIndicator;
     private static final double RED  = 0.277;
@@ -65,7 +65,7 @@ public class BLUETELEOP extends OpMode {
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setMaxPower(1);
-        Pose startPose = new Pose(54.5, 8, Math.toRadians(90));
+        Pose startPose = new Pose(89.4, 8, Math.toRadians(90));
         follower.setStartingPose(startPose);
 
         //limelight = hardwareMap.get(Limelight3A.class, "limelight");
@@ -83,8 +83,8 @@ public class BLUETELEOP extends OpMode {
         intake = hardwareMap.get(DcMotor.class, "Intake");
         kicker = hardwareMap.get(Servo.class, "Kicker");
 
-        turretController = new TurretController(hardwareMap, "Turret");
-        turretController.resetEncoder();
+        turretController = new TurretControllerRED(hardwareMap, "Turret");
+        turretController.resetEncoderRED();
 
         fr.setDirection(DcMotorSimple.Direction.FORWARD);
         br.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -200,10 +200,10 @@ public class BLUETELEOP extends OpMode {
         lastPose = new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading());
         lastTime = currentTime;
 
-        turretController.aimAtGoalWithPrediction(currentPose, velocity);
+        turretController.aimAtGoalWithPredictionRED(currentPose, velocity);
 
         if (gamepad2.options) {
-            turretController.resetEncoder();
+            turretController.resetEncoderRED();
         }
 
         /* ---------- BLOCKER CONTROL ---------- */
@@ -216,7 +216,7 @@ public class BLUETELEOP extends OpMode {
         /* ---------- SHOOTER + INTAKE ---------- */
         // Target velocity is always distance-based — shooter runs continuously,
         // no idle speed switching. Intake and kicker control when balls actually fire.
-        double distance = turretController.getDistanceToGoal(currentPose);
+        double distance = turretController.getDistanceToGoalRED(currentPose);
         double targetVelocity = (VEL_A*distance*distance)+(VEL_B*distance)+VEL_C;
         targetVelocity= Range.clip(targetVelocity,0,MAX_SHOOTER_VELOCITY);
 
@@ -234,8 +234,8 @@ public class BLUETELEOP extends OpMode {
         intake.setPower(intakePower);
 
         /* ---------- TELEMETRY ---------- */
-        double targetAngle  = turretController.calculateTurretAngle(currentPose);
-        double currentAngle = turretController.getCurrentAngle();
+        double targetAngle  = turretController.calculateTurretAngleRED(currentPose);
+        double currentAngle = turretController.getCurrentAngleRED();
 
         telemetry.addData("--- POSE ---", "");
         telemetry.addData("X Position", "%.2f", currentPose.getX());
