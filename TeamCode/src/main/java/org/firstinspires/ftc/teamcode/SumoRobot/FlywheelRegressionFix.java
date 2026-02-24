@@ -75,8 +75,8 @@ public class FlywheelRegressionFix extends OpMode {
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setMaxPower(1);
-        Pose startPose = org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.getTeleOpStartPose();
-        follower.setStartingPose(startPose);
+       // Pose startPose = org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.getTeleOpStartPose();
+        //follower.setStartingPose(startPose);
 
         rgbIndicator = hardwareMap.get(Servo.class, "RGB");
 

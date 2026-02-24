@@ -11,6 +11,7 @@ public class TurretController {
 
     private DcMotorEx turretMotor;
 
+    private int encoderOffset=0;
     // ================= MOTOR + GEAR =================
     private static final double COUNTS_PER_DEGREE = 366.0 / 90.0;
 
@@ -45,6 +46,9 @@ public class TurretController {
     private double previousAngle = 0.0;
     private long   lastTime      = 0;
 
+    public void setEncoderOffset(int offset) {
+        this.encoderOffset=offset;
+    }
     // ================= CONSTRUCTOR =================
     public TurretController(HardwareMap hardwareMap, String motorName) {
         turretMotor = hardwareMap.get(DcMotorEx.class, motorName);
@@ -60,17 +64,18 @@ public class TurretController {
 
     // ================= GETTERS =================
     public double getCurrentAngle() {
-        return turretMotor.getCurrentPosition() / COUNTS_PER_DEGREE;
+        return (turretMotor.getCurrentPosition() +encoderOffset) / COUNTS_PER_DEGREE;
     }
 
     public int getRawTicks() {
-        return turretMotor.getCurrentPosition();
+        return turretMotor.getCurrentPosition() +encoderOffset;
     }
 
     public void resetEncoder() {
         turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         targetAngle = 0;
+        encoderOffset=0;
         turretMotor.setPower(0);
     }
 

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.mechanisms;
+package org.firstinspires.ftc.teamcode.SumoRobot;
 
 import com.pedropathing.geometry.Pose;
 
@@ -7,6 +7,22 @@ import com.pedropathing.geometry.Pose;
  * Allows TeleOp to know where Autonomous actually ended.
  */
 public class PedroPose {
+
+    // --- ADD THESE VARIABLES ---
+    private static Integer lastKnownTurretTicks = null;
+
+    // --- ADD THESE METHODS ---
+    public static void saveTurretTicks(int ticks) {
+        lastKnownTurretTicks = ticks;
+    }
+
+    public static Integer getTurretTicks() {
+        return lastKnownTurretTicks;
+    }
+
+    // --- UPDATE YOUR EXISTING CLEAR METHOD ---
+
+
 
     // Static pose that persists between OpModes
     private static Pose lastKnownPose = null;
@@ -43,6 +59,7 @@ public class PedroPose {
     public static void clearSavedPose() {
         lastKnownPose = null;
         poseSetByAuto = false;
+        lastKnownTurretTicks=null;
     }
 
     /**

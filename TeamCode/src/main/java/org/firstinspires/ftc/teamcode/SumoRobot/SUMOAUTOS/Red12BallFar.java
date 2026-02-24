@@ -481,7 +481,7 @@ public class Red12BallFar extends OpMode {
     @Override
   public void stop() {
       Pose finalPose = follower.getPose();
-      org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.saveCurrentPose(finalPose);
+      //org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.saveCurrentPose(finalPose);
       super.stop();
     }
 

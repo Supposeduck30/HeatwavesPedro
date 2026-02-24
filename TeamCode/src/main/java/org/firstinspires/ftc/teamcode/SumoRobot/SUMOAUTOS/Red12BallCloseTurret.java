@@ -463,7 +463,8 @@ public class Red12BallCloseTurret extends OpMode {
     @Override
     public void stop() {
         Pose finalPose = follower.getPose();
-        org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.saveCurrentPose(finalPose);
+        org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.saveCurrentPose(finalPose);
+        org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.saveTurretTicks(turret.getCurrentPosition());
         super.stop();
     }
 }

@@ -65,8 +65,12 @@ public class REDTELEOP extends OpMode {
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setMaxPower(1);
-        Pose startPose = new Pose(89.4, 8, Math.toRadians(90));
-        follower.setStartingPose(startPose);
+        if (org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.hasPoseFromAuto()){
+            follower.setStartingPose(org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.getTeleOpStartPose());
+        } else {
+            Pose startPose = new Pose(54.5,8,Math.toRadians(90));
+            follower.setStartingPose(startPose);
+        }
 
         //limelight = hardwareMap.get(Limelight3A.class, "limelight");
         //limelight.pipelineSwitch(1);
@@ -84,7 +88,14 @@ public class REDTELEOP extends OpMode {
         kicker = hardwareMap.get(Servo.class, "Kicker");
 
         turretController = new TurretControllerRED(hardwareMap, "Turret");
-        turretController.resetEncoderRED();
+        Integer autoTurretTicks = org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.getTurretTicks();
+
+        if (autoTurretTicks!=null) {
+            turretController.setEncoderOffsetRED(autoTurretTicks);
+            telemetry.addData("Turret mode", "Resumed from auto(" + autoTurretTicks + " ticks");
+        } else {
+            telemetry.addData("Turret mode", "Fresh start (0 ticks)");
+        }
 
         fr.setDirection(DcMotorSimple.Direction.FORWARD);
         br.setDirection(DcMotorSimple.Direction.FORWARD);

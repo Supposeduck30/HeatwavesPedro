@@ -474,7 +474,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
      @Override
      public void stop() {
          Pose finalPose = follower.getPose();
-     org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.saveCurrentPose(finalPose);
+     //org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.PedroPose.saveCurrentPose(finalPose);
       super.stop();
      }
 
