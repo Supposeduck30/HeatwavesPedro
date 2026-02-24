@@ -218,14 +218,18 @@ public class BLUETELEOP extends OpMode {
         if (gamepad2.options) {
             turretController.resetEncoder();
         }
-
+        /* ---------- Live Turret Trim ---------- */
+        if(gamepad2.dpad_left){
+            turretController.ANGLE_OFFSET += 0.2;
+        } else if(gamepad2.dpad_right){
+            turretController.ANGLE_OFFSET -= 0.2;
+        }
         /* ---------- BLOCKER CONTROL ---------- */
         if (gamepad2.triangle) {
             kicker.setPosition(KICKER_OPEN);
         } else {
             kicker.setPosition(KICKER_BLOCK);
         }
-
         /* ---------- SHOOTER + INTAKE ---------- */
         // Target velocity is always distance-based — shooter runs continuously,
         // no idle speed switching. Intake and kicker control when balls actually fire.
@@ -241,7 +245,14 @@ public class BLUETELEOP extends OpMode {
         } else if (gamepad2.right_bumper) { // RB → intake forward (shoot)
             intakePower = 1.0;
         }
+        /* ---------- AIM LOCK ---------- */
+        boolean isShooting = gamepad2.right_bumper;
 
+        if(!isShooting){
+            turretController.aimAtGoalWithPrediction(currentPose, velocity);
+        } else{
+            turretController.update();
+        }
         shooter1.setVelocity(targetVelocity);
         shooter2.setVelocity(targetVelocity);
         intake.setPower(intakePower);
@@ -265,6 +276,9 @@ public class BLUETELEOP extends OpMode {
         telemetry.addData("Velocity Error S1", "%.0f ticks/s", targetVelocity - shooter1.getVelocity());
         telemetry.addData("--- BLOCKER ---", "");
         telemetry.addData("Status", gamepad2.triangle ? "OPEN" : "BLOCKING");
+        telemetry.addData("--- AIM LOCK ---", "");
+        telemetry.addData("Live Trim Offset", "%.1f (use d-pad L/R)", turretController.ANGLE_OFFSET);
+        telemetry.addData("Status", isShooting ? "SHOOTING (Locked)" : "Tracking");
         telemetry.addData("Motor direction of front right", fr.getDirection());
         telemetry.update();
     }
