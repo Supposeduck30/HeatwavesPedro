@@ -10,6 +10,7 @@ import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
+
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -392,6 +393,10 @@ public class Blue12BallCloseTurret extends OpMode {
                 shooter2.setVelocity(0);
                 intake.setPower(0);
                 kicker.setPosition(0.31);
+                turret.setDirection(DcMotorSimple.Direction.REVERSE);
+                turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                turret.setTargetPosition(-1000);
+                turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 turret.setPower(0.5);
                 telemetry.addLine("Done all Paths");
                 break;
