@@ -65,7 +65,7 @@ public class BLUETELEOP extends OpMode {
     public void init() {
         follower = Constants.createFollower(hardwareMap);
         follower.setMaxPower(1);
-        Pose startPose = new Pose(57.3, 110.2, Math.toRadians(180));
+        Pose startPose = new Pose(54.5, 8, Math.toRadians(90 ));
         follower.setStartingPose(startPose);
 
         //limelight = hardwareMap.get(Limelight3A.class, "limelight");
