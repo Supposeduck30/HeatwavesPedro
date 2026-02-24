@@ -24,6 +24,7 @@ public class REDTELEOP extends OpMode {
     private Follower follower;
     private Limelight3A limelight;
 
+
     // TURRET CONTROLLER
     private TurretControllerRED turretController;
 
@@ -51,9 +52,10 @@ public class REDTELEOP extends OpMode {
     //private static final double VELOCITY_SLOPE     = 6.58626;
     //private static final double VELOCITY_INTERCEPT = 1165.72046;
 
-    private static final double VEL_A = 0.0168765;
-    private static final double VEL_B = 1.60873;
-    private static final double VEL_C = 1331.50868;
+    private static final double VEL_A = 0.016966;
+    private static final double VEL_B = 1.45242;
+    private static final double VEL_C = 1235.32337;
+
     private static final double MAX_SHOOTER_VELOCITY = 2600;
 
     private static final double ALIGN_KP        = 0.015;
