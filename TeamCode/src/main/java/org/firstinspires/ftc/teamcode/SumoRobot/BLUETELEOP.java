@@ -30,8 +30,7 @@ public class BLUETELEOP extends OpMode {
     private Servo rgbIndicator;
     private static final double RED  = 0.277;
     private static final double BLUE = 0.5;
-
-    private final Pose parkPose   = new Pose(39.33, 33, Math.toRadians(180));
+    private final Pose parkPose   = new Pose(105.3, 31.8, Math.toRadians(0));
     private final Pose shootFar   = new Pose(78, 18, Math.toRadians(64));
     private final Pose resetPose  = new Pose(7, 9, Math.toRadians(90));
     private final Pose shootClose = new Pose(82, 108, Math.toRadians(30.5));
@@ -246,13 +245,13 @@ public class BLUETELEOP extends OpMode {
             intakePower = 1.0;
         }
         /* ---------- AIM LOCK ---------- */
-        boolean isShooting = gamepad2.right_bumper;
+       // boolean isShooting = gamepad2.right_bumper;
 
-        if(!isShooting){
-            turretController.aimAtGoalWithPrediction(currentPose, velocity);
-        } else{
-            turretController.update();
-        }
+        //if(!isShooting){
+          //  turretController.aimAtGoalWithPrediction(currentPose, velocity);
+        //} else{
+          //  turretController.update();
+       // }
         shooter1.setVelocity(targetVelocity);
         shooter2.setVelocity(targetVelocity);
         intake.setPower(intakePower);
@@ -278,7 +277,8 @@ public class BLUETELEOP extends OpMode {
         telemetry.addData("Status", gamepad2.triangle ? "OPEN" : "BLOCKING");
         telemetry.addData("--- AIM LOCK ---", "");
         telemetry.addData("Live Trim Offset", "%.1f (use d-pad L/R)", turretController.ANGLE_OFFSET);
-        telemetry.addData("Status", isShooting ? "SHOOTING (Locked)" : "Tracking");
+        //
+        // telemetry.addData("Status", isShooting ? "SHOOTING (Locked)" : "Tracking");
         telemetry.addData("Motor direction of front right", fr.getDirection());
         telemetry.update();
     }

@@ -26,7 +26,7 @@ public class Blue9BallFar extends OpMode {
     private Servo kicker;
     private DcMotorEx turret;
 
-    private static final int TURRET_TARGET_TICKS = 90;
+    private static final int TURRET_TARGET_TICKS = 98;
     public double shootVelocity = 2200;
 
     // Pathing
@@ -40,11 +40,15 @@ public class Blue9BallFar extends OpMode {
         DRIVE_TO_SHOOT1,
         SPIN_UP1,
         SHOOT1,
-        INTAKE_PATH1,
+        DRIVE_TO_STACK,
+        INTAKING_STACK,
+        WAIT_FOR_INTAKE_STACK,
         DRIVE_TO_SHOOT2,
         SPIN_UP2,
         SHOOT2,
-        INTAKE_PATH2,
+        DRIVE_TO_HP,
+        INTAKING_HP,
+        WAIT_FOR_INTAKE_HP,
         DRIVE_TO_SHOOT3,
         SPIN_UP3,
         SHOOT3,
@@ -55,51 +59,66 @@ public class Blue9BallFar extends OpMode {
     private PathState pathState;
 
     // Poses
-    private final Pose startPose = new Pose(53,6.6,Math.toRadians(180));
-    private final Pose shootPose1 = new Pose(44.4,35.3, Math.toRadians(180));
-    private final Pose collectRow1 = new Pose(12.5,35.7, Math.toRadians(180));
-    private final Pose takeRow1 = new Pose(55.4,9.8, Math.toRadians(270));
-    private final Pose shootPose2 = new Pose(7.7,27, Math.toRadians(270));
-    private final Pose collectRow2 = new Pose(99.86,58.32, Math.toRadians(180));
-    private final Pose takeRow2 = new Pose(7.4,10.9, Math.toRadians(180));
-    private final Pose shootPose3 = new Pose(55.4,9.8, Math.toRadians(180));
-    private final Pose endPose = new Pose(31.3,10.2, Math.toRadians(180));
+    private final Pose startPose = new Pose(54.5,8.6,Math.toRadians(90));
+    private final Pose shootPose1 = new Pose(55.1,15.9, Math.toRadians(180));
+    private final Pose collectRow1 = new Pose(40.4,35.7, Math.toRadians(180));
+    private final Pose takeRow1 = new Pose(14.4,35.7, Math.toRadians(180));
+    private final Pose shootPose2 = new Pose(55.1,15.9, Math.toRadians(180));
+    private final Pose collectRow2 = new Pose(7,25.2, Math.toRadians(270));
+    private final Pose takeRow2 = new Pose(7,9.7, Math.toRadians(270));
+    private final Pose shootPose3 = new Pose(55.1,15.9, Math.toRadians(180));
+    private final Pose endPose = new Pose(17.2,16, Math.toRadians(180));
 
     private PathChain path1, pathCollect1, pathTake1, path2,
             pathCollect2, pathTake2, path3, pathEnd;
 
     private void buildPaths() {
-
+        // TURN 90 DEGREES TO 180
         path1 = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, shootPose1))
+                .setLinearHeadingInterpolation(startPose.getHeading(), shootPose1.getHeading())
                 .build();
 
+        // DRIVE TO STACK LINE (Hold 180)
         pathCollect1 = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose1, collectRow1))
+                .setConstantHeadingInterpolation(shootPose1.getHeading())
                 .build();
 
+        // SWEEP THROUGH STACK (Hold 180)
         pathTake1 = follower.pathBuilder()
                 .addPath(new BezierLine(collectRow1, takeRow1))
+                .setConstantHeadingInterpolation(collectRow1.getHeading())
                 .build();
 
+        // RETURN TO SHOOT (Hold 180)
         path2 = follower.pathBuilder()
                 .addPath(new BezierLine(takeRow1, shootPose2))
+                .setConstantHeadingInterpolation(takeRow1.getHeading())
                 .build();
 
+        // DRIVE TO HUMAN PLAYER (Turn 180 to 270)
         pathCollect2 = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose2, collectRow2))
+                .setLinearHeadingInterpolation(shootPose2.getHeading(), collectRow2.getHeading())
                 .build();
 
+        // SWEEP HP (Hold 270)
         pathTake2 = follower.pathBuilder()
                 .addPath(new BezierLine(collectRow2, takeRow2))
+                .setConstantHeadingInterpolation(collectRow2.getHeading())
                 .build();
 
+        // RETURN TO SHOOT (Turn 270 to 180)
         path3 = follower.pathBuilder()
                 .addPath(new BezierLine(takeRow2, shootPose3))
+                .setLinearHeadingInterpolation(takeRow2.getHeading(), shootPose3.getHeading())
                 .build();
 
+        // PARK (Hold 180)
         pathEnd = follower.pathBuilder()
                 .addPath(new BezierLine(shootPose3, endPose))
+                .setConstantHeadingInterpolation(shootPose3.getHeading())
                 .build();
     }
 
@@ -109,9 +128,7 @@ public class Blue9BallFar extends OpMode {
     }
 
     private void stateMachine() {
-
         switch (pathState) {
-
             case DRIVE_TO_SHOOT1:
                 follower.followPath(path1, true);
                 setPathState(PathState.SPIN_UP1);
@@ -125,52 +142,82 @@ public class Blue9BallFar extends OpMode {
                 break;
 
             case SHOOT1:
-                handleShooting(PathState.INTAKE_PATH1, pathCollect1);
+                handleShooting(PathState.DRIVE_TO_STACK, pathCollect1);
                 break;
 
-            case INTAKE_PATH1:
-                intake.setPower(1);
+            case DRIVE_TO_STACK:
                 if (!follower.isBusy()) {
-                    follower.followPath(pathTake1, true);
+                    // Start Intake and follow the sweep path SLOWLY (0.6 speed) so it actually grabs them
+                    intake.setPower(1);
+                    follower.followPath(pathTake1, 0.6, true);
+                    setPathState(PathState.INTAKING_STACK);
+                }
+                break;
+
+            case INTAKING_STACK:
+                if (!follower.isBusy()) {
+                    // Done driving over balls. Wait 0.8 seconds to let them travel up the ramp!
+                    setPathState(PathState.WAIT_FOR_INTAKE_STACK);
+                }
+                break;
+
+            case WAIT_FOR_INTAKE_STACK:
+                if (pathTimer.getElapsedTimeSeconds() > 0.8) {
+                    intake.setPower(0);
+                    follower.followPath(path2, true);
                     setPathState(PathState.DRIVE_TO_SHOOT2);
                 }
                 break;
 
             case DRIVE_TO_SHOOT2:
                 if (!follower.isBusy()) {
-                    follower.followPath(path2, true);
                     setPathState(PathState.SPIN_UP2);
                 }
                 break;
 
             case SPIN_UP2:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 1.0) {
+                if (pathTimer.getElapsedTimeSeconds() > 1.0) {
                     ballsShot = 0;
                     setPathState(PathState.SHOOT2);
                 }
                 break;
 
             case SHOOT2:
-                handleShooting(PathState.INTAKE_PATH2, pathCollect2);
+                handleShooting(PathState.DRIVE_TO_HP, pathCollect2);
                 break;
 
-            case INTAKE_PATH2:
-                intake.setPower(1);
+            case DRIVE_TO_HP:
                 if (!follower.isBusy()) {
-                    follower.followPath(pathTake2, true);
+                    // Start Intake and follow HP sweep path SLOWLY
+                    intake.setPower(1);
+                    follower.followPath(pathTake2, 0.6, true);
+                    setPathState(PathState.INTAKING_HP);
+                }
+                break;
+
+            case INTAKING_HP:
+                if (!follower.isBusy()) {
+                    // Wait for balls to travel up ramp
+                    setPathState(PathState.WAIT_FOR_INTAKE_HP);
+                }
+                break;
+
+            case WAIT_FOR_INTAKE_HP:
+                if (pathTimer.getElapsedTimeSeconds() > 0.8) {
+                    intake.setPower(0);
+                    follower.followPath(path3, true);
                     setPathState(PathState.DRIVE_TO_SHOOT3);
                 }
                 break;
 
             case DRIVE_TO_SHOOT3:
                 if (!follower.isBusy()) {
-                    follower.followPath(path3, true);
                     setPathState(PathState.SPIN_UP3);
                 }
                 break;
 
             case SPIN_UP3:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 1.0) {
+                if (pathTimer.getElapsedTimeSeconds() > 1.0) {
                     ballsShot = 0;
                     setPathState(PathState.SHOOT3);
                 }
@@ -188,30 +235,29 @@ public class Blue9BallFar extends OpMode {
 
             case DONE:
                 intake.setPower(0);
+                shooter1.setVelocity(0);
+                shooter2.setVelocity(0);
                 kicker.setPosition(0.31);
+                turret.setPower(0.5);
                 telemetry.addLine("Auto Complete");
                 break;
         }
     }
 
     private void handleShooting(PathState nextState, PathChain nextPath) {
-
         if (!shooting && pathTimer.getElapsedTimeSeconds() > 0.3) {
-
             intake.setPower(1);
-            kicker.setPosition(0.6);
+            kicker.setPosition(0.25);
             shooting = true;
             kickTimer.resetTimer();
-
         } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
-
             kicker.setPosition(0.31);
             shooting = false;
             ballsShot++;
 
             if (ballsShot >= 3) {
                 ballsShot = 0;
-                intake.setPower(0);
+                intake.setPower(1);
                 follower.followPath(nextPath, true);
                 setPathState(nextState);
             } else {
@@ -222,7 +268,6 @@ public class Blue9BallFar extends OpMode {
 
     @Override
     public void init() {
-
         follower = Constants.createFollower(hardwareMap);
         follower.setPose(startPose);
 
@@ -237,7 +282,6 @@ public class Blue9BallFar extends OpMode {
         turret.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turret.setTargetPosition(TURRET_TARGET_TICKS);
         turret.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
         turret.setPower(0.5);
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -246,14 +290,14 @@ public class Blue9BallFar extends OpMode {
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(400,0,0,25);
+        PIDFCoefficients pidf = new PIDFCoefficients(120,0,0,25);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
         pathTimer = new Timer();
         kickTimer = new Timer();
 
-        kicker.setPosition(0.31);
+        kicker.setPosition(0.15);
 
         buildPaths();
         pathState = PathState.DRIVE_TO_SHOOT1;
@@ -268,10 +312,9 @@ public class Blue9BallFar extends OpMode {
 
     @Override
     public void loop() {
-
         follower.update();
 
-        // Blue18 style velocity hold
+        // Keep velocity held high during auto
         shooter1.setVelocity(shootVelocity);
         shooter2.setVelocity(shootVelocity);
 
@@ -279,6 +322,16 @@ public class Blue9BallFar extends OpMode {
 
         telemetry.addData("State", pathState);
         telemetry.addData("Balls Shot", ballsShot);
+        telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
         telemetry.update();
+    }
+
+    @Override
+    public void stop() {
+        // --- ADDED CRITICAL MEMORY SAVES FOR TELEOP ---
+        Pose finalPose = follower.getPose();
+        org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.saveCurrentPose(finalPose);
+        org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.saveTurretTicks(turret.getCurrentPosition());
+        super.stop();
     }
 }
