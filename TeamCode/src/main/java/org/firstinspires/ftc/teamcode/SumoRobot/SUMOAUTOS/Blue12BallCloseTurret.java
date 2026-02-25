@@ -35,7 +35,7 @@ public class Blue12BallCloseTurret extends OpMode {
     private DcMotor intake;
     private Servo kicker;
 
-    public double shootVelocity = 1650;
+    public double shootVelocity = 1530;
     private static final int TURRET_TARGET_TICKS = 219;
 
     // Software
@@ -89,7 +89,7 @@ public class Blue12BallCloseTurret extends OpMode {
     private final Pose bezierGateToShoot  = new Pose(61.4, 61.3, Math.toRadians(180));
     private final Pose pose5End  = new Pose(55.8, 89.9,  Math.toRadians(180));
     private final Pose pose6End  = new Pose(45,   83.5,  Math.toRadians(180));
-    private final Pose pose7End  = new Pose(24.9, 83.5,  Math.toRadians(180));
+    private final Pose pose7End  = new Pose(23.9, 83.5,  Math.toRadians(180));
     private final Pose pose8End  = new Pose(55.8, 89.9,  Math.toRadians(180));
     private final Pose pose9End  = new Pose(45.4, 36.5,  Math.toRadians(180));
     private final Pose pose10End = new Pose(12.9, 36.5,  Math.toRadians(180));
@@ -190,6 +190,7 @@ public class Blue12BallCloseTurret extends OpMode {
                     shooting = true;
                     kickTimer.resetTimer();
                 } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
+                    kicker.setPosition(0.31);
                     shooting = false;
                     ballsShot++;
 
@@ -250,7 +251,7 @@ public class Blue12BallCloseTurret extends OpMode {
             case SHOOT2:
                 if (!shooting && pathTimer.getElapsedTimeSeconds() > 0.3) {
                     intake.setPower(1);
-                    kicker.setPosition(0.6);
+                    kicker.setPosition(0.25);
                     shooting = true;
                     kickTimer.resetTimer();
                 } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
@@ -307,18 +308,18 @@ public class Blue12BallCloseTurret extends OpMode {
 
             case SHOOT3:
                 if (!shooting && pathTimer.getElapsedTimeSeconds() > 0.3) {
-                    intake.setPower(1);
-                    kicker.setPosition(0.6);
-                    shooting = true;
-                    kickTimer.resetTimer();
-                } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
-                    kicker.setPosition(0.31);
-                    shooting = false;
-                    ballsShot++;
+                intake.setPower(1);
+                kicker.setPosition(0.25);
+                shooting = true;
+                kickTimer.resetTimer();
+            } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
+                kicker.setPosition(0.31);
+                shooting = false;
+                ballsShot++;
 
-                    if (ballsShot >= 3) {
-                        ballsShot = 0;
-                        follower.followPath(path9, true);
+                if (ballsShot >= 3) {
+                    ballsShot = 0;
+                    intake.setPower(1);
                         setPathState(PathState.INTAKECLOSE3);
                     } else {
                         pathTimer.resetTimer();
@@ -360,7 +361,7 @@ public class Blue12BallCloseTurret extends OpMode {
             case SHOOT4:
                 if (!shooting && pathTimer.getElapsedTimeSeconds() > 0.3) {
                     intake.setPower(1);
-                    kicker.setPosition(0.6);
+                    kicker.setPosition(0.25);
                     shooting = true;
                     kickTimer.resetTimer();
                 } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
@@ -370,6 +371,7 @@ public class Blue12BallCloseTurret extends OpMode {
 
                     if (ballsShot >= 3) {
                         ballsShot = 0;
+                        intake.setPower(1);
                         follower.followPath(path12, true);
                         setPathState(PathState.INTAKECLOSE4);
                     } else {
@@ -420,7 +422,7 @@ public class Blue12BallCloseTurret extends OpMode {
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
-        PIDFCoefficients pidf = new PIDFCoefficients(400, 0, 0, 25);
+        PIDFCoefficients pidf = new PIDFCoefficients(120, 0, 0, 25);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         turret.setDirection(DcMotorSimple.Direction.REVERSE);

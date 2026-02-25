@@ -26,13 +26,13 @@ public class REDTELEOP extends OpMode {
 
 
     // TURRET CONTROLLER
-    private TurretControllerRED turretController;
+    private TurretControllerRED turretControllerRED;
 
     private Servo rgbIndicator;
     private static final double RED  = 0.277;
     private static final double BLUE = 0.5;
 
-    private final Pose parkPose   = new Pose(39.33, 33, Math.toRadians(180));
+    private final Pose parkPose   = new Pose(38.8, 31.5, Math.toRadians(0));
     private final Pose shootFar   = new Pose(78, 18, Math.toRadians(64));
     private final Pose resetPose  = new Pose(7, 9, Math.toRadians(90));
     private final Pose shootClose = new Pose(82, 108, Math.toRadians(30.5));
@@ -70,7 +70,7 @@ public class REDTELEOP extends OpMode {
         if (org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.hasPoseFromAuto()){
             follower.setStartingPose(org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.getTeleOpStartPose());
         } else {
-            Pose startPose = new Pose(54.5,8,Math.toRadians(90));
+            Pose startPose = new Pose(89.8,8.7,Math.toRadians(90));
             follower.setStartingPose(startPose);
         }
 
@@ -89,11 +89,11 @@ public class REDTELEOP extends OpMode {
         intake = hardwareMap.get(DcMotor.class, "Intake");
         kicker = hardwareMap.get(Servo.class, "Kicker");
 
-        turretController = new TurretControllerRED(hardwareMap, "Turret");
+        turretControllerRED = new TurretControllerRED(hardwareMap, "Turret");
         Integer autoTurretTicks = org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.getTurretTicks();
 
         if (autoTurretTicks!=null) {
-            turretController.setEncoderOffsetRED(autoTurretTicks);
+            turretControllerRED.setEncoderOffsetRED(autoTurretTicks);
             telemetry.addData("Turret mode", "Resumed from auto(" + autoTurretTicks + " ticks");
         } else {
             telemetry.addData("Turret mode", "Fresh start (0 ticks)");
@@ -213,10 +213,10 @@ public class REDTELEOP extends OpMode {
         lastPose = new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading());
         lastTime = currentTime;
 
-        turretController.aimAtGoalWithPredictionRED(currentPose, velocity);
+        turretControllerRED.aimAtGoalWithPredictionRED(currentPose, velocity);
 
         if (gamepad2.options) {
-            turretController.resetEncoderRED();
+            turretControllerRED.resetEncoderRED();
         }
 
         /* ---------- BLOCKER CONTROL ---------- */
@@ -225,11 +225,18 @@ public class REDTELEOP extends OpMode {
         } else {
             kicker.setPosition(KICKER_BLOCK);
         }
+        /* ---------- Live Turret Trim ---------- */
+        if(gamepad2.dpad_left){
+            turretControllerRED.ANGLE_OFFSETRED += 0.2;
+        } else if(gamepad2.dpad_right){
+            turretControllerRED
 
+                    .ANGLE_OFFSETRED -= 0.2;
+        }
         /* ---------- SHOOTER + INTAKE ---------- */
         // Target velocity is always distance-based — shooter runs continuously,
         // no idle speed switching. Intake and kicker control when balls actually fire.
-        double distance = turretController.getDistanceToGoalRED(currentPose);
+        double distance = turretControllerRED.getDistanceToGoalRED(currentPose);
         double targetVelocity = (VEL_A*distance*distance)+(VEL_B*distance)+VEL_C;
         targetVelocity= Range.clip(targetVelocity,0,MAX_SHOOTER_VELOCITY);
 
@@ -247,8 +254,8 @@ public class REDTELEOP extends OpMode {
         intake.setPower(intakePower);
 
         /* ---------- TELEMETRY ---------- */
-        double targetAngle  = turretController.calculateTurretAngleRED(currentPose);
-        double currentAngle = turretController.getCurrentAngleRED();
+        double targetAngle  = turretControllerRED.calculateTurretAngleRED(currentPose);
+        double currentAngle = turretControllerRED.getCurrentAngleRED();
 
         telemetry.addData("--- POSE ---", "");
         telemetry.addData("X Position", "%.2f", currentPose.getX());
