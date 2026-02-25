@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous
 @Configurable
-public class Blue9BallFar extends OpMode {
+public class Red9BallFar extends OpMode {
 
     // Mechanisms
     private DcMotorEx shooter1, shooter2;
@@ -26,7 +26,7 @@ public class Blue9BallFar extends OpMode {
     private Servo kicker;
     private DcMotorEx turret;
 
-    private static final int TURRET_TARGET_TICKS = 99;
+    private static final int TURRET_TARGET_TICKS = 670;
     public double shootVelocity = 1765;
 
     // Pathing
@@ -62,15 +62,16 @@ public class Blue9BallFar extends OpMode {
     private PathState pathState;
 
     // Poses
-    private final Pose startPose = new Pose(53.4,7.7,Math.toRadians(180));
-    private final Pose shootPose1 = new Pose(55.1,15.9, Math.toRadians(180));
-    private final Pose collectRow1 = new Pose(40.4,35.7, Math.toRadians(180));
-    private final Pose takeRow1 = new Pose(14.4,35.7, Math.toRadians(180));
-    private final Pose shootPose2 = new Pose(55.1,15.9, Math.toRadians(180));
-    private final Pose collectRow2 = new Pose(7,25.2, Math.toRadians(270));
-    private final Pose takeRow2 = new Pose(7,9.7, Math.toRadians(270));
-    private final Pose shootPose3 = new Pose(55.1,15.9, Math.toRadians(180));
-    private final Pose endPose = new Pose(17.2,16, Math.toRadians(180));
+    private final Pose startPose = new Pose(90.6,7.7,Math.toRadians(0));
+    private final Pose shootPose1 = new Pose(88.9,15.9, Math.toRadians(0));
+    private final Pose collectRow1 = new Pose(109.6,35.7, Math.toRadians(0));
+    private final Pose takeRow1 = new Pose(129.6,35.7, Math.toRadians(0));
+    private final Pose shootPose2 = new Pose(88.9,15.9, Math.toRadians(0));
+    private final Pose collectRow2 = new Pose(137,25.2, Math.toRadians(270));
+    private final Pose takeRow2 = new Pose(137,9.7, Math.toRadians(270));
+    private final Pose shootPose3 = new Pose(88.9,15.9, Math.toRadians(0));
+    private final Pose endPose = new Pose(126.8,16, Math.toRadians(0));
+
 
     private PathChain path1, pathCollect1, pathTake1, path2,
             pathCollect2, pathTake2, path3, pathEnd;
