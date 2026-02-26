@@ -64,10 +64,10 @@ public class Red9BallFar extends OpMode {
     // Poses
     private final Pose startPose = new Pose(90.6,7.7,Math.toRadians(0));
     private final Pose shootPose1 = new Pose(88.9,15.9, Math.toRadians(0));
-    private final Pose collectRow1 = new Pose(109.6,35.7, Math.toRadians(0));
+    private final Pose collectRow1 = new Pose(98.5,32.3, Math.toRadians(0));
     private final Pose takeRow1 = new Pose(129.6,35.7, Math.toRadians(0));
     private final Pose shootPose2 = new Pose(88.9,15.9, Math.toRadians(0));
-    private final Pose collectRow2 = new Pose(137,25.2, Math.toRadians(270));
+    private final Pose collectRow2 = new Pose(137,37.8, Math.toRadians(270));
     private final Pose takeRow2 = new Pose(137,9.7, Math.toRadians(270));
     private final Pose shootPose3 = new Pose(88.9,15.9, Math.toRadians(0));
     private final Pose endPose = new Pose(126.8,16, Math.toRadians(0));

@@ -64,10 +64,10 @@ public class Blue9BallFar extends OpMode {
     // Poses
     private final Pose startPose = new Pose(53.4,7.7,Math.toRadians(180));
     private final Pose shootPose1 = new Pose(55.1,15.9, Math.toRadians(180));
-    private final Pose collectRow1 = new Pose(40.4,35.7, Math.toRadians(180));
+    private final Pose collectRow1 = new Pose(56,36, Math.toRadians(180));
     private final Pose takeRow1 = new Pose(14.4,35.7, Math.toRadians(180));
     private final Pose shootPose2 = new Pose(55.1,15.9, Math.toRadians(180));
-    private final Pose collectRow2 = new Pose(7,25.2, Math.toRadians(270));
+    private final Pose collectRow2 = new Pose(7.2,41.3, Math.toRadians(270));
     private final Pose takeRow2 = new Pose(7,9.7, Math.toRadians(270));
     private final Pose shootPose3 = new Pose(55.1,15.9, Math.toRadians(180));
     private final Pose endPose = new Pose(17.2,16, Math.toRadians(180));
@@ -161,7 +161,7 @@ public class Blue9BallFar extends OpMode {
                 break;
 
             case INTAKING_STACK:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 5) {
                     // Done driving over balls. Wait 0.8 seconds to let them travel up the ramp!
                     setPathState(PathState.WAIT_FOR_INTAKE_STACK);
                 }
@@ -170,7 +170,7 @@ public class Blue9BallFar extends OpMode {
             case WAIT_FOR_INTAKE_STACK:
                 if (pathTimer.getElapsedTimeSeconds() > 0.8) {
                     intake.setPower(0);
-                    follower.followPath(path2, true);
+                    follower.followPath(path2, false);
                     setPathState(PathState.DRIVE_TO_SHOOT2);
                 }
                 break;
@@ -199,7 +199,7 @@ public class Blue9BallFar extends OpMode {
                 if (!follower.isBusy()) {
                     // Start Intake and follow HP sweep path SLOWLY
                     intake.setPower(1);
-                    follower.followPath(pathTake2, 0.6, true);
+                    follower.followPath(pathTake2, 0.8, false);
                     setPathState(PathState.INTAKING_HP);
                 }
                 break;
@@ -214,7 +214,7 @@ public class Blue9BallFar extends OpMode {
             case WAIT_FOR_INTAKE_HP:
                 if (pathTimer.getElapsedTimeSeconds() > 0.8) {
                     intake.setPower(0);
-                    follower.followPath(path3, true);
+                    follower.followPath(path3, false);
                     setPathState(PathState.DRIVE_TO_SHOOT3);
                 }
                 break;

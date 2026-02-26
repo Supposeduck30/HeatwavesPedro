@@ -87,8 +87,8 @@ public class Red12BallCloseTurret extends OpMode {
     private final Pose pose4End  = new Pose(130.8, 71.5,  Math.toRadians(0));
     private final Pose bezierGateToShoot  = new Pose(82.6, 61.3, Math.toRadians(0));
     private final Pose pose5End  = new Pose(88.2, 89.9,  Math.toRadians(0));
-    private final Pose pose6End  = new Pose(99,   83.5,  Math.toRadians(0));
-    private final Pose pose7End  = new Pose(121.1, 83.5,  Math.toRadians(0));
+    private final Pose pose6End  = new Pose(99,   85.2,  Math.toRadians(0));
+    private final Pose pose7End  = new Pose(128.3, 85.2,  Math.toRadians(0));
     private final Pose pose8End  = new Pose(88.2, 89.9,  Math.toRadians(0));
     private final Pose pose9End  = new Pose(98.6, 36.5,  Math.toRadians(0));
     private final Pose pose10End = new Pose(131.1, 36.5,  Math.toRadians(0));
