@@ -117,9 +117,9 @@ public class Blue18BallCloseTurret extends OpMode {
                 }
                 break;
             case SHOOT1:
+                kicker.setPosition(0.25);
                 if (!shooting && pathTimer.getElapsedTimeSeconds() > 0.4) {
                     intake.setPower(1);
-                    kicker.setPosition(0.25);
                     shooting = true;
                     kickTimer.resetTimer();
                 } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.14) {
@@ -159,9 +159,9 @@ public class Blue18BallCloseTurret extends OpMode {
                 }
                 break;
             case SHOOT2:
+                kicker.setPosition(0.25);
                 if (!shooting && pathTimer.getElapsedTimeSeconds() > 0.1) {
                     intake.setPower(1);
-                    kicker.setPosition(0.25);
                     shooting = true;
                     kickTimer.resetTimer();
                 } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.14) {
