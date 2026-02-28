@@ -33,7 +33,7 @@ public class new18BallGateIntake extends OpMode {
     private DcMotorEx turret;
 
     public double shootVelocity = 1530;
-    public int TURRET_TARGET_TICKS = 219;
+    public int TURRET_TARGET_TICKS = 217;
 
 
     // Software
@@ -60,6 +60,9 @@ public class new18BallGateIntake extends OpMode {
         DRIVE_INTAKE_GATE1_TO_SHOOT3,
         SHOOT3,
 
+        SHOOT3TOINTAKESPIKE1,
+        COLLECTSPIKE1,
+
         DONE,
     }
 
@@ -70,26 +73,30 @@ public class new18BallGateIntake extends OpMode {
     private final Pose startPose           = new Pose(24.600, 126.700, Math.toRadians(135));
 
     // Each path has its own shoot spot (same coordinates, separate poses)
-    private final Pose shootSpot1          = new Pose(60.600,  84.000, Math.toRadians(180));
-    private final Pose shootSpot2          = new Pose(60.600,  84.000, Math.toRadians(180));
-    private final Pose shootSpot3          = new Pose(60.600,  84.000, Math.toRadians(180));
+    private final Pose shootSpot1          = new Pose(55.8,  84.000, Math.toRadians(180));
+    private final Pose shootSpot2          = new Pose(55.8,  84.000, Math.toRadians(180));
+    private final Pose shootSpot3          = new Pose(55.8,  84.000, Math.toRadians(180));
 
     // IntakeSpike2
-    private final Pose intakeSpike2CP      = new Pose(69.000,  55.000, Math.toRadians(180));
-    private final Pose intakeSpike2End     = new Pose(15.500,  60.200, Math.toRadians(180));
+    private final Pose intakeSpike2CP      = new Pose(69.000,  53, Math.toRadians(180));
+    private final Pose intakeSpike2End     = new Pose(15.500,  58, Math.toRadians(180));
 
     // Spike2ToShoot2
     private final Pose spike2ToShoot2CP    = new Pose(45.500,  67.200, Math.toRadians(180));
 
+    private final Pose intakeGatetoShootCP = new Pose(45.500,  67.200, Math.toRadians(180));
     // Shoot2ToGate
-    private final Pose shoot2ToGateEnd     = new Pose(13.380,  60.245, Math.toRadians(135));
+    private final Pose shoot2ToGateEnd     = new Pose(10.38,  61.245, Math.toRadians(135));
 
     // GateToIntake
-    private final Pose gateToIntakeEnd     = new Pose( 9.129,  54.264, Math.toRadians(100));
+    private final Pose gateToIntakeEnd     = new Pose( 6.129,  55, Math.toRadians(100));
 
+    //Spike1ToShoot1
+    private final Pose intakeEndtoSpike1    = new Pose(43.7, 84, Math.toRadians(180));
+    private final Pose Spike1toShoot1       = new Pose(15.2,  84, Math.toRadians(180));
     // ── Path chains ────────────────────────────────────────────────────────────
     private PathChain shootPreload1, intakeSpike2, spike2ToShoot2,
-            shoot2ToGate, gateToIntake, intakeGate1ToShoot3;
+            shoot2ToGate, gateToIntake, intakeGate1ToShoot3, shoot3ToIntakeSpike1, IntakeSpike1toCollect1;
 
     public void buildPaths() {
         // ShootPreload1: startPose → shootSpot1, heading 135°→180°
@@ -124,8 +131,18 @@ public class new18BallGateIntake extends OpMode {
 
         // IntakeGate1ToShoot3: (9.129,54.264) → shootSpot3, heading 100°→180°
         intakeGate1ToShoot3 = follower.pathBuilder()
-                .addPath(new BezierLine(gateToIntakeEnd, shootSpot3))
+                .addPath(new BezierCurve(gateToIntakeEnd, intakeGatetoShootCP, shootSpot3))
                 .setLinearHeadingInterpolation(Math.toRadians(100), Math.toRadians(180))
+                .build();
+
+        shoot3ToIntakeSpike1 = follower.pathBuilder()
+                .addPath(new BezierLine(shootSpot3, intakeEndtoSpike1))
+                .setLinearHeadingInterpolation(shootSpot3.getHeading(), intakeEndtoSpike1.getHeading())
+                .build();
+
+        IntakeSpike1toCollect1 = follower.pathBuilder()
+                .addPath(new BezierLine(intakeEndtoSpike1, Spike1toShoot1))
+                .setLinearHeadingInterpolation(intakeEndtoSpike1.getHeading(), Spike1toShoot1.getHeading())
                 .build();
     }
 
@@ -147,7 +164,7 @@ public class new18BallGateIntake extends OpMode {
                     setPathState(PathState.SHOOT1);
                 }
             case SHOOT1:
-                if (!follower.isBusy()&& pathTimer.getElapsedTimeSeconds() > 2.5) {
+                if (!follower.isBusy()) {
                     if (!shooting ) {
                         kicker.setPosition(0.25);
                         shooting = true;
@@ -218,7 +235,7 @@ public class new18BallGateIntake extends OpMode {
                 break;
 
             case DRIVE_GATE_TO_INTAKE:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 1.0) {
                     follower.followPath(intakeGate1ToShoot3, true);
                     setPathState(PathState.DRIVE_INTAKE_GATE1_TO_SHOOT3);
                 }
@@ -237,18 +254,28 @@ public class new18BallGateIntake extends OpMode {
                     shooting = true;
                     kickTimer.resetTimer();
                 } else if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
-                    kicker.setPosition(0.31);
                     shooting = false;
                     ballsShot++;
                     if (ballsShot >= 3) {
                         ballsShot = 0;
-                        setPathState(PathState.DONE);
+                        setPathState(PathState.SHOOT3TOINTAKESPIKE1);
                     } else {
                         pathTimer.resetTimer();
                     }
                 }
                 break;
 
+            case SHOOT3TOINTAKESPIKE1:
+                if (!follower.isBusy()) {
+                    follower.followPath(shoot3ToIntakeSpike1, true);
+                    setPathState(PathState.COLLECTSPIKE1);
+                }
+                break;
+            case COLLECTSPIKE1:
+                if (!follower.isBusy()){
+                    follower.followPath(IntakeSpike1toCollect1,true);
+                    setPathState(PathState.DONE);
+                }
             case DONE:
                 shooter1.setVelocity(0);
                 shooter2.setVelocity(0);
