@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.SumoRobot.SUMOAUTOS;
 
 import com.bylazar.configurables.annotations.Configurable;
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
@@ -55,6 +56,17 @@ public class Blue18BallFar extends OpMode {
         SPIN_UP3,
         SHOOT3,
         INTAKECLOSE3,
+
+        CHANCE1,
+        CHANCE1SHOOT,
+        CHANCE1CLOSE,
+        CHANCE2,
+        CHANCE2SHOOT,
+        CHANCE2CLOSE,
+        CHANCE3,
+        CHANCE3SHOOT,
+        CHANCE3CLOSE,
+
         DRIVE_TO_END,
         DONE
     }
@@ -64,16 +76,25 @@ public class Blue18BallFar extends OpMode {
     // Poses
     private final Pose startPose = new Pose(53.4,7.7,Math.toRadians(180));
     private final Pose shootPose1 = new Pose(55.1,15.9, Math.toRadians(180));
-    private final Pose collectRow1 = new Pose(40.4,35.7, Math.toRadians(180));
+    private final Pose collectRow1 = new Pose(56,36, Math.toRadians(180));
     private final Pose takeRow1 = new Pose(14.4,35.7, Math.toRadians(180));
     private final Pose shootPose2 = new Pose(55.1,15.9, Math.toRadians(180));
-    private final Pose collectRow2 = new Pose(7,25.2, Math.toRadians(270));
+    private final Pose collectRow2 = new Pose(7.2,41.3, Math.toRadians(270));
     private final Pose takeRow2 = new Pose(7,9.7, Math.toRadians(270));
     private final Pose shootPose3 = new Pose(55.1,15.9, Math.toRadians(180));
+    private final Pose chanceGrab1 = new Pose(9,11.5, Math.toRadians(270));
+    private final Pose chanceGrab1CP = new Pose(16.9,55.6, Math.toRadians(270));
+    private final Pose chanceGrab1ToShoot1 = new Pose(55.1,15.9,Math.toRadians(180));
+    private final Pose chanceGrab2 = new Pose(8.1, 40.5, Math.toRadians(90));
+    private final Pose chanceGrab2CP = new Pose(0.4,0.9, Math.toRadians(90));
+    private final Pose chanceGrab2ToShoot2 = new Pose(55.1,15.9, Math.toRadians(180));
+    private final Pose chanceGrab3 = new Pose (9.6,45,Math.toRadians(90));
+    private final Pose chanceGrab3CP = new Pose (4.3,5,Math.toRadians(90));
+    private final Pose chanceGrab3ToShoot3 = new Pose (55.1,15.9,Math.toRadians(180));
     private final Pose endPose = new Pose(17.2,16, Math.toRadians(180));
 
     private PathChain path1, pathCollect1, pathTake1, path2,
-            pathCollect2, pathTake2, path3, pathEnd;
+            pathCollect2, pathTake2, path3, chance1, chance1ToShoot, chance2, chance2ToShoot, chance3, chance3ToShoot, pathEnd;
 
     private void buildPaths() {
         // TURN 90 DEGREES TO 180
@@ -116,6 +137,35 @@ public class Blue18BallFar extends OpMode {
         path3 = follower.pathBuilder()
                 .addPath(new BezierLine(takeRow2, shootPose3))
                 .setLinearHeadingInterpolation(takeRow2.getHeading(), shootPose3.getHeading())
+                .build();
+
+        chance1 = follower.pathBuilder()
+                .addPath(new BezierCurve(shootPose3, chanceGrab1CP, chanceGrab1))
+                .setLinearHeadingInterpolation(shootPose3.getHeading(), chanceGrab1CP.getHeading(), chanceGrab1.getHeading())
+                .build();
+
+        chance1ToShoot = follower.pathBuilder()
+                .addPath(new BezierLine(chanceGrab1, chanceGrab1ToShoot1))
+                .setLinearHeadingInterpolation(chanceGrab1.getHeading(),chanceGrab1ToShoot1.getHeading())
+                .build();
+
+        chance2 = follower.pathBuilder()
+                .addPath(new BezierCurve(chanceGrab1ToShoot1, chanceGrab2CP, chanceGrab2))
+                .setLinearHeadingInterpolation(chanceGrab1ToShoot1.getHeading(), chanceGrab2CP.getHeading(), chanceGrab2.getHeading())
+                .build();
+
+        chance2ToShoot = follower.pathBuilder()
+                .addPath(new BezierLine(chanceGrab2, chanceGrab2ToShoot2))
+                .setLinearHeadingInterpolation(chanceGrab2.getHeading(), chanceGrab2ToShoot2.getHeading())
+                .build();
+        chance3 = follower.pathBuilder()
+                .addPath(new BezierCurve(chanceGrab2ToShoot2, chanceGrab3CP, chanceGrab3))
+                .setLinearHeadingInterpolation(chanceGrab2ToShoot2.getHeading(), chanceGrab3CP.getHeading(), chanceGrab3.getHeading())
+                .build();
+
+        chance3ToShoot = follower.pathBuilder()
+                .addPath(new BezierLine(chanceGrab3, chanceGrab3ToShoot3))
+                .setLinearHeadingInterpolation(chanceGrab3.getHeading(),chanceGrab3ToShoot3.getHeading())
                 .build();
 
         // PARK (Hold 180)
@@ -161,7 +211,7 @@ public class Blue18BallFar extends OpMode {
                 break;
 
             case INTAKING_STACK:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 5) {
                     // Done driving over balls. Wait 0.8 seconds to let them travel up the ramp!
                     setPathState(PathState.WAIT_FOR_INTAKE_STACK);
                 }
@@ -170,7 +220,7 @@ public class Blue18BallFar extends OpMode {
             case WAIT_FOR_INTAKE_STACK:
                 if (pathTimer.getElapsedTimeSeconds() > 0.8) {
                     intake.setPower(0);
-                    follower.followPath(path2, true);
+                    follower.followPath(path2, false);
                     setPathState(PathState.DRIVE_TO_SHOOT2);
                 }
                 break;
@@ -199,7 +249,7 @@ public class Blue18BallFar extends OpMode {
                 if (!follower.isBusy()) {
                     // Start Intake and follow HP sweep path SLOWLY
                     intake.setPower(1);
-                    follower.followPath(pathTake2, 0.6, true);
+                    follower.followPath(pathTake2, 0.8, false);
                     setPathState(PathState.INTAKING_HP);
                 }
                 break;
@@ -214,7 +264,7 @@ public class Blue18BallFar extends OpMode {
             case WAIT_FOR_INTAKE_HP:
                 if (pathTimer.getElapsedTimeSeconds() > 0.8) {
                     intake.setPower(0);
-                    follower.followPath(path3, true);
+                    follower.followPath(path3, false);
                     setPathState(PathState.DRIVE_TO_SHOOT3);
                 }
                 break;
@@ -233,13 +283,64 @@ public class Blue18BallFar extends OpMode {
                 break;
 
             case SHOOT3:
-                handleShooting(PathState.INTAKECLOSE3, pathEnd);
+                handleShooting(PathState.INTAKECLOSE3, chance1);
                 break;
             case INTAKECLOSE3:
                 kicker.setPosition(0.15);
 
+                setPathState(PathState.CHANCE1);
+                break;
+
+            case CHANCE1:
+                if (pathTimer.getElapsedTimeSeconds() > 0.8) {
+                    intake.setPower(1);
+                    follower.followPath(chance1ToShoot, true);
+                    setPathState(PathState.CHANCE1SHOOT);
+                }
+                break;
+            case CHANCE1SHOOT:
+                handleShooting(PathState.CHANCE1CLOSE, chance2);
+                break;
+
+            case CHANCE1CLOSE:
+                kicker.setPosition(0.15);
+                setPathState(PathState.CHANCE2);
+                break;
+
+            case CHANCE2:
+                if (pathTimer.getElapsedTimeSeconds() > 0.8) {
+                    intake.setPower(1);
+                    follower.followPath(chance2, true);
+                    setPathState(PathState.CHANCE2SHOOT);
+                }
+                break;
+
+            case CHANCE2SHOOT:
+                handleShooting(PathState.CHANCE2CLOSE, chance2ToShoot);
+                break;
+
+            case CHANCE2CLOSE:
+                kicker.setPosition(0.15);
+                setPathState(PathState.CHANCE3);
+                break;
+
+            case CHANCE3:
+                if (pathTimer.getElapsedTimeSeconds() > 0.8) {
+                    intake.setPower(1);
+                    follower.followPath(chance3, true);
+                    setPathState(PathState.CHANCE3SHOOT);
+                }
+                break;
+
+            case CHANCE3SHOOT:
+                handleShooting(PathState.CHANCE3CLOSE, chance3ToShoot);
+                break;
+
+            case CHANCE3CLOSE:
+                kicker.setPosition(0.15);
                 setPathState(PathState.DRIVE_TO_END);
                 break;
+
             case DRIVE_TO_END:
                 if (!follower.isBusy()) {
                     setPathState(PathState.DONE);

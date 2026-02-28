@@ -87,7 +87,7 @@ public class new18BallGateIntake extends OpMode {
     private final Pose intakeGatetoShootCP = new Pose(45.500,  67.200, Math.toRadians(180));
     // Shoot2ToGate
     private final Pose shoot2ToGateEnd     = new Pose(10.38,  61.245, Math.toRadians(135));
-
+    private final Pose shoot2ToGateEndCP = new Pose(46.9, 75.8, Math.toRadians(135));
     // GateToIntake
     private final Pose gateToIntakeEnd     = new Pose( 6.129,  55, Math.toRadians(100));
 
@@ -119,7 +119,7 @@ public class new18BallGateIntake extends OpMode {
 
         // Shoot2ToGate: shootSpot2 → (13.38,60.245), heading 180°→135°
         shoot2ToGate = follower.pathBuilder()
-                .addPath(new BezierLine(shootSpot2, shoot2ToGateEnd))
+                .addPath(new BezierCurve(shootSpot2,shoot2ToGateEndCP, shoot2ToGateEnd))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(135))
                 .build();
 
