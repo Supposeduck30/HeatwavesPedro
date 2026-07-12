@@ -163,8 +163,8 @@ public class TurretController {
 
         double power = p + d;
 
-        if (Math.abs(power) <0.05 && Math.abs(power) > 0.01){
-            power=Math.signum(power) * 0.05;
+        if (Math.abs(power) <0.04 && Math.abs(power) > 0.01){
+            power=Math.signum(power) * 0.04;
         }
 
         double currentMaxPower = MAX_POWER;

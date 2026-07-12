@@ -20,7 +20,9 @@ public class RegressionTest extends OpMode {
     private DcMotor intake;
     private Servo kicker;
     private Follower follower;
-    private TurretController turretController;
+
+    // Changed to Red Turret Controller
+    private TurretControllerRED turretController;
 
     // The manual velocity we will adjust with the D-Pad
     private double manualVelocity = 1200.0;
@@ -45,8 +47,11 @@ public class RegressionTest extends OpMode {
         intake = hardwareMap.get(DcMotor.class, "Intake");
         kicker = hardwareMap.get(Servo.class, "Kicker");
 
-        turretController = new TurretController(hardwareMap, "Turret");
-        turretController.resetEncoder();
+        // Instantiating the RED controller
+        turretController = new TurretControllerRED(hardwareMap, "Turret");
+
+        // Calling the RED specific method
+        turretController.resetEncoderRED();
 
         shooter1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -103,20 +108,17 @@ public class RegressionTest extends OpMode {
         lastDpadRight = dpadRight;
         lastDpadLeft = dpadLeft;
 
-        // 3. AUTO-AIM TURRET
-        turretController.aimAtGoalWithPrediction(currentPose, new Pose(0,0,0));
+        // 3. AUTO-AIM TURRET (Calling the RED specific method)
+        turretController.aimAtGoalWithPredictionRED(currentPose, new Pose(0,0,0));
 
         // 4. SHOOT MACRO (Right Bumper)
         if (gamepad2.right_bumper || gamepad1.right_bumper) {
             intake.setPower(1.0);
             kicker.setPosition(KICKER_OPEN);
-        } else
-
-            if (gamepad2.left_bumper) {
-                intake.setPower(1);
-        kicker.setPosition(KICKER_BLOCK);
-        }
-        else {
+        } else if (gamepad2.left_bumper) {
+            intake.setPower(1);
+            kicker.setPosition(KICKER_BLOCK);
+        } else {
             intake.setPower(0.0);
             kicker.setPosition(KICKER_BLOCK);
         }
@@ -124,8 +126,8 @@ public class RegressionTest extends OpMode {
         shooter1.setVelocity(manualVelocity);
         shooter2.setVelocity(manualVelocity);
 
-        // 5. TELEMETRY (WRITE THESE NUMBERS DOWN!)
-        double distance = turretController.getDistanceToGoal(currentPose);
+        // 5. TELEMETRY (Calling the RED specific method)
+        double distance = turretController.getDistanceToGoalRED(currentPose);
 
         telemetry.addLine("=== SHOOTER TUNER ===");
         telemetry.addLine("Adjust speed using D-Pad.");
