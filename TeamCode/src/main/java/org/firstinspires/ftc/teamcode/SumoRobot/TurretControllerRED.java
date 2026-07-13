@@ -10,7 +10,6 @@ import com.qualcomm.robotcore.util.Range;
 public class TurretControllerRED {
 
     private DcMotorEx turretMotor;
-
     private int encoderOffset = 0;
 
     // ================= MOTOR + GEAR =================
@@ -21,7 +20,7 @@ public class TurretControllerRED {
     private static final double MAX_ANGLE = 180.0;
 
     // ================= GOAL LOCATION =================
-    private static final double GOAL_X = 160.1;
+    private static final double GOAL_X = 165.1;
     private static final double GOAL_Y = 187.2;
 
     // ================= TURRET PIVOT OFFSET =================
@@ -32,7 +31,7 @@ public class TurretControllerRED {
     public double ANGLE_OFFSETRED = 3.5;
 
     // ================= PREDICTIVE AIMING =================
-    private static final double XY_SCALAR                   = 0.;
+    private static final double XY_SCALAR                   = 0.4;
     private static final double MIN_VELOCITY_FOR_PREDICTION = 2.0;
 
     // ================= PID CONTROL =================
@@ -142,6 +141,7 @@ public class TurretControllerRED {
     }
 
     public void update() {
+        // --- ACTIVE PID TRACKING ---
         double currentAngle = getCurrentAngleRED();
         double error = targetAngle - currentAngle;
 

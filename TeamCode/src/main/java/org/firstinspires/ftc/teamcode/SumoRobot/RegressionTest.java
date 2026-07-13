@@ -27,11 +27,15 @@ public class RegressionTest extends OpMode {
     // The manual velocity we will adjust with the D-Pad
     private double manualVelocity = 1200.0;
 
-    // Button state tracking (so holding the button doesn't add 1000 instantly)
+    // Button state tracking for Shooter Velocity (Gamepad 1 D-pad)
     private boolean lastDpadUp = false;
     private boolean lastDpadDown = false;
     private boolean lastDpadRight = false;
     private boolean lastDpadLeft = false;
+
+    // Button state tracking for Turret Trim (Gamepad 1 X and B)
+    private boolean lastX = false;
+    private boolean lastB = false;
 
     // Kicker constants
     public static final double KICKER_BLOCK = 0.15;
@@ -40,18 +44,15 @@ public class RegressionTest extends OpMode {
     @Override
     public void init() {
         follower = Constants.createFollower(hardwareMap);
-        follower.setStartingPose(new Pose(54.5, 8, Math.toRadians(90)));
+        follower.setStartingPose(new Pose(89.8, 8.7, Math.toRadians(90)));
 
         shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
         shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
         intake = hardwareMap.get(DcMotor.class, "Intake");
         kicker = hardwareMap.get(Servo.class, "Kicker");
 
-        // Instantiating the RED controller
+        // Instantiating the RED controller (Starts in HOMING state by default)
         turretController = new TurretControllerRED(hardwareMap, "Turret");
-
-        // Calling the RED specific method
-        turretController.resetEncoderRED();
 
         shooter1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -61,15 +62,15 @@ public class RegressionTest extends OpMode {
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(120, 0, 0, 20);
+        PIDFCoefficients pidf = new PIDFCoefficients(117, 0, 0, 22);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
         kicker.setPosition(KICKER_BLOCK);
 
-        telemetry.addLine("Tuning Mode Ready.");
-        telemetry.addLine("Use D-PAD UP/DOWN for +/- 50 RPM");
-        telemetry.addLine("Use D-PAD RIGHT/LEFT for +/- 10 RPM");
+        telemetry.addLine("Tuning Mode Ready (Single Controller Tuning)");
+        telemetry.addLine("G1 D-PAD: Adjust Shooter RPM (+/- 50 or 10)");
+        telemetry.addLine("G1 X / B: Adjust Live Turret Trim (+/- 0.2°)");
         telemetry.update();
     }
 
@@ -89,11 +90,11 @@ public class RegressionTest extends OpMode {
         double driveTurn    = -gamepad1.right_stick_x;
         follower.setTeleOpDrive(driveForward, driveStrafe, driveTurn, true);
 
-        // 2. ADJUST VELOCITY WITH D-PAD (Gamepad 1 or 2)
-        boolean dpadUp = gamepad1.dpad_up || gamepad2.dpad_up;
-        boolean dpadDown = gamepad1.dpad_down || gamepad2.dpad_down;
-        boolean dpadRight = gamepad1.dpad_right || gamepad2.dpad_right;
-        boolean dpadLeft = gamepad1.dpad_left || gamepad2.dpad_left;
+        // 2. ADJUST VELOCITY WITH D-PAD (Gamepad 1)
+        boolean dpadUp = gamepad1.dpad_up;
+        boolean dpadDown = gamepad1.dpad_down;
+        boolean dpadRight = gamepad1.dpad_right;
+        boolean dpadLeft = gamepad1.dpad_left;
 
         if (dpadUp && !lastDpadUp) manualVelocity += 50;
         if (dpadDown && !lastDpadDown) manualVelocity -= 50;
@@ -108,14 +109,32 @@ public class RegressionTest extends OpMode {
         lastDpadRight = dpadRight;
         lastDpadLeft = dpadLeft;
 
-        // 3. AUTO-AIM TURRET (Calling the RED specific method)
+        // 3. LIVE TURRET TRIM WITH X AND B (Gamepad 1)
+        boolean xNow = gamepad1.x;
+        boolean bNow = gamepad1.b;
+
+        if (xNow && !lastX) {
+            turretController.ANGLE_OFFSETRED += 0.2;
+        } else if (bNow && !lastB) {
+            turretController.ANGLE_OFFSETRED -= 0.2;
+        }
+
+        lastX = xNow;
+        lastB = bNow;
+
+        // 4. AUTO-AIM TURRET
         turretController.aimAtGoalWithPredictionRED(currentPose, new Pose(0,0,0));
 
-        // 4. SHOOT MACRO (Right Bumper)
+        // Optional Manual Override to Reset state if things go wrong
+        if (gamepad2.options || gamepad1.options) {
+            turretController.resetEncoderRED();
+        }
+
+        // 5. SHOOT MACRO (Right Bumper)
         if (gamepad2.right_bumper || gamepad1.right_bumper) {
             intake.setPower(1.0);
             kicker.setPosition(KICKER_OPEN);
-        } else if (gamepad2.left_bumper) {
+        } else if (gamepad2.left_bumper || gamepad1.left_bumper) {
             intake.setPower(1);
             kicker.setPosition(KICKER_BLOCK);
         } else {
@@ -126,15 +145,16 @@ public class RegressionTest extends OpMode {
         shooter1.setVelocity(manualVelocity);
         shooter2.setVelocity(manualVelocity);
 
-        // 5. TELEMETRY (Calling the RED specific method)
+        // 6. TELEMETRY
         double distance = turretController.getDistanceToGoalRED(currentPose);
 
-        telemetry.addLine("=== SHOOTER TUNER ===");
-        telemetry.addLine("Adjust speed using D-Pad.");
+        telemetry.addLine("=== G1 SHOOTER & TURRET TUNER ===");
+        telemetry.addLine("D-Pad -> RPM | X & B -> Turret Trim");
         telemetry.addLine("Hold Right Bumper to fire.");
         telemetry.addLine("-----------------------------");
-        telemetry.addData("1. CURRENT DISTANCE (X)", "%.1f", distance);
-        telemetry.addData("2. PERFECT VELOCITY (Y)", "%.0f", manualVelocity);
+        telemetry.addData("Turret Trim Offset", "%.2f°", turretController.ANGLE_OFFSETRED);
+        telemetry.addData("1. CURRENT DISTANCE (X)", "%.1f in", distance);
+        telemetry.addData("2. PERFECT VELOCITY (Y)", "%.0f ticks/s", manualVelocity);
         telemetry.addLine("-----------------------------");
         telemetry.addData("S1 Actual", "%.0f", shooter1.getVelocity());
         telemetry.addData("S2 Actual", "%.0f", shooter2.getVelocity());

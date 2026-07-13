@@ -52,9 +52,9 @@ public class REDTELEOP extends OpMode {
     //private static final double VELOCITY_SLOPE     = 6.58626;
     //private static final double VELOCITY_INTERCEPT = 1165.72046;
 
-    private static final double VEL_A = 0.016966;
-    private static final double VEL_B = 1.45242;
-    private static final double VEL_C = 1235.32337;
+    private static final double VEL_A = 0.0220573;
+    private static final double VEL_B = -0.464531;
+    private static final double VEL_C = 1402.823;
 
     private static final double MAX_SHOOTER_VELOCITY = 2600;
 
@@ -110,12 +110,11 @@ public class REDTELEOP extends OpMode {
         bl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);   
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(120, 0, 0, 25);
+        PIDFCoefficients pidf = new PIDFCoefficients(125, 0, 0, 26);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
