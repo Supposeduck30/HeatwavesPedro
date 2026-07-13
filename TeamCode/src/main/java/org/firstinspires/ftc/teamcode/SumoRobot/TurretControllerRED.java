@@ -20,7 +20,7 @@ public class TurretControllerRED {
     private static final double MAX_ANGLE = 180.0;
 
     // ================= GOAL LOCATION =================
-    private static final double GOAL_X = 165.1;
+    private static final double GOAL_X = 162.1;
     private static final double GOAL_Y = 187.2;
 
     // ================= TURRET PIVOT OFFSET =================
@@ -31,14 +31,14 @@ public class TurretControllerRED {
     public double ANGLE_OFFSETRED = 3.5;
 
     // ================= PREDICTIVE AIMING =================
-    private static final double XY_SCALAR                   = 0.4;
+    private static final double XY_SCALAR                   = 0.5;
     private static final double MIN_VELOCITY_FOR_PREDICTION = 2.0;
 
     // ================= PID CONTROL =================
     private static final double KP        = 0.04;
     private static final double KD        = 0.003;
     private static final double MAX_POWER = 1.0;
-    private static final double DEADBAND  = 1.5;
+    private static final double DEADBAND  = 0.7;
 
     private double targetAngle   = 90.0;
     private double previousAngle = 0.0;
