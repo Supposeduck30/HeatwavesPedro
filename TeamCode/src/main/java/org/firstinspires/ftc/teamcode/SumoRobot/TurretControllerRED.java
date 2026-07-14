@@ -20,7 +20,7 @@ public class TurretControllerRED {
     private static final double MAX_ANGLE = 180.0;
 
     // ================= GOAL LOCATION =================
-    private static final double GOAL_X = 162.1;
+    private static final double GOAL_X = 180.1;
     private static final double GOAL_Y = 187.2;
 
     // ================= TURRET PIVOT OFFSET =================
