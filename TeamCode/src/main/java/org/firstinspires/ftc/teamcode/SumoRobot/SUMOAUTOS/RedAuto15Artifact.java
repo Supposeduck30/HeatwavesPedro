@@ -16,7 +16,6 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import org.firstinspires.ftc.teamcode.SumoRobot.TurretControllerRED;
 
@@ -33,7 +32,6 @@ public class RedAuto15Artifact extends OpMode {
 
     // Live Turret Controller
     private TurretControllerRED turretController;
-
     public double shootVelocity = 1430;
 
     // Software
@@ -52,84 +50,79 @@ public class RedAuto15Artifact extends OpMode {
     public enum PathState {
         DRIVE_PATH1,
         SPIN_UP1, SHOOT1, INTAKECLOSE1,
-
         DRIVE_PATH2, DRIVE_PATH3, WAIT_INTAKE2, DRIVE_PATH4,
         SPIN_UP2, SHOOT2, INTAKECLOSE2,
-
         DRIVE_PATH5, WAIT_INTAKE3, DRIVE_PATH6,
         SPIN_UP3, SHOOT3, INTAKECLOSE3,
-
         DRIVE_PATH7, WAIT_INTAKE4, DRIVE_PATH8,
         SPIN_UP4, SHOOT4, INTAKECLOSE4,
-
-        DRIVE_PATH9, WAIT_INTAKE5, DRIVE_PATH10, DONE
+        DRIVE_PATH9, WAIT_INTAKE5, DRIVE_PATH10,
+        SPIN_UP5, SHOOT5, DONE
     }
 
     PathState pathState;
-
-    private final Pose startPose = new Pose(165, 168, Math.toRadians(0));
-
+    private final Pose startPose = new Pose(165.000, 168.000, Math.toRadians(0));
     private PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9, path10;
 
     public void buildPaths() {
-        // Path 1: Drive to first shoot position
+        // Path 1: Drive to first shoot position (Segment 1)
         path1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(163.500, 170.000), new Pose(134.500, 140.700)))
+                .addPath(new BezierLine(new Pose(165.000, 168.000), new Pose(137.100, 141.400)))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .build();
 
-        // Path 2: Curve towards first block
+        // Path 2: Curve towards first block (Segment 2)
         path2 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(134.500, 140.700), new Pose(126.539, 95.670), new Pose(169.000, 100.4)))
+                .addPath(new BezierCurve(new Pose(137.100, 141.400), new Pose(124.078, 109.003), new Pose(173.000, 109.900)))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .build();
 
-        // Path 3: Sweep to grab block
+        // Path 3: Sweep to grab block (Segment 9)
         path3 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(169.000, 100.4), new Pose(157.004, 112.157), new Pose(171.000, 115.700)))
+                .addPath(new BezierCurve(new Pose(173.000, 109.900), new Pose(152.373, 115.352), new Pose(171.500, 116.000)))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .build();
 
-        // Path 4: Return to shoot 2
+        // Path 4: Return to shoot 2 (Segment 3)
         path4 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(171.000, 115.700), new Pose(132.400, 137.600)))
+                .addPath(new BezierLine(new Pose(171.500, 116.000), new Pose(132.700, 126.900)))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .build();
 
-        // Path 5: Drive out for block 3
+        // Path 5: Drive out for block 3 (Segment 4)
         path5 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(132.400, 137.600), new Pose(175, 106)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(35))
+                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(172.000, 102.00)))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(30))
                 .build();
 
-        // Path 6: Return to shoot 3
+        // Path 6: Return to shoot 3 (Segment 5)
         path6 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(175.000, 106.000), new Pose(132.400, 137.600)))
-                .setLinearHeadingInterpolation(Math.toRadians(35), Math.toRadians(35))
+                .addPath(new BezierLine(new Pose(172.000, 102.00), new Pose(132.700, 126.900)))
+                .setLinearHeadingInterpolation(Math.toRadians(30), Math.toRadians(0))
                 .build();
 
-        // Path 7: Drive out for block 4
+        // Path 7: Drive out for block 4 (Segment 6)
         path7 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(132.400, 137.600), new Pose(175, 106)))
-                .setLinearHeadingInterpolation(Math.toRadians(35), Math.toRadians(35))
+                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(172.000, 102.00)))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(30))
                 .build();
 
-        // Path 8: Return to shoot 4
+        // Path 8: Return to shoot 4 (Segment 7)
         path8 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(175.000, 106.000), new Pose(132.400, 137.600)))
-                .setLinearHeadingInterpolation(Math.toRadians(35), Math.toRadians(35))
+                .addPath(new BezierLine(new Pose(172.000, 102.00), new Pose(132.700, 126.900)))
+                .setLinearHeadingInterpolation(Math.toRadians(30), Math.toRadians(0))
                 .build();
 
-        // Path 9: Drive out for final block/action
+        // Path 9: Drive out for final block/action (Segment 8)
         path9 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(132.400, 137.600), new Pose(175, 106.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(35), Math.toRadians(35))
+                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(172.000, 102.00)))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(30))
                 .build();
 
-        // Path 10: Final park
+        // Path 10: Final park (Segment 10)
         path10 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(175.000, 106.000), new Pose(129.178, 147.055)))
-                .setLinearHeadingInterpolation(Math.toRadians(35), Math.toRadians(35))
+                .addPath(new BezierLine(new Pose(172.000, 102.00), new Pose(126.600, 153.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(30), Math.toRadians(30))
                 .build();
     }
 
@@ -145,34 +138,27 @@ public class RedAuto15Artifact extends OpMode {
                 follower.followPath(path1, true);
                 setPathState(PathState.SPIN_UP1);
                 break;
-
             case SPIN_UP1:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 1.5) {
+                if ((!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 3.5) && pathTimer.getElapsedTimeSeconds() > 1.5) {
                     ballsShot = 0;
                     setPathState(PathState.SHOOT1);
                 }
                 break;
-
             case SHOOT1:
-                // First ball fires instantly (0.0s), subsequent balls wait 0.45s to index into shooter wheel
                 double fireDelay = (ballsShot == 0) ? 0.0 : 0.45;
-
                 if (!shooting && pathTimer.getElapsedTimeSeconds() > fireDelay && ballsShot < 3) {
                     intake.setPower(1);
                     kicker.setPosition(0.25);
                     shooting = true;
                     kickTimer.resetTimer();
                 }
-
                 if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
                     kicker.setPosition(0.31);
                     shooting = false;
                     ballsShot++;
-                    pathTimer.resetTimer(); // Reset timer to clock the feed gap for next ball
+                    pathTimer.resetTimer();
                 }
-
                 if (ballsShot >= 3) {
-                    // Added 0.1s of clearance delay after the last ball of Cycle 1 completes its shot
                     if (pathTimer.getElapsedTimeSeconds() > 0.1) {
                         ballsShot = 0;
                         intake.setPower(1);
@@ -181,7 +167,6 @@ public class RedAuto15Artifact extends OpMode {
                     }
                 }
                 break;
-
             case INTAKECLOSE1:
                 kicker.setPosition(0.15);
                 setPathState(PathState.DRIVE_PATH2);
@@ -189,42 +174,37 @@ public class RedAuto15Artifact extends OpMode {
 
             // ================== CYCLE 2 ==================
             case DRIVE_PATH2:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.0) {
                     follower.followPath(path3, true);
                     setPathState(PathState.DRIVE_PATH3);
                 }
                 break;
-
             case DRIVE_PATH3:
-                if (!follower.isBusy()) {
-                    intake.setPower(1);
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.0) {
+                    intake.setPower(0);
                     setPathState(PathState.WAIT_INTAKE2);
                 }
                 break;
-
             case WAIT_INTAKE2:
                 if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    intake.setPower(1);
                     follower.followPath(path4, true);
                     setPathState(PathState.DRIVE_PATH4);
                 }
                 break;
-
             case DRIVE_PATH4:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.0) {
                     intake.setPower(0);
                     setPathState(PathState.SPIN_UP2);
                 }
                 break;
-
             case SPIN_UP2:
                 if (pathTimer.getElapsedTimeSeconds() > 0.5) {
                     ballsShot = 0;
                     setPathState(PathState.SHOOT2);
                 }
                 break;
-
             case SHOOT2:
-                // Instantly extend blocker upon entering state sequence
                 if (!shooting && ballsShot == 0) {
                     intake.setPower(1);
                     kicker.setPosition(0.25);
@@ -232,12 +212,9 @@ public class RedAuto15Artifact extends OpMode {
                     kickTimer.resetTimer();
                     ballsShot = 1;
                 }
-
                 if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
                     kicker.setPosition(0.31);
                 }
-
-                // Increased from 0.46s to 0.56s to allow extra clearance before motion
                 if (pathTimer.getElapsedTimeSeconds() > 0.56) {
                     shooting = false;
                     ballsShot = 0;
@@ -246,7 +223,6 @@ public class RedAuto15Artifact extends OpMode {
                     setPathState(PathState.INTAKECLOSE2);
                 }
                 break;
-
             case INTAKECLOSE2:
                 kicker.setPosition(0.15);
                 setPathState(PathState.DRIVE_PATH5);
@@ -254,33 +230,29 @@ public class RedAuto15Artifact extends OpMode {
 
             // ================== CYCLE 3 ==================
             case DRIVE_PATH5:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
                     intake.setPower(1);
                     setPathState(PathState.WAIT_INTAKE3);
                 }
                 break;
-
             case WAIT_INTAKE3:
                 if (pathTimer.getElapsedTimeSeconds() > 1.5) {
                     follower.followPath(path6, true);
                     setPathState(PathState.DRIVE_PATH6);
                 }
                 break;
-
             case DRIVE_PATH6:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
                     intake.setPower(0);
                     setPathState(PathState.SPIN_UP3);
                 }
                 break;
-
             case SPIN_UP3:
                 if (pathTimer.getElapsedTimeSeconds() > 0.5) {
                     ballsShot = 0;
                     setPathState(PathState.SHOOT3);
                 }
                 break;
-
             case SHOOT3:
                 if (!shooting && ballsShot == 0) {
                     intake.setPower(1);
@@ -289,12 +261,9 @@ public class RedAuto15Artifact extends OpMode {
                     kickTimer.resetTimer();
                     ballsShot = 1;
                 }
-
                 if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
                     kicker.setPosition(0.31);
                 }
-
-                // Increased from 0.46s to 0.56s to allow extra clearance before motion
                 if (pathTimer.getElapsedTimeSeconds() > 0.56) {
                     shooting = false;
                     ballsShot = 0;
@@ -303,7 +272,6 @@ public class RedAuto15Artifact extends OpMode {
                     setPathState(PathState.INTAKECLOSE3);
                 }
                 break;
-
             case INTAKECLOSE3:
                 kicker.setPosition(0.15);
                 setPathState(PathState.DRIVE_PATH7);
@@ -311,33 +279,29 @@ public class RedAuto15Artifact extends OpMode {
 
             // ================== CYCLE 4 ==================
             case DRIVE_PATH7:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
                     intake.setPower(1);
                     setPathState(PathState.WAIT_INTAKE4);
                 }
                 break;
-
             case WAIT_INTAKE4:
                 if (pathTimer.getElapsedTimeSeconds() > 1.5) {
                     follower.followPath(path8, true);
                     setPathState(PathState.DRIVE_PATH8);
                 }
                 break;
-
             case DRIVE_PATH8:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
                     intake.setPower(0);
                     setPathState(PathState.SPIN_UP4);
                 }
                 break;
-
             case SPIN_UP4:
                 if (pathTimer.getElapsedTimeSeconds() > 0.5) {
                     ballsShot = 0;
                     setPathState(PathState.SHOOT4);
                 }
                 break;
-
             case SHOOT4:
                 if (!shooting && ballsShot == 0) {
                     intake.setPower(1);
@@ -346,12 +310,9 @@ public class RedAuto15Artifact extends OpMode {
                     kickTimer.resetTimer();
                     ballsShot = 1;
                 }
-
                 if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
                     kicker.setPosition(0.31);
                 }
-
-                // Increased from 0.46s to 0.56s to allow extra clearance before motion
                 if (pathTimer.getElapsedTimeSeconds() > 0.56) {
                     shooting = false;
                     ballsShot = 0;
@@ -360,7 +321,6 @@ public class RedAuto15Artifact extends OpMode {
                     setPathState(PathState.INTAKECLOSE4);
                 }
                 break;
-
             case INTAKECLOSE4:
                 kicker.setPosition(0.15);
                 setPathState(PathState.DRIVE_PATH9);
@@ -368,34 +328,55 @@ public class RedAuto15Artifact extends OpMode {
 
             // ================== FINAL OUT & PARK ==================
             case DRIVE_PATH9:
-                if (!follower.isBusy()) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
                     intake.setPower(1);
                     setPathState(PathState.WAIT_INTAKE5);
                 }
                 break;
-
             case WAIT_INTAKE5:
                 if (pathTimer.getElapsedTimeSeconds() > 1.5) {
                     follower.followPath(path10, true);
                     setPathState(PathState.DRIVE_PATH10);
                 }
                 break;
-
             case DRIVE_PATH10:
-                if (!follower.isBusy()) {
-                    setPathState(PathState.DONE);
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
+                    intake.setPower(0);
+                    setPathState(PathState.SPIN_UP5);
                 }
                 break;
 
+            // ================== FINAL SHOOT & DONE ==================
+            case SPIN_UP5:
+                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    ballsShot = 0;
+                    setPathState(PathState.SHOOT5);
+                }
+                break;
+            case SHOOT5:
+                if (!shooting && ballsShot == 0) {
+                    intake.setPower(1);
+                    kicker.setPosition(0.25);
+                    shooting = true;
+                    kickTimer.resetTimer();
+                    ballsShot = 1;
+                }
+                if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
+                    kicker.setPosition(0.31);
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 0.56) {
+                    shooting = false;
+                    ballsShot = 0;
+                    setPathState(PathState.DONE);
+                }
+                break;
             case DONE:
                 shooter1.setVelocity(0);
                 shooter2.setVelocity(0);
                 intake.setPower(0);
                 kicker.setPosition(0.31);
-
                 turretController.setTargetAngle(90.0);
                 turretController.update();
-
                 telemetry.addLine("Done all Paths");
                 break;
         }
@@ -415,7 +396,6 @@ public class RedAuto15Artifact extends OpMode {
         shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
         intake = hardwareMap.get(DcMotor.class, "Intake");
         kicker = hardwareMap.get(Servo.class, "Kicker");
-
         turretController = new TurretControllerRED(hardwareMap, "Turret");
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -428,11 +408,9 @@ public class RedAuto15Artifact extends OpMode {
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
         kicker.setPosition(0.15);
-
         buildPaths();
         pathState = PathState.DRIVE_PATH1;
         shooting = false;
-
         lastTime = System.currentTimeMillis();
 
         panelsTelemetry.debug("Status", "Initialized");
@@ -467,11 +445,9 @@ public class RedAuto15Artifact extends OpMode {
             if (dt > 0.005) {
                 double velX = (currentPose.getX() - lastPose.getX()) / dt;
                 double velY = (currentPose.getY() - lastPose.getY()) / dt;
-
                 double diffHeading = currentPose.getHeading() - lastPose.getHeading();
                 while (diffHeading > Math.PI)  diffHeading -= 2 * Math.PI;
                 while (diffHeading < -Math.PI) diffHeading += 2 * Math.PI;
-
                 double velHeading = diffHeading / dt;
                 velocity = new Pose(velX, velY, velHeading);
             } else {
