@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.control.FilteredPIDFCoefficients;
 import com.pedropathing.control.PIDFCoefficients;
+import com.pedropathing.control.PredictiveBrakingCoefficients;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.follower.FollowerConstants;
 import com.pedropathing.ftc.FollowerBuilder;
@@ -16,19 +17,21 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(12.97)
-            .forwardZeroPowerAcceleration(-32.44)
-           .lateralZeroPowerAcceleration(-70.03)
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.06,0,0.005,0.02))
-            .headingPIDFCoefficients(new PIDFCoefficients(0.7, 0, 0.03, 0.01))
+            .mass(13.15)
+            //.forwardZeroPowerAcceleration(-32.44)
+           //.lateralZeroPowerAcceleration(-70.03)
+            //.translationalPIDFCoefficients(new PIDFCoefficients(0.04,0,0.009,0.02))
+            .headingPIDFCoefficients(new PIDFCoefficients(0.6, 0, 0.002, 0.02))
+            .predictiveBrakingCoefficients(new PredictiveBrakingCoefficients(0.05, 0.071, 0.0018))
+            .centripetalScaling(0);
             //.useSecondaryHeadingPIDF(false)
             //.secondaryHeadingPIDFCoefficients(new PIDFCoefficients(0.8, 0, 0, 0.07))
 
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.08, 0, 0.0001, 0.6,0.025))
+           // .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.07, 0, 0.0003, 0.6,0.025))
             //    .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.1, 0, 0.000001, 0.6,0.025))
             // .headingPIDFCoefficients(new PIDFCoefficients(0.5, 0, 0.0001, 0.02))
 
-            .centripetalScaling(0.0005);
+           // .centripetalScaling(0.0005); */
 
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100,  1.35, 1);
@@ -63,8 +66,9 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.REVERSE)
-            .xVelocity(81.54)
-            .yVelocity(57.75);
+            .xVelocity(79.58)
+            .yVelocity(56.3);
+
 
 
 }
