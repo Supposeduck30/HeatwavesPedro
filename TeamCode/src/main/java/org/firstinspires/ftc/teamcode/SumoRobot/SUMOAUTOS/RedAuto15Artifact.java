@@ -67,19 +67,19 @@ public class RedAuto15Artifact extends OpMode {
     public void buildPaths() {
         // Path 1: Drive to first shoot position (Segment 1)
         path1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(165.000, 168.000), new Pose(137.100, 141.400)))
+                .addPath(new BezierLine(new Pose(165.000, 168.00), new Pose(137.100, 141.400)))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .build();
 
-        // Path 2: Curve towards first block (Segment 2)
+        // Path 2: Curve towards spike and intake the balls (Segment 2)
         path2 = follower.pathBuilder()
                 .addPath(new BezierCurve(new Pose(137.100, 141.400), new Pose(124.078, 109.003), new Pose(173.000, 109.900)))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .build();
 
-        // Path 3: Sweep to grab block (Segment 9)
+        // Path 3: open gate (Segment 9)
         path3 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(173.000, 109.900), new Pose(152.373, 115.352), new Pose(171.500, 116.000)))
+                .addPath(new BezierCurve(new Pose(173.000, 109.900), new Pose(152.373, 115.352), new Pose(172.500, 116.000)))
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .build();
 
@@ -89,40 +89,40 @@ public class RedAuto15Artifact extends OpMode {
                 .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
                 .build();
 
-        // Path 5: Drive out for block 3 (Segment 4)
+        // Path 5: Drive out for gateintake (Segment 4)
         path5 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(172.000, 102.00)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(30))
+                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(176.4, 106.2)))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(33))
                 .build();
 
         // Path 6: Return to shoot 3 (Segment 5)
         path6 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(172.000, 102.00), new Pose(132.700, 126.900)))
-                .setLinearHeadingInterpolation(Math.toRadians(30), Math.toRadians(0))
+                .addPath(new BezierLine(new Pose(176.4, 106.2), new Pose(132.700, 126.900)))
+                .setLinearHeadingInterpolation(Math.toRadians(33), Math.toRadians(0))
                 .build();
 
-        // Path 7: Drive out for block 4 (Segment 6)
+        // Path 7: Drive out for gate intake (Segment 6)
         path7 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(172.000, 102.00)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(30))
+                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(176.4, 106.2)))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(33))
                 .build();
 
         // Path 8: Return to shoot 4 (Segment 7)
         path8 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(172.000, 102.00), new Pose(132.700, 126.900)))
-                .setLinearHeadingInterpolation(Math.toRadians(30), Math.toRadians(0))
+                .addPath(new BezierLine(new Pose(176.4, 106.2), new Pose(132.700, 126.900)))
+                .setLinearHeadingInterpolation(Math.toRadians(33), Math.toRadians(0))
                 .build();
 
-        // Path 9: Drive out for final block/action (Segment 8)
+        // Path 9: Drive out for final gate intake (Segment 8)
         path9 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(172.000, 102.00)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(30))
+                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(176.4, 106.2)))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(33))
                 .build();
 
         // Path 10: Final park (Segment 10)
         path10 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(172.000, 102.00), new Pose(126.600, 153.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(30), Math.toRadians(30))
+                .addPath(new BezierLine(new Pose(176.4, 106.2), new Pose(126.600, 153.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(33), Math.toRadians(34))
                 .build();
     }
 
