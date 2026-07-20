@@ -68,7 +68,7 @@ public class BLUETELEOP extends OpMode {
         if (org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.hasPoseFromAuto()){
             follower.setStartingPose(org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.getTeleOpStartPose());
         } else {
-            Pose startPose = new Pose(54.5,8,Math.toRadians(90));
+            Pose startPose = new Pose(56,36,Math.toRadians(90));
             follower.setStartingPose(startPose);
         }
 

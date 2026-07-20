@@ -70,7 +70,7 @@ public class REDTELEOP extends OpMode {
         if (org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.hasPoseFromAuto()){
             follower.setStartingPose(org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.getTeleOpStartPose());
         } else {
-            Pose startPose = new Pose(102.13496932515338,7.711656441717793,Math.toRadians(90));
+            Pose startPose = new Pose(112.19439868204282,9.248764415156508,Math.toRadians(90));
             follower.setStartingPose(startPose);
         }
 
