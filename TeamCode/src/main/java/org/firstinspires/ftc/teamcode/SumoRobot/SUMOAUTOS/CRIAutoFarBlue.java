@@ -16,12 +16,13 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+
 import org.firstinspires.ftc.teamcode.SumoRobot.TurretControllerRED;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name="CRIFarRed", group="Autonomous")
 @Configurable
-public class CRIAutoFarRed extends OpMode {
+public class CRIAutoFarBlue extends OpMode {
     private TelemetryManager panelsTelemetry;
 
     // Hardware Mechanisms

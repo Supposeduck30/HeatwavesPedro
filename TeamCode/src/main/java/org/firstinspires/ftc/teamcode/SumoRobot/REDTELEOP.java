@@ -44,13 +44,12 @@ public class REDTELEOP extends OpMode {
     private boolean holdingShootClose = false;
     private boolean aligningToTag     = false;
 
+    // Toggle Debouncer for the Target Switch
+    private boolean lastGamepad2Circle = false;
+
     // KICKER AS BLOCKER
     public static final double KICKER_BLOCK = 0.15;
     public static final double KICKER_OPEN  = 0.25;
-
-    // Regression: velocity = m * distance + b
-    //private static final double VELOCITY_SLOPE     = 6.58626;
-    //private static final double VELOCITY_INTERCEPT = 1165.72046;
 
     private static final double VEL_A = 0.0220573;
     private static final double VEL_B = -0.464531;
@@ -73,10 +72,6 @@ public class REDTELEOP extends OpMode {
             Pose startPose = new Pose(112.19439868204282,9.248764415156508,Math.toRadians(90));
             follower.setStartingPose(startPose);
         }
-
-        //limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        //limelight.pipelineSwitch(1);
-        //limelight.start();
 
         fr = hardwareMap.get(DcMotor.class, "FR");
         fl = hardwareMap.get(DcMotor.class, "FL");
@@ -110,7 +105,7 @@ public class REDTELEOP extends OpMode {
         bl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);   
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
@@ -183,6 +178,14 @@ public class REDTELEOP extends OpMode {
 
         follower.setTeleOpDrive(driveForward, driveStrafe, driveTurn, true);
 
+        /* ---------- TURRET TARGET TOGGLE ---------- */
+        // Use gamepad2.circle (B button on Xbox controllers) to toggle goals
+        boolean gamepad2CircleNow = gamepad2.circle;
+        if (gamepad2CircleNow && !lastGamepad2Circle) {
+            turretControllerRED.toggleGoal();
+        }
+        lastGamepad2Circle = gamepad2CircleNow;
+
         /* ---------- TURRET CONTROL WITH PREDICTIVE AIMING ---------- */
         Pose currentPose = follower.getPose();
         Pose velocity;
@@ -224,27 +227,25 @@ public class REDTELEOP extends OpMode {
         } else {
             kicker.setPosition(KICKER_BLOCK);
         }
+
         /* ---------- Live Turret Trim ---------- */
         if(gamepad2.dpad_left){
             turretControllerRED.ANGLE_OFFSETRED += 0.2;
         } else if(gamepad2.dpad_right){
-            turretControllerRED
-
-                    .ANGLE_OFFSETRED -= 0.2;
+            turretControllerRED.ANGLE_OFFSETRED -= 0.2;
         }
+
         /* ---------- SHOOTER + INTAKE ---------- */
-        // Target velocity is always distance-based — shooter runs continuously,
-        // no idle speed switching. Intake and kicker control when balls actually fire.
         double distance = turretControllerRED.getDistanceToGoalRED(currentPose);
         double targetVelocity = (VEL_A*distance*distance)+(VEL_B*distance)+VEL_C;
         targetVelocity= Range.clip(targetVelocity,0,MAX_SHOOTER_VELOCITY);
 
         double intakePower = 0;
-        if (gamepad2.cross) {               // X → intake reverse
+        if (gamepad2.cross) {
             intakePower = -0.9;
-        } else if (gamepad2.left_bumper) {  // LB → intake forward
+        } else if (gamepad2.left_bumper) {
             intakePower = 1.0;
-        } else if (gamepad2.right_bumper) { // RB → intake forward (shoot)
+        } else if (gamepad2.right_bumper) {
             intakePower = 1.0;
         }
 
@@ -256,6 +257,8 @@ public class REDTELEOP extends OpMode {
         double targetAngle  = turretControllerRED.calculateTurretAngleRED(currentPose);
         double currentAngle = turretControllerRED.getCurrentAngleRED();
 
+        // Show which goal is currently active in telemetry
+        telemetry.addData("--- ACTIVE GOAL ---", turretControllerRED.isTargetingSecondaryGoal() ? "SECONDARY (100, 185)" : "PRIMARY (180.1, 187.2)");
         telemetry.addData("--- POSE ---", "");
         telemetry.addData("X Position", "%.2f", currentPose.getX());
         telemetry.addData("Y Position", "%.2f", currentPose.getY());
@@ -271,7 +274,6 @@ public class REDTELEOP extends OpMode {
         telemetry.addData("Velocity Error S1", "%.0f ticks/s", targetVelocity - shooter1.getVelocity());
         telemetry.addData("--- BLOCKER ---", "");
         telemetry.addData("Status", gamepad2.triangle ? "OPEN" : "BLOCKING");
-        telemetry.addData("Motor direction of front right", fr.getDirection());
         telemetry.update();
     }
 }

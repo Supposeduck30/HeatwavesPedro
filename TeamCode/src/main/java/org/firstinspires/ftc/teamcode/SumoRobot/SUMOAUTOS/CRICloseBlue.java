@@ -16,12 +16,13 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.SumoRobot.TurretControllerRED;
 
-@Autonomous(name="CRICloseRed", group="Auto")
+import org.firstinspires.ftc.teamcode.SumoRobot.TurretControllerRED;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+
+@Autonomous(name="CRICloseBlue", group="CRI")
 @Configurable
-public class RedAuto15Artifact extends OpMode {
+public class CRICloseBlue extends OpMode {
     private TelemetryManager panelsTelemetry;
 
     // Mechanisms
@@ -61,68 +62,68 @@ public class RedAuto15Artifact extends OpMode {
     }
 
     PathState pathState;
-    private final Pose startPose = new Pose(165.000, 168.000, Math.toRadians(0));
+    private final Pose startPose = new Pose(23.000, 168.000, Math.toRadians(10));
     private PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9, path10;
 
     public void buildPaths() {
         // Path 1: Drive to first shoot position (Segment 1)
         path1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(165.000, 168.00), new Pose(137.100, 141.400)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .addPath(new BezierLine(new Pose(23.000, 168.00), new Pose(50.900, 141.400)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
         // Path 2: Curve towards spike and intake the balls (Segment 2)
         path2 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(137.100, 141.400), new Pose(124.078, 109.003), new Pose(173.000, 109.900)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .addPath(new BezierCurve(new Pose(50.900, 141.400), new Pose(63.922, 109.003), new Pose(173.000, 109.900)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
         // Path 3: open gate (Segment 9)
         path3 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(173.000, 109.900), new Pose(152.373, 115.352), new Pose(172.500, 116.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .addPath(new BezierCurve(new Pose(15, 109.900), new Pose(35.627, 115.352), new Pose(172.500, 116.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
         // Path 4: Return to shoot 2 (Segment 3)
         path4 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(171.500, 116.000), new Pose(132.700, 126.900)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(0))
+                .addPath(new BezierLine(new Pose(16.5, 116.000), new Pose(55.3, 126.900)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
         // Path 5: Drive out for gateintake (Segment 4)
         path5 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(176.4, 106.2)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(33))
+                .addPath(new BezierLine(new Pose(55.3, 126.900), new Pose(11.6, 106.2)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(147))
                 .build();
 
         // Path 6: Return to shoot 3 (Segment 5)
         path6 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(176.4, 106.2), new Pose(132.700, 126.900)))
-                .setLinearHeadingInterpolation(Math.toRadians(33), Math.toRadians(0))
+                .addPath(new BezierLine(new Pose(11.6, 106.2), new Pose(55.3, 126.900)))
+                .setLinearHeadingInterpolation(Math.toRadians(147), Math.toRadians(180))
                 .build();
 
         // Path 7: Drive out for gate intake (Segment 6)
         path7 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(176.4, 106.2)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(33))
+                .addPath(new BezierLine(new Pose(55.3, 126.900), new Pose(11.6, 106.2)))
+                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(147))
                 .build();
 
         // Path 8: Return to shoot 4 (Segment 7)
         path8 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(176.4, 106.2), new Pose(132.700, 126.900)))
-                .setLinearHeadingInterpolation(Math.toRadians(33), Math.toRadians(0))
+                .addPath(new BezierLine(new Pose(11.6, 106.2), new Pose(55.3, 126.900)))
+                .setLinearHeadingInterpolation(Math.toRadians(147), Math.toRadians(180))
                 .build();
 
         // Path 9: Drive out for final gate intake (Segment 8)
         path9 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(132.700, 126.900), new Pose(176.4, 106.2)))
-                .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(33))
+                .addPath(new BezierLine(new Pose(55.3, 126.900), new Pose(11.6, 106.2)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(147))
                 .build();
 
         // Path 10: Final park (Segment 10)
         path10 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(176.4, 106.2), new Pose(126.600, 153.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(33), Math.toRadians(34))
+                .addPath(new BezierLine(new Pose(11.6, 106.2), new Pose(61.4, 153.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(147), Math.toRadians(146))
                 .build();
     }
 
