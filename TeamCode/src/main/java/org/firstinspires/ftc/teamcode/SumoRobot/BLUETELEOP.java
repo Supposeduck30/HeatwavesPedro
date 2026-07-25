@@ -68,7 +68,7 @@ public class BLUETELEOP extends OpMode {
         if (org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.hasPoseFromAuto()){
             follower.setStartingPose(org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.getTeleOpStartPose());
         } else {
-            Pose startPose = new Pose(56,36,Math.toRadians(90));
+            Pose startPose = new Pose(78.7,8,Math.toRadians(90));
             follower.setStartingPose(startPose);
         }
 
@@ -114,7 +114,7 @@ public class BLUETELEOP extends OpMode {
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(120, 0, 0, 25);
+        PIDFCoefficients pidf = new PIDFCoefficients(125, 0, 0, 26);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 

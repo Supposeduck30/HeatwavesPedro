@@ -16,16 +16,15 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
-
-import org.firstinspires.ftc.teamcode.SumoRobot.TurretController;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
+import org.firstinspires.ftc.teamcode.SumoRobot.TurretController;
 
-@Autonomous(name="CRICloseBlue", group="CRI")
+@Autonomous(name="Third Team Auto Blue CRI", group="Autonomous")
 @Configurable
-public class CRICloseBlue extends OpMode {
+public class ThirdAutoBlue extends OpMode {
     private TelemetryManager panelsTelemetry;
 
-    // Mechanisms
+    // Hardware Mechanisms
     private DcMotorEx shooter1;
     private DcMotorEx shooter2;
     private DcMotor intake;
@@ -33,7 +32,7 @@ public class CRICloseBlue extends OpMode {
 
     // Live Turret Controller
     private TurretController turretController;
-    public double shootVelocity = 1430;
+    public double shootVelocity = 1510;
 
     // Software
     public Follower follower;
@@ -47,84 +46,77 @@ public class CRICloseBlue extends OpMode {
     private boolean shooting = false;
     private int ballsShot = 0;
 
-    // States
+    // Explicit State Machine
     public enum PathState {
         DRIVE_PATH1,
         SPIN_UP1, SHOOT1, INTAKECLOSE1,
-        DRIVE_PATH2, DRIVE_PATH3, WAIT_INTAKE2, DRIVE_PATH4,
+        DRIVE_PATH2, WAIT_INTAKE1, DRIVE_PATH3,
         SPIN_UP2, SHOOT2, INTAKECLOSE2,
-        DRIVE_PATH5, WAIT_INTAKE3, DRIVE_PATH6,
+        DRIVE_PATH4, WAIT_INTAKE2, DRIVE_PATH5,
         SPIN_UP3, SHOOT3, INTAKECLOSE3,
-        DRIVE_PATH7, WAIT_INTAKE4, DRIVE_PATH8,
+        DRIVE_PATH6, WAIT_INTAKE3, DRIVE_PATH7,
         SPIN_UP4, SHOOT4, INTAKECLOSE4,
-        DRIVE_PATH9, WAIT_INTAKE5, DRIVE_PATH10,
-        SPIN_UP5, SHOOT5, DONE
+        DRIVE_PATH8, WAIT_INTAKE4, DRIVE_PATH9,
+        DONE
     }
 
     PathState pathState;
-    // Fixed initial heading to 180 degrees to match Path 1 start
-    private final Pose startPose = new Pose(23.000, 168.000, Math.toRadians(180));
-    private PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9, path10;
+    private final Pose startPose = new Pose(78.192, 160.041, Math.toRadians(180));
+    private PathChain path1, path2, path3, path4, path5, path6, path7, path8, path9;
 
     public void buildPaths() {
-        // Path 1: Drive to first shoot position (Segment 1)
+        // Path 1: Drive to first shoot position (Preloads)
         path1 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(23.000, 168.00), new Pose(50.900, 141.400)))
+                .addPath(new BezierLine(new Pose(78.192, 160.041), new Pose(76.176, 117.288)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
-        // Path 2: Curve towards spike and intake the balls (Segment 2) -> Fixed X typo 173.000 to 17.300
+        // Path 2: Sweep/Intake 1
         path2 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(50.900, 141.400), new Pose(63.922, 109.003), new Pose(17.300, 109.900)))
+                .addPath(new BezierCurve(new Pose(76.176, 117.288), new Pose(72.000, 82.100), new Pose(16.800, 83.100)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
-        // Path 3: open gate (Segment 9) -> Fixed X typo 172.500 to 17.250
+        // Path 3: Return to shoot 1
         path3 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(17.300, 109.900), new Pose(35.627, 115.352), new Pose(16.50, 116.000)))
+                .addPath(new BezierLine(new Pose(16.800, 83.100), new Pose(77.100, 102.100)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
-        // Path 4: Return to shoot 2 (Segment 3)
+        // Path 4: Sweep/Intake 2
         path4 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(16.500, 116.000), new Pose(55.300, 126.900)))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
+                .addPath(new BezierLine(new Pose(77.100, 102.100), new Pose(14.000, 80.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140))
                 .build();
 
-        // Path 5: Drive out for gate intake (Segment 4)
+        // Path 5: Return to shoot 2
         path5 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(55.300, 126.900), new Pose(10.600, 106.200)))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(147))
+                .addPath(new BezierLine(new Pose(14.000, 80.000), new Pose(77.100, 102.100)))
+                .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(180))
                 .build();
 
-        // Path 6: Return to shoot 3 (Segment 5)
+        // Path 6: Sweep/Intake 3
         path6 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(10.600, 106.200), new Pose(55.300, 126.900)))
-                .setLinearHeadingInterpolation(Math.toRadians(147), Math.toRadians(180))
+                .addPath(new BezierLine(new Pose(77.100, 102.100), new Pose(14.000, 80.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140))
                 .build();
 
-        // Path 7: Drive out for gate intake (Segment 6) -> Fixed start heading from 0 to 180 deg
+        // Path 7: Return to shoot 3
         path7 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(55.300, 126.900), new Pose(10.600, 106.200)))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(147))
+                .addPath(new BezierLine(new Pose(14.000, 80.000), new Pose(77.100, 102.100)))
+                .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(180))
                 .build();
 
-        // Path 8: Return to shoot 4 (Segment 7)
+        // Path 8: Sweep/Intake 4
         path8 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(10.600, 106.200), new Pose(55.300, 126.900)))
-                .setLinearHeadingInterpolation(Math.toRadians(147), Math.toRadians(180))
+                .addPath(new BezierLine(new Pose(77.100, 102.100), new Pose(14.000, 80.000)))
+                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(140))
                 .build();
 
-        // Path 9: Drive out for final gate intake (Segment 8)
+        // Path 9: Final Park
         path9 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(55.300, 126.900), new Pose(10.600, 106.200)))
-                .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(147))
-                .build();
-
-        // Path 10: Final park (Segment 10)
-        path10 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(10.600, 106.200), new Pose(61.400, 153.000)))
-                .setLinearHeadingInterpolation(Math.toRadians(147), Math.toRadians(146))
+                .addPath(new BezierLine(new Pose(14.000, 80.000), new Pose(82.842, 125.009)))
+                .setLinearHeadingInterpolation(Math.toRadians(140), Math.toRadians(180))
                 .build();
     }
 
@@ -135,18 +127,20 @@ public class CRICloseBlue extends OpMode {
 
     public void statePathUpdate() {
         switch (pathState) {
-            // ================== CYCLE 1 (PRELOADS) ==================
+            // ================== PRELOAD CYCLE ==================
             case DRIVE_PATH1:
                 follower.followPath(path1, true);
                 setPathState(PathState.SPIN_UP1);
                 break;
             case SPIN_UP1:
-                if ((!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 3.5) && pathTimer.getElapsedTimeSeconds() > 1.5) {
+                // Wait for the robot to finish moving to preload position
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 3.0) {
                     ballsShot = 0;
                     setPathState(PathState.SHOOT1);
                 }
                 break;
             case SHOOT1:
+                // Shoots all 3 preload balls
                 double fireDelay = (ballsShot == 0) ? 0.0 : 0.45;
                 if (!shooting && pathTimer.getElapsedTimeSeconds() > fireDelay && ballsShot < 3) {
                     intake.setPower(1);
@@ -174,28 +168,21 @@ public class CRICloseBlue extends OpMode {
                 setPathState(PathState.DRIVE_PATH2);
                 break;
 
-            // ================== CYCLE 2 ==================
+            // ================== CYCLE 1 ==================
             case DRIVE_PATH2:
-                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.0) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
+                    intake.setPower(1);
+                    setPathState(PathState.WAIT_INTAKE1);
+                }
+                break;
+            case WAIT_INTAKE1:
+                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
                     follower.followPath(path3, true);
                     setPathState(PathState.DRIVE_PATH3);
                 }
                 break;
             case DRIVE_PATH3:
-                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.0) {
-                    intake.setPower(0);
-                    setPathState(PathState.WAIT_INTAKE2);
-                }
-                break;
-            case WAIT_INTAKE2:
-                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
-                    intake.setPower(1);
-                    follower.followPath(path4, true);
-                    setPathState(PathState.DRIVE_PATH4);
-                }
-                break;
-            case DRIVE_PATH4:
-                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.0) {
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
                     intake.setPower(0);
                     setPathState(PathState.SPIN_UP2);
                 }
@@ -221,29 +208,29 @@ public class CRICloseBlue extends OpMode {
                     shooting = false;
                     ballsShot = 0;
                     intake.setPower(1);
-                    follower.followPath(path5, true);
+                    follower.followPath(path4, true);
                     setPathState(PathState.INTAKECLOSE2);
                 }
                 break;
             case INTAKECLOSE2:
                 kicker.setPosition(0.15);
-                setPathState(PathState.DRIVE_PATH5);
+                setPathState(PathState.DRIVE_PATH4);
                 break;
 
-            // ================== CYCLE 3 ==================
-            case DRIVE_PATH5:
+            // ================== CYCLE 2 ==================
+            case DRIVE_PATH4:
                 if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
                     intake.setPower(1);
-                    setPathState(PathState.WAIT_INTAKE3);
+                    setPathState(PathState.WAIT_INTAKE2);
                 }
                 break;
-            case WAIT_INTAKE3:
-                if (pathTimer.getElapsedTimeSeconds() > 1.5) {
-                    follower.followPath(path6, true);
-                    setPathState(PathState.DRIVE_PATH6);
+            case WAIT_INTAKE2:
+                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    follower.followPath(path5, true);
+                    setPathState(PathState.DRIVE_PATH5);
                 }
                 break;
-            case DRIVE_PATH6:
+            case DRIVE_PATH5:
                 if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
                     intake.setPower(0);
                     setPathState(PathState.SPIN_UP3);
@@ -270,29 +257,29 @@ public class CRICloseBlue extends OpMode {
                     shooting = false;
                     ballsShot = 0;
                     intake.setPower(1);
-                    follower.followPath(path7, true);
+                    follower.followPath(path6, true);
                     setPathState(PathState.INTAKECLOSE3);
                 }
                 break;
             case INTAKECLOSE3:
                 kicker.setPosition(0.15);
-                setPathState(PathState.DRIVE_PATH7);
+                setPathState(PathState.DRIVE_PATH6);
                 break;
 
-            // ================== CYCLE 4 ==================
-            case DRIVE_PATH7:
+            // ================== CYCLE 3 ==================
+            case DRIVE_PATH6:
                 if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
                     intake.setPower(1);
-                    setPathState(PathState.WAIT_INTAKE4);
+                    setPathState(PathState.WAIT_INTAKE3);
                 }
                 break;
-            case WAIT_INTAKE4:
-                if (pathTimer.getElapsedTimeSeconds() > 1.5) {
-                    follower.followPath(path8, true);
-                    setPathState(PathState.DRIVE_PATH8);
+            case WAIT_INTAKE3:
+                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    follower.followPath(path7, true);
+                    setPathState(PathState.DRIVE_PATH7);
                 }
                 break;
-            case DRIVE_PATH8:
+            case DRIVE_PATH7:
                 if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
                     intake.setPower(0);
                     setPathState(PathState.SPIN_UP4);
@@ -319,59 +306,35 @@ public class CRICloseBlue extends OpMode {
                     shooting = false;
                     ballsShot = 0;
                     intake.setPower(1);
-                    follower.followPath(path9, true);
+                    follower.followPath(path8, true);
                     setPathState(PathState.INTAKECLOSE4);
                 }
                 break;
             case INTAKECLOSE4:
                 kicker.setPosition(0.15);
-                setPathState(PathState.DRIVE_PATH9);
+                setPathState(PathState.DRIVE_PATH8);
                 break;
 
             // ================== FINAL OUT & PARK ==================
+            case DRIVE_PATH8:
+                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
+                    intake.setPower(1);
+                    setPathState(PathState.WAIT_INTAKE4);
+                }
+                break;
+            case WAIT_INTAKE4:
+                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    follower.followPath(path9, true);
+                    setPathState(PathState.DRIVE_PATH9);
+                }
+                break;
             case DRIVE_PATH9:
                 if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
-                    intake.setPower(1);
-                    setPathState(PathState.WAIT_INTAKE5);
-                }
-                break;
-            case WAIT_INTAKE5:
-                if (pathTimer.getElapsedTimeSeconds() > 1.5) {
-                    follower.followPath(path10, true);
-                    setPathState(PathState.DRIVE_PATH10);
-                }
-                break;
-            case DRIVE_PATH10:
-                if (!follower.isBusy() || pathTimer.getElapsedTimeSeconds() > 2.5) {
-                    intake.setPower(0);
-                    setPathState(PathState.SPIN_UP5);
-                }
-                break;
-
-            // ================== FINAL SHOOT & DONE ==================
-            case SPIN_UP5:
-                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
-                    ballsShot = 0;
-                    setPathState(PathState.SHOOT5);
-                }
-                break;
-            case SHOOT5:
-                if (!shooting && ballsShot == 0) {
-                    intake.setPower(1);
-                    kicker.setPosition(0.25);
-                    shooting = true;
-                    kickTimer.resetTimer();
-                    ballsShot = 1;
-                }
-                if (shooting && kickTimer.getElapsedTimeSeconds() > 0.16) {
-                    kicker.setPosition(0.31);
-                }
-                if (pathTimer.getElapsedTimeSeconds() > 0.56) {
-                    shooting = false;
-                    ballsShot = 0;
                     setPathState(PathState.DONE);
                 }
                 break;
+
+            // ================== DONE ==================
             case DONE:
                 shooter1.setVelocity(0);
                 shooter2.setVelocity(0);
@@ -393,11 +356,14 @@ public class CRICloseBlue extends OpMode {
 
         follower = Constants.createFollower(hardwareMap);
         follower.setPose(startPose);
+        follower.setMaxPower(1.0);
 
         shooter1 = hardwareMap.get(DcMotorEx.class, "Shooter1");
         shooter2 = hardwareMap.get(DcMotorEx.class, "Shooter2");
         intake = hardwareMap.get(DcMotor.class, "Intake");
         kicker = hardwareMap.get(Servo.class, "Kicker");
+
+        // Fixed controller instance to base TurretController
         turretController = new TurretController(hardwareMap, "Turret");
 
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -405,11 +371,11 @@ public class CRICloseBlue extends OpMode {
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(120, 0, 0, 25);
+        PIDFCoefficients pidf = new PIDFCoefficients(125, 0, 0, 26);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
-        kicker.setPosition(0.15);
+        kicker.setPosition(0.15); // Retracted
         buildPaths();
         pathState = PathState.DRIVE_PATH1;
         shooting = false;
@@ -431,11 +397,11 @@ public class CRICloseBlue extends OpMode {
     public void loop() {
         follower.update();
 
-        // 1. Velocity Maintenance
+        // 1. Maintain Flywheels constantly
         shooter1.setVelocity(shootVelocity);
         shooter2.setVelocity(shootVelocity);
 
-        // 2. Turret Auto-Tracking Math
+        // 2. Turret Vector Prediction
         Pose currentPose = follower.getPose();
         long currentTime = System.currentTimeMillis();
         Pose velocity;
@@ -460,21 +426,20 @@ public class CRICloseBlue extends OpMode {
         lastPose = new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading());
         lastTime = currentTime;
 
-        // 3. Update the Turret!
+        // 3. Actively Aim Turret
         if (pathState != PathState.DONE) {
+            // Fixed aiming method to base target prediction
             turretController.aimAtGoalWithPrediction(currentPose, velocity);
         }
 
         // 4. Update the Drivetrain and Shooter State Machine
         statePathUpdate();
 
-        // Telemetry
-        panelsTelemetry.debug("Heading (deg)", Math.toDegrees(follower.getPose().getHeading()));
+        // 5. Telemetry Logs
         panelsTelemetry.debug("Path State", pathState);
-        panelsTelemetry.debug("Turret Angle", turretController.getCurrentAngle());
-        panelsTelemetry.debug("Balls Shot", ballsShot);
-        panelsTelemetry.debug("X", follower.getPose().getX());
-        panelsTelemetry.debug("Y", follower.getPose().getY());
+        panelsTelemetry.debug("Shooter 1 Vel", shooter1.getVelocity());
+        panelsTelemetry.debug("Shooter 2 Vel", shooter2.getVelocity());
+        panelsTelemetry.debug("Balls Shot Phase", ballsShot);
         panelsTelemetry.update(telemetry);
     }
 

@@ -10,8 +10,8 @@ import com.qualcomm.robotcore.util.Range;
 public class TurretController {
 
     private DcMotorEx turretMotor;
+    private int encoderOffset = 0;
 
-    private int encoderOffset=0;
     // ================= MOTOR + GEAR =================
     private static final double COUNTS_PER_DEGREE = 366.0 / 90.0;
 
@@ -19,9 +19,18 @@ public class TurretController {
     private static final double MIN_ANGLE = 0.0;
     private static final double MAX_ANGLE = 180.0;
 
-    // ================= GOAL LOCATION =================
-    private static final double GOAL_X = 2.7;
-    private static final double GOAL_Y = 140.2;
+    // ================= GOAL LOCATIONS =================
+    private static final double PRIMARY_GOAL_X = 6.2;
+    private static final double PRIMARY_GOAL_Y = 187.2;
+
+    // TODO: Update these coordinates for the CRI secondary goal!
+    private static final double SECONDARY_GOAL_X = 86.8;
+    private static final double SECONDARY_GOAL_Y = 184.2;
+
+    // Active tracking coordinates
+    private double currentGoalX = PRIMARY_GOAL_X;
+    private double currentGoalY = PRIMARY_GOAL_Y;
+    private boolean targetingSecondaryGoal = false;
 
     // ================= TURRET PIVOT OFFSET =================
     private static final double TURRET_OFFSET_FORWARD = -6.0;
@@ -31,24 +40,24 @@ public class TurretController {
     public double ANGLE_OFFSET = 3.5;
 
     // ================= PREDICTIVE AIMING =================
-    private static final double XY_SCALAR                   = 0.4;
+    private static final double PROJECTILE_SPEED_IN_PER_SEC = 193.75;
+    private static final double SYSTEM_DELAY_SECONDS = 0.0;
     private static final double MIN_VELOCITY_FOR_PREDICTION = 2.0;
 
     // ================= PID CONTROL =================
-    private static final double KP        = 0.06;
-    private static final double KD        = 0.008;
-    private static final double MAX_POWER = 1;
-    private static final double DEADBAND = 0.8;
-    // Deadband removed — motor corrects continuously for tighter tracking.
-    // If jitter/chatter becomes a problem, add back a small value (0.1 +r 0.2).
+    private static final double KP        = 0.065;
+    private static final double KD        = 0.004;
+    private static final double MAX_POWER = 1.0;
+    private static final double MIN_POWER = 0.08;
 
     private double targetAngle   = 90.0;
     private double previousAngle = 0.0;
     private long   lastTime      = 0;
 
     public void setEncoderOffset(int offset) {
-        this.encoderOffset=offset;
+        this.encoderOffset = offset;
     }
+
     // ================= CONSTRUCTOR =================
     public TurretController(HardwareMap hardwareMap, String motorName) {
         turretMotor = hardwareMap.get(DcMotorEx.class, motorName);
@@ -62,27 +71,43 @@ public class TurretController {
         lastTime = System.currentTimeMillis();
     }
 
+    // ================= GOAL TOGGLING =================
+    public void toggleGoal() {
+        targetingSecondaryGoal = !targetingSecondaryGoal;
+        if (targetingSecondaryGoal) {
+            currentGoalX = SECONDARY_GOAL_X;
+            currentGoalY = SECONDARY_GOAL_Y;
+        } else {
+            currentGoalX = PRIMARY_GOAL_X;
+            currentGoalY = PRIMARY_GOAL_Y;
+        }
+    }
+
+    public boolean isTargetingSecondaryGoal() {
+        return targetingSecondaryGoal;
+    }
+
     // ================= GETTERS =================
     public double getCurrentAngle() {
-        return (turretMotor.getCurrentPosition() +encoderOffset) / COUNTS_PER_DEGREE;
+        return (turretMotor.getCurrentPosition() + encoderOffset) / COUNTS_PER_DEGREE;
     }
 
     public int getRawTicks() {
-        return turretMotor.getCurrentPosition() +encoderOffset;
+        return turretMotor.getCurrentPosition() + encoderOffset;
     }
 
     public void resetEncoder() {
         turretMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         turretMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         targetAngle = 0;
-        encoderOffset=0;
+        encoderOffset = 0;
         turretMotor.setPower(0);
     }
 
     public double getDistanceToGoal(Pose currentPose) {
         double[] turretWorld = getTurretWorldPosition(currentPose);
-        double dx = GOAL_X - turretWorld[0];
-        double dy = GOAL_Y - turretWorld[1];
+        double dx = currentGoalX - turretWorld[0];
+        double dy = currentGoalY - turretWorld[1];
         return Math.sqrt(dx * dx + dy * dy);
     }
 
@@ -105,8 +130,8 @@ public class TurretController {
     public double calculateTurretAngle(Pose currentPose) {
         double[] turretWorld = getTurretWorldPosition(currentPose);
 
-        double dx = GOAL_X - turretWorld[0];
-        double dy = GOAL_Y - turretWorld[1];
+        double dx = currentGoalX - turretWorld[0];
+        double dy = currentGoalY - turretWorld[1];
         double absTargetAngle = Math.toDegrees(Math.atan2(dy, dx));
 
         double robotHeading = Math.toDegrees(currentPose.getHeading());
@@ -129,8 +154,12 @@ public class TurretController {
             return calculateTurretAngle(currentPose);
         }
 
-        double predictedX = currentPose.getX() + (velocity.getX() * XY_SCALAR);
-        double predictedY = currentPose.getY() + (velocity.getY() * XY_SCALAR);
+        double distanceToGoal = getDistanceToGoal(currentPose);
+        double timeOfFlight = distanceToGoal / PROJECTILE_SPEED_IN_PER_SEC;
+        double dynamicTimeScalar = timeOfFlight + SYSTEM_DELAY_SECONDS;
+
+        double predictedX = currentPose.getX() + (velocity.getX() * dynamicTimeScalar);
+        double predictedY = currentPose.getY() + (velocity.getY() * dynamicTimeScalar);
         Pose predictedPose = new Pose(predictedX, predictedY, currentPose.getHeading());
 
         return calculateTurretAngle(predictedPose);
@@ -151,20 +180,14 @@ public class TurretController {
 
         if (dt <= 0.001) dt = 0.001;
 
-        if (Math.abs(error)<DEADBAND){
-            turretMotor.setPower(0);
-            previousAngle = currentAngle;
-            return;
-        }
-
         double p = KP * error;
         double derivative = (currentAngle - previousAngle) / dt;
         double d = -KD * derivative;
 
         double power = p + d;
 
-        if (Math.abs(power) <0.04 && Math.abs(power) > 0.01){
-            power=Math.signum(power) * 0.04;
+        if (Math.abs(error) > 0.10 && Math.abs(power) < MIN_POWER) {
+            power = Math.signum(error) * MIN_POWER;
         }
 
         double currentMaxPower = MAX_POWER;

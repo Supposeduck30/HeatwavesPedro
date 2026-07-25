@@ -34,6 +34,9 @@ public class CRIAutoFarRed extends OpMode {
     private TurretControllerRED turretController;
     public double shootVelocity = 2000; // Updated to 1900
 
+    // --- TURRET OFFSET ---
+    public double turretOffsetDegrees = -4.0; // Change to -2.0 if it aims the wrong way
+
     // Software & Tracking
     public Follower follower;
     private Timer stateTimer, pauseTimer, globalTimer;
@@ -139,9 +142,14 @@ public class CRIAutoFarRed extends OpMode {
         lastPose = new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading());
         lastTime = currentTime;
 
-        // 3. Actively Aim Turret
+        // 3. Actively Aim Turret with Manual Offset applied to heading
         if (currentState != AutoState.DONE) {
-            turretController.aimAtGoalWithPredictionRED(currentPose, velocity);
+            Pose offsetPose = new Pose(
+                    currentPose.getX(),
+                    currentPose.getY(),
+                    currentPose.getHeading() + Math.toRadians(turretOffsetDegrees)
+            );
+            turretController.aimAtGoalWithPredictionRED(offsetPose, velocity);
         }
 
         // 4. Update Route Sequence & Intakes/Shooters
@@ -153,6 +161,7 @@ public class CRIAutoFarRed extends OpMode {
         panelsTelemetry.debug("Shooter 1 Vel", shooter1.getVelocity());
         panelsTelemetry.debug("Shooter 2 Vel", shooter2.getVelocity());
         panelsTelemetry.debug("Balls Fired Sequences", ballsShot);
+        panelsTelemetry.debug("Turret Offset Applied", turretOffsetDegrees);
         panelsTelemetry.update(telemetry);
     }
 
