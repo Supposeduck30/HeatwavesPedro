@@ -35,6 +35,9 @@ public class CRIAutoFarBlue extends OpMode {
     private TurretController turretController;
     public double shootVelocity = 2000;
 
+    // --- TURRET OFFSET ---
+    public double turretOffsetDegrees = 4.0; // Opposite direction of Red's -4.0
+
     // Software & Tracking
     public Follower follower;
     private Timer stateTimer, pauseTimer, globalTimer;
@@ -82,7 +85,7 @@ public class CRIAutoFarBlue extends OpMode {
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(125, 0, 0, 26);
+        PIDFCoefficients pidf = new PIDFCoefficients(125, 0, 0, 20);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
@@ -140,9 +143,14 @@ public class CRIAutoFarBlue extends OpMode {
         lastPose = new Pose(currentPose.getX(), currentPose.getY(), currentPose.getHeading());
         lastTime = currentTime;
 
-        // 3. Actively Aim Turret
+        // 3. Actively Aim Turret with Manual Offset applied to heading
         if (currentState != AutoState.DONE) {
-            turretController.aimAtGoalWithPrediction(currentPose, velocity);
+            Pose offsetPose = new Pose(
+                    currentPose.getX(),
+                    currentPose.getY(),
+                    currentPose.getHeading() + Math.toRadians(turretOffsetDegrees)
+            );
+            turretController.aimAtGoalWithPrediction(offsetPose, velocity);
         }
 
         // 4. Update Route Sequence & Intakes/Shooters
@@ -154,6 +162,7 @@ public class CRIAutoFarBlue extends OpMode {
         panelsTelemetry.debug("Shooter 1 Vel", shooter1.getVelocity());
         panelsTelemetry.debug("Shooter 2 Vel", shooter2.getVelocity());
         panelsTelemetry.debug("Balls Fired Sequences", ballsShot);
+        panelsTelemetry.debug("Turret Offset Applied", turretOffsetDegrees);
         panelsTelemetry.update(telemetry);
     }
 
@@ -247,7 +256,7 @@ public class CRIAutoFarBlue extends OpMode {
                     .build();
 
             autoPaths[1] = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(75, 43.000), new Pose(71.1, 62.100), new Pose(170.300, 58.700)))
+                    .addPath(new BezierCurve(new Pose(75, 43.000), new Pose(71.1, 62.100), new Pose(17.700, 58.700)))
                     .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                     .build();
 
@@ -268,31 +277,31 @@ public class CRIAutoFarBlue extends OpMode {
 
             autoPaths[5] = follower.pathBuilder()
                     .addPath(new BezierCurve(new Pose(75.000, 43.000), new Pose(9.3, 31.400), new Pose(7, 76.500)))
-                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
                     .build();
 
             autoPaths[6] = follower.pathBuilder()
-                    .addPath(new BezierLine(new Pose(181.000, 76.500), new Pose(113.000, 43.000)))
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
+                    .addPath(new BezierLine(new Pose(7, 76.500), new Pose(75, 43.000)))
+                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
                     .build();
 
             autoPaths[7] = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(113.000, 43.000), new Pose(178.700, 31.200), new Pose(181.000, 76.500)))
-                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
+                    .addPath(new BezierCurve(new Pose(75, 43.000), new Pose(9.3, 31.200), new Pose(7, 76.500)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
                     .build();
 
             autoPaths[8] = follower.pathBuilder()
-                    .addPath(new BezierLine(new Pose(181.000, 76.500), new Pose(113.000, 43.000)))
-                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(0))
+                    .addPath(new BezierLine(new Pose(7, 76.500), new Pose(75, 43.000)))
+                    .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(180))
                     .build();
 
             autoPaths[9] = follower.pathBuilder()
-                    .addPath(new BezierCurve(new Pose(113.000, 43.000), new Pose(178.700, 31.200), new Pose(181.000, 76.500)))
-                    .setLinearHeadingInterpolation(Math.toRadians(0), Math.toRadians(90))
+                    .addPath(new BezierCurve(new Pose(75, 43.000), new Pose(9.3, 31.200), new Pose(7, 76.500)))
+                    .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(90))
                     .build();
 
             autoPaths[10] = follower.pathBuilder()
-                    .addPath(new BezierLine(new Pose(181.000, 76.500), new Pose(105.900, 38.400)))
+                    .addPath(new BezierLine(new Pose(7, 76.500), new Pose(105.900, 38.400)))
                     .setLinearHeadingInterpolation(Math.toRadians(90), Math.toRadians(90))
                     .build();
         }

@@ -114,7 +114,7 @@ public class BLUETELEOP extends OpMode {
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(125, 0, 0, 26);
+        PIDFCoefficients pidf = new PIDFCoefficients(125, 0, 0, 20);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
@@ -229,6 +229,7 @@ public class BLUETELEOP extends OpMode {
         } else {
             kicker.setPosition(KICKER_BLOCK);
         }
+
         /* ---------- SHOOTER + INTAKE ---------- */
         // Target velocity is always distance-based — shooter runs continuously,
         // no idle speed switching. Intake and kicker control when balls actually fire.
@@ -236,25 +237,38 @@ public class BLUETELEOP extends OpMode {
         double targetVelocity = (VEL_A*distance*distance)+(VEL_B*distance)+VEL_C;
         targetVelocity= Range.clip(targetVelocity,0,MAX_SHOOTER_VELOCITY);
 
+        // Retrieve the current goal state from your TurretController
+        // IMPORTANT: Rename 'isTrackingSecondaryGoal()' if your method is called something else
+        boolean trackingSecondary = turretController.isTargetingSecondaryGoal();
+
         double intakePower = 0;
         if (gamepad2.cross) {               // X → intake reverse
             intakePower = -0.9;
-        } else if (gamepad2.left_bumper) {  // LB → intake forward
+        } else if (gamepad2.left_bumper) {  // LB → intake forward (normal intaking)
             intakePower = 1.0;
-        } else if (gamepad2.right_bumper) { // RB → intake forward (shoot)
-            intakePower = 1.0;
+        } else if (gamepad2.right_bumper) { // RB → intake forward (shooting)
+            if (trackingSecondary) {
+                // Slow down the feed rate for the secondary goal for better consistency
+                intakePower = 1
+                ;
+            } else {
+                // Full feed rate for the primary goal
+                intakePower = 1.0;
+            }
         }
-        /* ---------- AIM LOCK ---------- */
-       // boolean isShooting = gamepad2.right_bumper;
 
-        //if(!isShooting){
-          //  turretController.aimAtGoalWithPrediction(currentPose, velocity);
-        //} else{
-          //  turretController.update();
-       // }
         shooter1.setVelocity(targetVelocity);
         shooter2.setVelocity(targetVelocity);
         intake.setPower(intakePower);
+
+        /* ---------- AIM LOCK ---------- */
+        // boolean isShooting = gamepad2.right_bumper;
+
+        //if(!isShooting){
+        //  turretController.aimAtGoalWithPrediction(currentPose, velocity);
+        //} else{
+        //  turretController.update();
+        // }
 
         /* ---------- TELEMETRY ---------- */
         double targetAngle  = turretController.calculateTurretAngle(currentPose);
@@ -268,11 +282,13 @@ public class BLUETELEOP extends OpMode {
         telemetry.addData("Target Angle (0=right, 180=left)", "%.2f°", targetAngle);
         telemetry.addData("Current Angle", "%.2f°", currentAngle);
         telemetry.addData("Distance to Goal", "%.2f in", distance);
-        telemetry.addData("--- SHOOTER ---", "");
+        telemetry.addData("Target Goal", trackingSecondary ? "SECONDARY (Slower Feed)" : "PRIMARY (Fast Feed)");
+        telemetry.addData("--- SHOOTER & INTAKE ---", "");
         telemetry.addData("Target Velocity", "%.0f ticks/s", targetVelocity);
         telemetry.addData("Shooter1 Actual", "%.0f ticks/s", shooter1.getVelocity());
         telemetry.addData("Shooter2 Actual", "%.0f ticks/s", shooter2.getVelocity());
         telemetry.addData("Velocity Error S1", "%.0f ticks/s", targetVelocity - shooter1.getVelocity());
+        telemetry.addData("Intake Feed Power", "%.1f", intakePower);
         telemetry.addData("--- BLOCKER ---", "");
         telemetry.addData("Status", gamepad2.triangle ? "OPEN" : "BLOCKING");
         telemetry.addData("--- AIM LOCK ---", "");

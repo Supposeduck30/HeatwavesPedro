@@ -24,7 +24,6 @@ public class REDTELEOP extends OpMode {
     private Follower follower;
     private Limelight3A limelight;
 
-
     // TURRET CONTROLLER
     private TurretControllerRED turretControllerRED;
 
@@ -87,9 +86,9 @@ public class REDTELEOP extends OpMode {
         turretControllerRED = new TurretControllerRED(hardwareMap, "Turret");
         Integer autoTurretTicks = org.firstinspires.ftc.teamcode.SumoRobot.PedroPose.getTurretTicks();
 
-        if (autoTurretTicks!=null) {
+        if (autoTurretTicks != null) {
             turretControllerRED.setEncoderOffsetRED(autoTurretTicks);
-            telemetry.addData("Turret mode", "Resumed from auto(" + autoTurretTicks + " ticks");
+            telemetry.addData("Turret mode", "Resumed from auto(" + autoTurretTicks + " ticks)");
         } else {
             telemetry.addData("Turret mode", "Fresh start (0 ticks)");
         }
@@ -109,7 +108,7 @@ public class REDTELEOP extends OpMode {
         shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        PIDFCoefficients pidf = new PIDFCoefficients(125, 0, 0, 26);
+        PIDFCoefficients pidf = new PIDFCoefficients(125, 0, 0, 20);
         shooter1.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
         shooter2.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, pidf);
 
@@ -179,7 +178,7 @@ public class REDTELEOP extends OpMode {
         follower.setTeleOpDrive(driveForward, driveStrafe, driveTurn, true);
 
         /* ---------- TURRET TARGET TOGGLE ---------- */
-        // Use gamepad2.circle (B button on Xbox controllers) to toggle goals
+        // Use gamepad2.circle to toggle goals
         boolean gamepad2CircleNow = gamepad2.circle;
         if (gamepad2CircleNow && !lastGamepad2Circle) {
             turretControllerRED.toggleGoal();
@@ -229,24 +228,32 @@ public class REDTELEOP extends OpMode {
         }
 
         /* ---------- Live Turret Trim ---------- */
-        if(gamepad2.dpad_left){
+        if (gamepad2.dpad_left) {
             turretControllerRED.ANGLE_OFFSETRED += 0.2;
-        } else if(gamepad2.dpad_right){
+        } else if (gamepad2.dpad_right) {
             turretControllerRED.ANGLE_OFFSETRED -= 0.2;
         }
 
         /* ---------- SHOOTER + INTAKE ---------- */
         double distance = turretControllerRED.getDistanceToGoalRED(currentPose);
-        double targetVelocity = (VEL_A*distance*distance)+(VEL_B*distance)+VEL_C;
-        targetVelocity= Range.clip(targetVelocity,0,MAX_SHOOTER_VELOCITY);
+        double targetVelocity = (VEL_A * distance * distance) + (VEL_B * distance) + VEL_C;
+        targetVelocity = Range.clip(targetVelocity, 0, MAX_SHOOTER_VELOCITY);
+
+        boolean targetingSecondary = turretControllerRED.isTargetingSecondaryGoal();
 
         double intakePower = 0;
-        if (gamepad2.cross) {
+        if (gamepad2.cross) {               // X → intake reverse
             intakePower = -0.9;
-        } else if (gamepad2.left_bumper) {
+        } else if (gamepad2.left_bumper) {  // LB → intake forward (normal intaking)
             intakePower = 1.0;
-        } else if (gamepad2.right_bumper) {
-            intakePower = 1.0;
+        } else if (gamepad2.right_bumper) { // RB → intake forward (shooting)
+            if (targetingSecondary) {
+                // Slower feed rate for secondary goal precision
+                intakePower = 1;
+            } else {
+                // Full feed rate for primary goal
+                intakePower = 1.0;
+            }
         }
 
         shooter1.setVelocity(targetVelocity);
@@ -257,8 +264,7 @@ public class REDTELEOP extends OpMode {
         double targetAngle  = turretControllerRED.calculateTurretAngleRED(currentPose);
         double currentAngle = turretControllerRED.getCurrentAngleRED();
 
-        // Show which goal is currently active in telemetry
-        telemetry.addData("--- ACTIVE GOAL ---", turretControllerRED.isTargetingSecondaryGoal() ? "SECONDARY (100, 185)" : "PRIMARY (180.1, 187.2)");
+        telemetry.addData("--- ACTIVE GOAL ---", targetingSecondary ? "SECONDARY (100, 185) [Slower Feed]" : "PRIMARY (180.1, 187.2) [Fast Feed]");
         telemetry.addData("--- POSE ---", "");
         telemetry.addData("X Position", "%.2f", currentPose.getX());
         telemetry.addData("Y Position", "%.2f", currentPose.getY());
@@ -267,13 +273,16 @@ public class REDTELEOP extends OpMode {
         telemetry.addData("Target Angle (0=right, 180=left)", "%.2f°", targetAngle);
         telemetry.addData("Current Angle", "%.2f°", currentAngle);
         telemetry.addData("Distance to Goal", "%.2f in", distance);
-        telemetry.addData("--- SHOOTER ---", "");
+        telemetry.addData("--- SHOOTER & INTAKE ---", "");
         telemetry.addData("Target Velocity", "%.0f ticks/s", targetVelocity);
         telemetry.addData("Shooter1 Actual", "%.0f ticks/s", shooter1.getVelocity());
         telemetry.addData("Shooter2 Actual", "%.0f ticks/s", shooter2.getVelocity());
         telemetry.addData("Velocity Error S1", "%.0f ticks/s", targetVelocity - shooter1.getVelocity());
+        telemetry.addData("Intake Power", "%.1f", intakePower);
         telemetry.addData("--- BLOCKER ---", "");
         telemetry.addData("Status", gamepad2.triangle ? "OPEN" : "BLOCKING");
+        telemetry.addData("--- AIM LOCK ---", "");
+        telemetry.addData("Live Trim Offset", "%.1f (use d-pad L/R)", turretControllerRED.ANGLE_OFFSETRED);
         telemetry.update();
     }
 }

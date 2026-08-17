@@ -81,49 +81,49 @@ public class CRICloseBlue extends OpMode {
 
         // Path 3: open gate (Segment 9) -> Fixed X typo 172.500 to 17.250
         path3 = follower.pathBuilder()
-                .addPath(new BezierCurve(new Pose(17.300, 109.900), new Pose(35.627, 115.352), new Pose(16.50, 116.000)))
+                .addPath(new BezierCurve(new Pose(17.300, 109.900), new Pose(35.627, 115.352), new Pose(15.50, 116.000)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
         // Path 4: Return to shoot 2 (Segment 3)
         path4 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(16.500, 116.000), new Pose(55.300, 126.900)))
+                .addPath(new BezierLine(new Pose(15.500, 116.000), new Pose(55.300, 126.900)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(180))
                 .build();
 
         // Path 5: Drive out for gate intake (Segment 4)
         path5 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(55.300, 126.900), new Pose(10.600, 106.200)))
+                .addPath(new BezierLine(new Pose(55.300, 126.900), new Pose(9.600, 106.200)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(147))
                 .build();
 
         // Path 6: Return to shoot 3 (Segment 5)
         path6 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(10.600, 106.200), new Pose(55.300, 126.900)))
+                .addPath(new BezierLine(new Pose(9.600, 106.200), new Pose(55.300, 126.900)))
                 .setLinearHeadingInterpolation(Math.toRadians(147), Math.toRadians(180))
                 .build();
 
         // Path 7: Drive out for gate intake (Segment 6) -> Fixed start heading from 0 to 180 deg
         path7 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(55.300, 126.900), new Pose(10.600, 106.200)))
+                .addPath(new BezierLine(new Pose(55.300, 126.900), new Pose(9.600, 106.200)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(147))
                 .build();
 
         // Path 8: Return to shoot 4 (Segment 7)
         path8 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(10.600, 106.200), new Pose(55.300, 126.900)))
+                .addPath(new BezierLine(new Pose(9.600, 106.200), new Pose(55.300, 126.900)))
                 .setLinearHeadingInterpolation(Math.toRadians(147), Math.toRadians(180))
                 .build();
 
         // Path 9: Drive out for final gate intake (Segment 8)
         path9 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(55.300, 126.900), new Pose(10.600, 106.200)))
+                .addPath(new BezierLine(new Pose(55.300, 126.900), new Pose(9.600, 106.200)))
                 .setLinearHeadingInterpolation(Math.toRadians(180), Math.toRadians(147))
                 .build();
 
         // Path 10: Final park (Segment 10)
         path10 = follower.pathBuilder()
-                .addPath(new BezierLine(new Pose(10.600, 106.200), new Pose(61.400, 153.000)))
+                .addPath(new BezierLine(new Pose(9.600, 106.200), new Pose(61.400, 153.000)))
                 .setLinearHeadingInterpolation(Math.toRadians(147), Math.toRadians(146))
                 .build();
     }
