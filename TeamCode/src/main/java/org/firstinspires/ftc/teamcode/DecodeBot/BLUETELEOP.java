@@ -111,7 +111,7 @@ public class BLUETELEOP extends OpMode {
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        shooter1.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooter1.setDirection(DcMotorSimple.Direction.FORWARD);
         shooter2.setDirection(DcMotorSimple.Direction.FORWARD);
 
         PIDFCoefficients pidf = new PIDFCoefficients(125, 0, 0, 20);
