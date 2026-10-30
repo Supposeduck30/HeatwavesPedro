@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.Limelight;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
+@Disabled
 @Autonomous
 
 public class imuPractice extends OpMode {

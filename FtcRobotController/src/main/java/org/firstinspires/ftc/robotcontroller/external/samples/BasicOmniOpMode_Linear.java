@@ -72,7 +72,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
     private DcMotor frontLeftDrive = null;
     private DcMotor backLeftDrive = null;
     private DcMotor frontRightDrive = null;
-    private DcMotor backRightDrive = null;
+    private DcMotor BR = null;
 
     @Override
     public void runOpMode() {
@@ -82,7 +82,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         frontLeftDrive = hardwareMap.get(DcMotor.class, "front_left_drive");
         backLeftDrive = hardwareMap.get(DcMotor.class, "back_left_drive");
         frontRightDrive = hardwareMap.get(DcMotor.class, "front_right_drive");
-        backRightDrive = hardwareMap.get(DcMotor.class, "back_right_drive");
+        BR = hardwareMap.get(DcMotor.class, "BR");
 
         // ########################################################################################
         // !!!            IMPORTANT Drive Information. Test your motor directions.            !!!!!
@@ -97,7 +97,7 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
         frontLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         backLeftDrive.setDirection(DcMotor.Direction.REVERSE);
         frontRightDrive.setDirection(DcMotor.Direction.FORWARD);
-        backRightDrive.setDirection(DcMotor.Direction.FORWARD);
+        BR.setDirection(DcMotor.Direction.FORWARD);
 
         // Wait for the game to start (driver presses START)
         telemetry.addData("Status", "Initialized");
@@ -120,19 +120,19 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             double frontLeftPower  = axial + lateral + yaw;
             double frontRightPower = axial - lateral - yaw;
             double backLeftPower   = axial - lateral + yaw;
-            double backRightPower  = axial + lateral - yaw;
+            double BRPower  = axial + lateral - yaw;
 
             // Normalize the values so no wheel power exceeds 100%
             // This ensures that the robot maintains the desired motion.
             max = Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower));
             max = Math.max(max, Math.abs(backLeftPower));
-            max = Math.max(max, Math.abs(backRightPower));
+            max = Math.max(max, Math.abs(BRPower));
 
             if (max > 1.0) {
                 frontLeftPower  /= max;
                 frontRightPower /= max;
                 backLeftPower   /= max;
-                backRightPower  /= max;
+                BRPower  /= max;
             }
 
             // This is test code:
@@ -149,19 +149,19 @@ public class BasicOmniOpMode_Linear extends LinearOpMode {
             frontLeftPower  = gamepad1.x ? 1.0 : 0.0;  // X gamepad
             backLeftPower   = gamepad1.a ? 1.0 : 0.0;  // A gamepad
             frontRightPower = gamepad1.y ? 1.0 : 0.0;  // Y gamepad
-            backRightPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
+            BRPower  = gamepad1.b ? 1.0 : 0.0;  // B gamepad
             */
 
             // Send calculated power to wheels
             frontLeftDrive.setPower(frontLeftPower);
             frontRightDrive.setPower(frontRightPower);
             backLeftDrive.setPower(backLeftPower);
-            backRightDrive.setPower(backRightPower);
+            BR.setPower(BRPower);
 
             // Show the elapsed game time and wheel power.
             telemetry.addData("Status", "Run Time: " + runtime.toString());
             telemetry.addData("Front left/Right", "%4.2f, %4.2f", frontLeftPower, frontRightPower);
-            telemetry.addData("Back  left/Right", "%4.2f, %4.2f", backLeftPower, backRightPower);
+            telemetry.addData("BL / BR", "%4.2f, %4.2f", backLeftPower, BRPower);
             telemetry.update();
         }
     }}

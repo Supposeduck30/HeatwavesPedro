@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 public class TemplateAuto extends LinearOpMode {
     //Motors
     protected DcMotor motorRightFront = null;
-    protected DcMotor motorRightBack = null;
+    protected DcMotor BR = null;
     protected DcMotor motorLeftFront = null;
     protected DcMotor motorLeftBack = null;
     protected DcMotor shooter1;
@@ -24,7 +24,7 @@ public class TemplateAuto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
         motorRightFront = hardwareMap.get(DcMotor.class, "rf");
-        motorRightBack = hardwareMap.get(DcMotor.class, "rr");
+        BR = hardwareMap.get(DcMotor.class, "BR");
         motorLeftBack = hardwareMap.get(DcMotor.class, "lr");
         motorLeftFront = hardwareMap.get(DcMotor.class, "lf");
         intake = hardwareMap.get(Servo.class, "Intake");
@@ -34,26 +34,26 @@ public class TemplateAuto extends LinearOpMode {
         motorLeftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
         motorLeftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
         motorRightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
-        motorRightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
+        BR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE );
 
     }
 
     public void strafeLeft(double speed){
         motorLeftFront.setPower(-speed);
         motorRightFront.setPower(-speed);
-        motorRightBack.setPower(speed);
+        BR.setPower(speed);
         motorLeftBack.setPower(speed);
     }
 
     public void strafeRight(double speed){
-        motorRightBack.setPower(-speed);
+        BR.setPower(-speed);
         motorRightFront.setPower(speed);
         motorLeftBack.setPower(-speed);
         motorLeftFront.setPower(speed);
     }
 
     public void moveFront(double speed){
-        motorRightBack.setPower(-speed);
+        BR.setPower(-speed);
         motorRightFront.setPower(-speed);
         motorLeftFront.setPower(speed);
         motorLeftBack.setPower(speed);
@@ -63,19 +63,19 @@ public class TemplateAuto extends LinearOpMode {
         motorLeftBack.setPower(-speed);
         motorLeftFront.setPower(-speed);
         motorRightFront.setPower(speed);
-        motorRightBack.setPower(speed);
+        BR.setPower(speed);
 
     }
 
     public void rotateRight(double speed){
-        motorRightBack.setPower(speed);
+        BR.setPower(speed);
         motorRightFront.setPower(speed);
         motorLeftFront.setPower(speed);
         motorLeftBack.setPower(speed);
     }
 
     public void rotateLeft(double speed){
-        motorRightBack.setPower(-speed);
+        BR.setPower(-speed);
         motorRightFront.setPower(-speed);
         motorLeftFront.setPower(-speed);
         motorLeftBack.setPower(-speed);

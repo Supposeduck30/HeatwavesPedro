@@ -1,22 +1,25 @@
 repositories {
     mavenCentral()
     google() // Needed for androidx
-    maven { url = "https://mymaven.bylazar.com/releases" }
 }
 
 dependencies {
-    implementation 'org.firstinspires.ftc:Inspection:11.0.0'
-    implementation 'org.firstinspires.ftc:Blocks:11.0.0'
-    implementation 'org.firstinspires.ftc:RobotCore:11.0.0'
-    implementation 'org.firstinspires.ftc:RobotServer:11.0.0'
-    implementation 'org.firstinspires.ftc:OnBotJava:11.0.0'
-    implementation 'org.firstinspires.ftc:Hardware:11.0.0'
-    implementation 'org.firstinspires.ftc:FtcCommon:11.0.0'
-    implementation 'org.firstinspires.ftc:Vision:11.0.0'
+    implementation 'org.firstinspires.ftc:Inspection:12.0.0'
+    implementation 'org.firstinspires.ftc:Blocks:12.0.0'
+    implementation 'org.firstinspires.ftc:RobotCore:12.0.0'
+    implementation 'org.firstinspires.ftc:RobotServer:12.0.0'
+    implementation 'org.firstinspires.ftc:OnBotJava:12.0.0'
+    implementation 'org.firstinspires.ftc:Hardware:12.0.0'
+    implementation 'org.firstinspires.ftc:FtcCommon:12.0.0'
+    implementation 'org.firstinspires.ftc:Vision:12.0.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
 
-    implementation 'com.pedropathing:ftc:2.1.2'
-    implementation 'com.pedropathing:telemetry:1.0.0'
-    implementation 'com.bylazar:fullpanels:1.0.6'
+    // Pedro Pathing 3.x. There is no 3.x `ftc` artifact (it stopped at 2.1.2 and is replaced by `revhub`),
+    // so core + revhub are the pair. Keep them on the same version.
+    implementation 'com.pedropathing:core:3.0.2'
+    implementation 'com.pedropathing:revhub:3.0.2'
+    // AutoTune is OFF for now: 'com.pedropathing:tuning:1.0.2' (compile-verified with these sources) pulls in Sloth and needs
+    // maven { url 'https://repo.dairy.foundation/releases/' }. See TeamCode/build.gradle to turn it back on.
+    // Panels ('com.bylazar:fullpanels') is OFF too: it also pulls in Sloth. Only the legacy Decode autos use it.
+    // To bring it back add the maven repo https://mymaven.bylazar.com/releases and the dairy.foundation repo above.
 }
-

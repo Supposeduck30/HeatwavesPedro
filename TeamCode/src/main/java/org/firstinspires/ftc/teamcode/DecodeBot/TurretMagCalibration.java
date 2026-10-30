@@ -1,11 +1,13 @@
 package org.firstinspires.ftc.teamcode.DecodeBot;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 
+@Disabled
 @TeleOp(name="Calibration: Find Red Mag Angle", group="Calibration")
 public class TurretMagCalibration extends LinearOpMode {
 

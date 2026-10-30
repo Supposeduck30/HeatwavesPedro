@@ -42,7 +42,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
  * of the robot.
  *
  * This OpMode assumes that you have four mecanum wheels each on its own motor named:
- *   front_left_motor, front_right_motor, back_left_motor, back_right_motor
+ *   front_left_motor, front_right_motor, back_left_motor, BR
  *
  *   and that the left motors are flipped such that when they turn clockwise the wheel moves backwards
  *
@@ -57,7 +57,7 @@ public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
     DcMotor frontLeftDrive;
     DcMotor frontRightDrive;
     DcMotor backLeftDrive;
-    DcMotor backRightDrive;
+    DcMotor BR;
 
     // This declares the IMU needed to get the current direction the robot is facing
     IMU imu;
@@ -67,7 +67,7 @@ public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
         frontLeftDrive = hardwareMap.get(DcMotor.class, "front_left_drive");
         frontRightDrive = hardwareMap.get(DcMotor.class, "front_right_drive");
         backLeftDrive = hardwareMap.get(DcMotor.class, "back_left_drive");
-        backRightDrive = hardwareMap.get(DcMotor.class, "back_right_drive");
+        BR = hardwareMap.get(DcMotor.class, "BR");
 
         // We set the left motors in reverse which is needed for drive trains where the left
         // motors are opposite to the right ones.
@@ -79,7 +79,7 @@ public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
         frontLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backLeftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        backRightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        BR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         imu = hardwareMap.get(IMU.class, "imu");
         // This needs to be changed to match the orientation on your robot
@@ -138,7 +138,7 @@ public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
         // strafe right, and rotate
         double frontLeftPower = forward + right + rotate;
         double frontRightPower = forward - right - rotate;
-        double backRightPower = forward + right - rotate;
+        double BRPower = forward + right - rotate;
         double backLeftPower = forward - right + rotate;
 
         double maxPower = 1.0;
@@ -149,7 +149,7 @@ public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
         // be and not get clipped
         maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
         maxPower = Math.max(maxPower, Math.abs(frontRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backRightPower));
+        maxPower = Math.max(maxPower, Math.abs(BRPower));
         maxPower = Math.max(maxPower, Math.abs(backLeftPower));
 
         // We multiply by maxSpeed so that it can be set lower for outreaches
@@ -158,6 +158,6 @@ public class RobotTeleopMecanumFieldRelativeDrive extends OpMode {
         frontLeftDrive.setPower(maxSpeed * (frontLeftPower / maxPower));
         frontRightDrive.setPower(maxSpeed * (frontRightPower / maxPower));
         backLeftDrive.setPower(maxSpeed * (backLeftPower / maxPower));
-        backRightDrive.setPower(maxSpeed * (backRightPower / maxPower));
+        BR.setPower(maxSpeed * (BRPower / maxPower));
     }
 }

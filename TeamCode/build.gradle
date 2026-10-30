@@ -1,3 +1,5 @@
+apply plugin: 'com.android.application'
+
 //
 // build.gradle in TeamCode
 //
@@ -11,6 +13,32 @@
 
 // Custom definitions may go here
 
+// Legacy Pedro Pathing 2.x sources (old Constants/Follower/PathChain/Pose API).
+// They are kept in the repo for reference but are NOT compiled, because the 2.x
+// API no longer exists in Pedro 3. As you port a file to the new API (see the
+// `pedro` package), delete its line from this list to compile it again.
+def legacyPedro2Sources = [
+        'org/firstinspires/ftc/teamcode/DecodeBot/BLUETELEOP.java',
+        'org/firstinspires/ftc/teamcode/DecodeBot/REDTELEOP.java',
+        'org/firstinspires/ftc/teamcode/DecodeBot/PedroPose.java',
+        'org/firstinspires/ftc/teamcode/DecodeBot/RegressionTest.java',
+        'org/firstinspires/ftc/teamcode/DecodeBot/TurretController.java',
+        'org/firstinspires/ftc/teamcode/DecodeBot/TurretControllerRED.java',
+        'org/firstinspires/ftc/teamcode/DecodeBot/intakeOnly.java',
+        'org/firstinspires/ftc/teamcode/DecodeBot/localizationDebug.java',
+        'org/firstinspires/ftc/teamcode/DecodeBot/SUMOAUTOS/**',
+]
+
+// AutoTune is temporarily OFF. These sources need `com.pedropathing:tuning` (which brings in Sloth),
+// and that dependency is removed in build.dependencies.gradle. To turn AutoTune back on:
+//   1. add `implementation 'com.pedropathing:tuning:<version>'` and the dairy.foundation maven repo
+//      back to build.dependencies.gradle
+//   2. delete the autoTuneSources exclude below
+def autoTuneSources = [
+        'org/firstinspires/ftc/teamcode/pedro/Tuning.java',
+        'org/firstinspires/ftc/teamcode/pedro/procedures/**',
+]
+
 // Include common definitions from above.
 apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
@@ -21,10 +49,17 @@ android {
     packagingOptions {
         jniLibs.useLegacyPackaging true
     }
+
+    sourceSets {
+        main {
+            java {
+                exclude legacyPedro2Sources
+                exclude autoTuneSources
+            }
+        }
+    }
 }
 
 dependencies {
     implementation project(':FtcRobotController')
-    implementation "org.solverslib:core:0.3.3"
-    implementation "org.solverslib:pedroPathing:0.3.3"
 }
