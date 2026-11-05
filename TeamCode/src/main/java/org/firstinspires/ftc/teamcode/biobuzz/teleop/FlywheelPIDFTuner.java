@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 /**
@@ -20,20 +21,23 @@ import com.qualcomm.robotcore.util.Range;
  *   dpad up / down        = P + / - one step
  *   dpad right / left     = bigger / smaller step (0.5, 1, 5, 10)
  *   triangle (Y)          = restart the error stats (use it before feeding balls to measure the dip)
+ *   circle (B)            = HOLD to open the blocker
+ *   right bumper          = intake + transfer, left bumper = intake only (feed balls like the teleop)
  *
  * HOW TO TUNE:
  *   1. Press cross (A) to spin up. With P at 0 the speed will sit a bit off the target.
  *   2. Raise P with a big step, then a small one, until the error is small and it reaches the
  *      target quickly. Stop the moment the actual speed starts to oscillate or buzz.
  *   3. Judge it on the stats: small "Settle time", small "Overshoot", "Avg error" near 0, small "Error RMS".
- *      Feed a few balls (press triangle first) and watch "Max dip" shrink.
+ *      Feed a few balls (settle, press triangle, hold circle to open the blocker, hold right bumper to feed)
+ *      and watch "MAX DIP" and the recovery time shrink.
  *   4. Copy the "Paste into BioBuzzConfig" value over SHOOTER_P.
  */
 @TeleOp(name = "Flywheel P Tuner", group = "BioBuzz")
 public class FlywheelPIDFTuner extends OpMode {
 
-    /** Fixed flywheel target while tuning, ticks/s. Follows the teleop's fixed shooter speed. */
-    private static final double TARGET_VELOCITY = SHOOTER_FIXED_VELOCITY;
+    /** Fixed flywheel target while tuning, ticks/s. Set on its own, not tied to the teleop's shooter speed. */
+    private static final double TARGET_VELOCITY = 1500;
     private static final double[] STEPS = {0.5, 1, 5, 10};
     /** P is never taken above this (Decode never needed more). */
     private static final double MAX_P = 125;
@@ -41,6 +45,8 @@ public class FlywheelPIDFTuner extends OpMode {
     private static final double SETTLE_HOLD_SEC = 0.5;
 
     private DcMotorEx shooter;
+    private DcMotor intake, transfer;
+    private Servo blocker;
 
     private double p = Math.min(SHOOTER_P, MAX_P);
     private int stepIndex = 2; // starts at step 5
@@ -53,14 +59,25 @@ public class FlywheelPIDFTuner extends OpMode {
     private boolean settled;
     private double sumErr, sumSqErr, maxDip, peakAbsErr;
     private int samples;
+    // Shot test: how far the speed drops below target and how long it takes to come back
+    private double lowestSpeed;
+    private boolean recovering;
+    private long dipStartNs;
+    private double lastRecoverySec, worstRecoverySec;
 
     private boolean lastUp, lastDown, lastLeft, lastRight, lastCross, lastTriangle;
 
     @Override
     public void init() {
-        shooter = hardwareMap.get(DcMotorEx.class, SHOOTER);
+        shooter  = hardwareMap.get(DcMotorEx.class, SHOOTER);
+        intake   = hardwareMap.get(DcMotor.class, INTAKE);
+        transfer = hardwareMap.get(DcMotor.class, TRANSFER);
+        blocker  = hardwareMap.get(Servo.class, BLOCKER);
         shooter.setDirection(SHOOTER_DIR);
+        intake.setDirection(INTAKE_DIR);
+        transfer.setDirection(TRANSFER_DIR);
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        blocker.setPosition(BLOCKER_BLOCK);
         applyCoefficients();
         resetStats();
 
@@ -103,6 +120,18 @@ public class FlywheelPIDFTuner extends OpMode {
         shooter.setVelocity(spinning ? TARGET_VELOCITY : 0);
         if (spinning) updateStats(now, velocity);
 
+        /* ---------- FEED (same controls as the teleop, on gamepad1) ---------- */
+        blocker.setPosition(gamepad1.circle ? BLOCKER_OPEN : BLOCKER_BLOCK);
+        double intakePower = 0, transferPower = 0;
+        if (gamepad1.left_bumper) {
+            intakePower = INTAKE_IN_POWER;
+        } else if (gamepad1.right_bumper) {
+            intakePower = INTAKE_IN_POWER;
+            transferPower = TRANSFER_IN_POWER;
+        }
+        intake.setPower(intakePower);
+        transfer.setPower(transferPower);
+
         /* ---------- TELEMETRY ---------- */
         double error = TARGET_VELOCITY - velocity;
 
@@ -132,6 +161,22 @@ public class FlywheelPIDFTuner extends OpMode {
         }
 
         telemetry.addLine();
+        telemetry.addData("--- SHOT TEST (settle, press triangle, hold circle + right bumper to feed) ---", "");
+        if (settled) {
+            telemetry.addData("MAX DIP (ticks/s below target)", "%.0f", maxDip);
+            telemetry.addData("Lowest speed", "%.0f", lowestSpeed);
+            telemetry.addData("Recovery time (last / worst)", "%s / %s%s",
+                    seconds(lastRecoverySec), seconds(worstRecoverySec), recovering ? "  (recovering now...)" : "");
+        } else {
+            telemetry.addData("MAX DIP", spinning ? "waiting to settle..." : "-");
+        }
+
+        telemetry.addLine();
+        telemetry.addData("SEND TO CLAUDE", "P=%s settle=%s overshoot=%.0f avgErr=%s maxDip=%s recovery=%s",
+                trim(p), seconds(settleSec), overshoot,
+                settled && samples > 0 ? String.format("%.1f", sumErr / samples) : "-",
+                settled ? String.format("%.0f", maxDip) : "-",
+                seconds(worstRecoverySec));
         telemetry.addData("Paste into BioBuzzConfig", "SHOOTER_P = %s", trim(p));
         telemetry.update();
     }
@@ -139,6 +184,8 @@ public class FlywheelPIDFTuner extends OpMode {
     @Override
     public void stop() {
         shooter.setVelocity(0);
+        intake.setPower(0);
+        transfer.setPower(0);
     }
 
     private void applyCoefficients() {
@@ -158,6 +205,10 @@ public class FlywheelPIDFTuner extends OpMode {
         maxDip = 0;
         peakAbsErr = 0;
         samples = 0;
+        lowestSpeed = Double.MAX_VALUE;
+        recovering = false;
+        lastRecoverySec = -1;
+        worstRecoverySec = -1;
     }
 
     private void updateStats(long now, double velocity) {
@@ -187,6 +238,17 @@ public class FlywheelPIDFTuner extends OpMode {
         samples++;
         maxDip = Math.max(maxDip, error);
         peakAbsErr = Math.max(peakAbsErr, Math.abs(error));
+        lowestSpeed = Math.min(lowestSpeed, velocity);
+
+        // A dip starts when the speed falls more than the tolerance below target and ends when it is back within it.
+        if (!recovering && error > SHOOTER_READY_TOLERANCE) {
+            recovering = true;
+            dipStartNs = now;
+        } else if (recovering && error <= SHOOTER_READY_TOLERANCE) {
+            recovering = false;
+            lastRecoverySec = (now - dipStartNs) / 1e9;
+            worstRecoverySec = Math.max(worstRecoverySec, lastRecoverySec);
+        }
     }
 
     private static String seconds(double s) {

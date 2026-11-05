@@ -15,7 +15,6 @@ public final class BioBuzzConfig {
     public static final String SHOOTER      = "shooter";
     public static final String INTAKE       = "intake";
     public static final String TRANSFER     = "transfer";
-    public static final String BALL_SENSOR  = "BallSensor";   // TUNE: digital channel (beam break / limit-style)
     public static final String BLOCKER   = "blocker";
     public static final String TURRET    = "Turret";
 
@@ -27,9 +26,6 @@ public final class BioBuzzConfig {
 
     // ================= FIELD / ROBOT GEOMETRY =================
     // Alliance-specific values (start pose, goals, park pose, shooter regression, trim) are in BioBuzzAlliance.
-
-    /** Pose that gamepad1 triangle snaps the robot to (use against a wall to fix drift). TUNE */
-    public static final Pose RESET_POSE = new Pose(7, 9, Math.toRadians(90));
 
     // ================= HOLD-TO-POINT (gamepad1, hold the button) =================
     // The shoot poses (left / right bumper) differ per alliance, see BioBuzzAlliance.
@@ -67,7 +63,7 @@ public final class BioBuzzConfig {
     /** true = the shooter always runs at SHOOTER_FIXED_VELOCITY; false = use the distance regression below. */
     public static final boolean USE_FIXED_SHOOTER_VELOCITY = true;
     /** Shooter target (ticks/s) while USE_FIXED_SHOOTER_VELOCITY is on. (F was tuned at 1450.) */
-    public static final double SHOOTER_FIXED_VELOCITY = 1400;
+    public static final double SHOOTER_FIXED_VELOCITY = 1480;
     /** Multiplies the regression output. 1.0 = the regression as-is; 1.5 = 50% faster. TUNE */
     public static final double SHOOTER_VELOCITY_SCALE = 3.0;
     /** Safety cap on the final target (ticks/s). Above the motor's real max it just means full power. */
@@ -75,11 +71,26 @@ public final class BioBuzzConfig {
     /** Telemetry says READY when the flywheel is within this many ticks/s of the target. */
     public static final double SHOOTER_READY_TOLERANCE = 50;
 
-    public static final double SHOOTER_P = 100, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 12.6; // was 14.76; tuner avg error was -30.5 at 14.5 and -24 at 14.0 (wheel runs fast), so F lowered. Check Avg error in FlywheelPIDFTuner
+    // Bang-bang shooter control (TeleOps): full power below the target, zero above it.
+    /** Power applied while the flywheel is below the target. */
+    public static final double BANG_BANG_ON_POWER = 1.0;
+    /** Power applied once the flywheel has reached the target. */
+    public static final double BANG_BANG_OFF_POWER = 0.0;
+    /** Ticks/s band around the target: turns on below (target - H), off above (target + H), holds in between. */
+    public static final double BANG_BANG_HYSTERESIS = 5;
+
+    public static final double SHOOTER_P = 100, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 14.9; // F was 12.6; after +250g the tuner read +200 error (too slow, ~1300 at target 1500), so 14.5, then avg error +14 at P=0, so 14.6, then avg error +20 at P=120, so ~14.8. P=120 F=14.9 tested in teleop: settle 1.98s, overshoot 40, max dip 100, recovery 0.24s. Then ShooterVelocityTuner at 1400 showed error 40-80 oscillating, so P lowered 120 -> 100 (estimate). Re-check with FlywheelPIDFTuner.
 
     // ================= BLOCKER =================
-    public static final double BLOCKER_BLOCK = 0.16; // was 0.0 in the scrimmage teleop
-    public static final double BLOCKER_OPEN  = 0.76; // same as ScrimmageTeleop KICKER_OPEN
+    public static final double BLOCKER_BLOCK = 0.63;
+    public static final double BLOCKER_OPEN  = 0.85;
+
+    // ================= FLOWER =================
+    public static final String FLOWER = "Flower1";
+    /** Default position. */
+    public static final double FLOWER_REST   = 0.2;
+    /** Position while toggled on with gamepad1 cross. */
+    public static final double FLOWER_ACTIVE = 1.0;
 
     // ================= INTAKE =================
     public static final double INTAKE_IN_POWER      = 1.0;
@@ -88,13 +99,7 @@ public final class BioBuzzConfig {
     public static final double PRIMARY_FEED_POWER   = 1.0;
     public static final double SECONDARY_FEED_POWER = 1.0; // Decode intended this slower; lower it if you want
 
-    // ================= TRANSFER + BALL SENSOR =================
+    // ================= TRANSFER =================
     public static final double TRANSFER_IN_POWER      = 1.0;  // TUNE
     public static final double TRANSFER_REVERSE_POWER = -0.9; // TUNE
-    /** While intaking, the transfer stops once this many balls have come in. The intake keeps running. */
-    public static final int    MAX_BALLS_STORED = 2;
-    /** true if the sensor reads HIGH when a ball is in front of it. Flip if the count is backwards. TUNE */
-    public static final boolean BALL_SENSOR_ACTIVE_HIGH = false;
-    /** Ignore sensor changes shorter than this so one ball is not counted twice. TUNE */
-    public static final long   BALL_SENSOR_DEBOUNCE_MS = 40;
 }

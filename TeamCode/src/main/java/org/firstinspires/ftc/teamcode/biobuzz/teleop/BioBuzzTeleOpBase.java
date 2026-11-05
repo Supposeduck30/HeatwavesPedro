@@ -7,9 +7,7 @@ import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.Gamepad;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
@@ -22,13 +20,13 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose
  *           HOLD to drive to and hold a point: square = empty gate, circle = park,
  *           left bumper = shoot far, right bumper = shoot close
- * gamepad2: right bumper = intake in (intake + transfer, transfer stops after 2 balls via the sensor),
- *           left bumper = shoot feed (intake + transfer both run, ball count resets),
- *           cross = reverse both (ball count resets), triangle (hold) = open blocker,
- *           circle = toggle primary/secondary goal, dpad down = zero ball count
+ * gamepad2: right bumper = intake + transfer,
+ *           left bumper = intake only,
+ *           cross = reverse both, triangle (hold) = open blocker,
+ *           circle = toggle primary/secondary goal, dpad down = reset the shot-test dip stats
  *
- * The shooter (single motor) always spins at the speed the distance to the goal calls for (no idle speed; the
- * blocker and intake decide when balls fire).
+ * The shooter (single motor) is bang-bang controlled: full power below the speed the distance to the goal
+ * calls for, zero above it (no idle speed; the blocker and intake decide when balls fire).
  *
  * TURRET IS DISABLED for now: BioBuzzTurret is not created or called. To bring it back, construct
  * it in init(), call turret.aimAtGoal(pose, velX, velY) in loop(), and take the goal/distance from
@@ -47,17 +45,23 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
 
     private DcMotorEx shooter;
     private DcMotor intake, transfer;
-    private DigitalChannel ballSensor;
     private Servo blocker;
+    private Servo flower;
+
+    private boolean flowerActive = false;
+    private boolean lastGamepad1Cross = false;
+    private boolean shooterOn = false;
+
+    // Shot test: how far the flywheel drops below target while shooting, and how long it takes to recover
+    private boolean dipArmed = false;
+    private double maxDip = 0, lowestSpeed = Double.MAX_VALUE;
+    private boolean recovering = false;
+    private long dipStartNs = 0;
+    private double lastRecoverySec = -1, worstRecoverySec = -1;
 
     private HoldTarget activeHold = HoldTarget.NONE;
     private boolean lastGamepad2Circle = false;
     private boolean secondaryGoal = false;
-
-    // Ball counting (rising edges on the sensor, debounced)
-    private int ballCount = 0;
-    private boolean lastSensorBall = false;
-    private long lastSensorChangeMs = 0;
 
     // Field-frame velocity from pose differences (used for shot leading)
     private Pose lastPose = null;
@@ -65,6 +69,10 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
     private double velX = 0, velY = 0;
 
     private boolean firstLoop = true;
+
+    // Loop timing
+    private long lastLoopNanos = 0;
+    private double loopMs = 0, maxLoopMs = 0;
 
     protected BioBuzzTeleOpBase(BioBuzzAlliance alliance) {
         this.alliance = alliance;
@@ -79,22 +87,22 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
             follower.setPose(alliance.startPose);
         }
 
-        shooter    = hardwareMap.get(DcMotorEx.class, SHOOTER);
-        intake     = hardwareMap.get(DcMotor.class, INTAKE);
-        transfer   = hardwareMap.get(DcMotor.class, TRANSFER);
-        ballSensor = hardwareMap.get(DigitalChannel.class, BALL_SENSOR);
-        blocker     = hardwareMap.get(Servo.class, BLOCKER);
+        shooter  = hardwareMap.get(DcMotorEx.class, SHOOTER);
+        intake   = hardwareMap.get(DcMotor.class, INTAKE);
+        transfer = hardwareMap.get(DcMotor.class, TRANSFER);
+        blocker  = hardwareMap.get(Servo.class, BLOCKER);
+        flower   = hardwareMap.get(Servo.class, FLOWER);
 
         shooter.setDirection(SHOOTER_DIR);
         intake.setDirection(INTAKE_DIR);
         transfer.setDirection(TRANSFER_DIR);
-        ballSensor.setMode(DigitalChannel.Mode.INPUT);
 
-        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F));
+        // Open loop (bang-bang): we set the power ourselves; the encoder is only read for velocity.
+        shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         blocker.setPosition(BLOCKER_BLOCK);
+        flower.setPosition(FLOWER_REST);
 
         telemetry.addData("Status", "Initialized (" + alliance + ")");
         telemetry.update();
@@ -112,8 +120,14 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
 
         long nowNanos = System.nanoTime();
 
+        if (lastLoopNanos != 0) {
+            loopMs = (nowNanos - lastLoopNanos) / 1e6;
+            maxLoopMs = Math.max(maxLoopMs, loopMs);
+        }
+        lastLoopNanos = nowNanos;
+
         if (gamepad1.triangle) {
-            follower.setPose(RESET_POSE);
+            follower.setPose(alliance.resetPose);
         }
 
         /* ---------- HOLD POINTS / DRIVE ---------- */
@@ -145,43 +159,54 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
         /* ---------- BLOCKER ---------- */
         blocker.setPosition(gamepad2.triangle ? BLOCKER_OPEN : BLOCKER_BLOCK);
 
+        /* ---------- FLOWER (gamepad1 cross toggles) ---------- */
+        if (gamepad1.cross && !lastGamepad1Cross) {
+            flowerActive = !flowerActive;
+        }
+        lastGamepad1Cross = gamepad1.cross;
+        flower.setPosition(flowerActive ? FLOWER_ACTIVE : FLOWER_REST);
+
         /* ---------- SHOOTER ---------- */
         double distance = distanceToGoal(pose);
         double targetVelocity = USE_FIXED_SHOOTER_VELOCITY
                 ? SHOOTER_FIXED_VELOCITY
                 : Range.clip(alliance.shooterVelocity(distance) * SHOOTER_VELOCITY_SCALE, 0, MAX_SHOOTER_VELOCITY);
-        shooter.setVelocity(targetVelocity);
+        double shooterVelocity = shooter.getVelocity();
+
+        // Bang-bang: full power below the target, zero above it, hysteresis band in between.
+        if (shooterVelocity < targetVelocity - BANG_BANG_HYSTERESIS) {
+            shooterOn = true;
+        } else if (shooterVelocity > targetVelocity + BANG_BANG_HYSTERESIS) {
+            shooterOn = false;
+        }
+        shooter.setPower(shooterOn ? BANG_BANG_ON_POWER : BANG_BANG_OFF_POWER);
 
         /* ---------- INTAKE ---------- */
-        updateBallCount();
-        if (gamepad2.dpad_down) {
-            ballCount = 0;
-        }
-
         double intakePower = 0, transferPower = 0;
         if (gamepad2.cross) {
             // Spit everything out
             intakePower = INTAKE_REVERSE_POWER;
             transferPower = TRANSFER_REVERSE_POWER;
-            ballCount = 0;
         } else if (gamepad2.left_bumper) {
-            // Shooting: both run no matter what the sensor says
-            double feed = secondaryGoal ? SECONDARY_FEED_POWER : PRIMARY_FEED_POWER;
-            intakePower = feed;
-            transferPower = feed;
-            ballCount = 0;
-        } else if (gamepad2.right_bumper) {
-            // Intaking: intake always runs, transfer stops once the robot is full
+            // Intake only
             intakePower = INTAKE_IN_POWER;
-            transferPower = ballCount >= MAX_BALLS_STORED ? 0 : TRANSFER_IN_POWER;
+        } else if (gamepad2.right_bumper) {
+            // Intake + transfer
+            intakePower = INTAKE_IN_POWER;
+            transferPower = TRANSFER_IN_POWER;
         }
         intake.setPower(intakePower);
         transfer.setPower(transferPower);
 
         /* ---------- TELEMETRY ---------- */
-        double shooterVelocity = shooter.getVelocity();
         boolean ready = Math.abs(targetVelocity - shooterVelocity) < SHOOTER_READY_TOLERANCE;
 
+        if (gamepad2.dpad_down) {
+            resetDipStats();
+        }
+        updateDipStats(nowNanos, targetVelocity, shooterVelocity);
+
+        telemetry.addData("Loop time (ms)", "%.1f (%.0f Hz), max %.1f", loopMs, loopMs > 0 ? 1000.0 / loopMs : 0, maxLoopMs);
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Active goal", secondaryGoal ? "SECONDARY" : "PRIMARY");
         telemetry.addData("Holding", activeHold);
@@ -194,30 +219,62 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
         telemetry.addData("Target (ticks/s)", "%.0f", targetVelocity);
         telemetry.addData("Actual (ticks/s)", "%.0f", shooterVelocity);
         telemetry.addData("Velocity error", "%.0f", targetVelocity - shooterVelocity);
+        telemetry.addData("Shooter power", "%.1f", shooterOn ? BANG_BANG_ON_POWER : BANG_BANG_OFF_POWER);
         telemetry.addData("Ready", ready ? "YES" : "no");
+        telemetry.addData("--- SHOT TEST (gamepad2 dpad down = reset) ---", "");
+        telemetry.addData("Tracking", dipArmed ? "ON" : "waiting for READY");
+        telemetry.addData("MAX DIP (ticks/s below target)", "%.0f", maxDip);
+        telemetry.addData("Lowest speed", lowestSpeed == Double.MAX_VALUE ? "-" : String.format("%.0f", lowestSpeed));
+        telemetry.addData("Recovery time (last / worst)", "%s / %s%s",
+                seconds(lastRecoverySec), seconds(worstRecoverySec), recovering ? "  (recovering now...)" : "");
+        telemetry.addData("SEND TO CLAUDE", "P=%s F=%s maxDip=%.0f recovery=%s",
+                SHOOTER_P, SHOOTER_F, maxDip, seconds(worstRecoverySec));
         telemetry.addData("--- FEED ---", "");
         telemetry.addData("Intake / Transfer power", "%.1f / %.1f", intakePower, transferPower);
-        telemetry.addData("Balls stored", "%d / %d  (sensor sees ball: %s)", ballCount, MAX_BALLS_STORED, lastSensorBall);
         telemetry.addData("Gamepad2 assigned", gamepad2.getGamepadId() != Gamepad.ID_UNASSOCIATED);
         telemetry.addData("Blocker", gamepad2.triangle ? "OPEN" : "BLOCKING");
+        telemetry.addData("Flower1", flowerActive ? "ACTIVE" : "REST");
         telemetry.update();
     }
 
+    /** Forget the dip stats. They also start over until the flywheel has been ready once. */
+    private void resetDipStats() {
+        dipArmed = false;
+        maxDip = 0;
+        lowestSpeed = Double.MAX_VALUE;
+        recovering = false;
+        lastRecoverySec = -1;
+        worstRecoverySec = -1;
+    }
+
     /**
-     * Counts balls entering as debounced rising edges of the sensor, but only while intaking
-     * (right bumper). Shooting and reversing reset the count in loop().
+     * Tracks how far the flywheel drops below its target while shooting (blocker held open) and how
+     * long it takes to come back inside SHOOTER_READY_TOLERANCE. Starts counting once the wheel has
+     * been ready, and counts until reset (dpad down), so reset right before a test. The idle speed
+     * ripple (a few tens of ticks/s) is the baseline; a real shot dips past it.
      */
-    private void updateBallCount() {
-        boolean raw = ballSensor.getState() == BALL_SENSOR_ACTIVE_HIGH;
-        long now = System.currentTimeMillis();
-        if (raw == lastSensorBall || now - lastSensorChangeMs < BALL_SENSOR_DEBOUNCE_MS) {
+    private void updateDipStats(long nowNanos, double target, double velocity) {
+        double error = target - velocity;
+        if (!dipArmed) {
+            dipArmed = Math.abs(error) <= SHOOTER_READY_TOLERANCE;
             return;
         }
-        lastSensorBall = raw;
-        lastSensorChangeMs = now;
-        if (raw && gamepad2.right_bumper && !gamepad2.left_bumper && !gamepad2.cross) {
-            ballCount++;
+
+        maxDip = Math.max(maxDip, error);
+        lowestSpeed = Math.min(lowestSpeed, velocity);
+
+        if (!recovering && error > SHOOTER_READY_TOLERANCE) {
+            recovering = true;
+            dipStartNs = nowNanos;
+        } else if (recovering && error <= SHOOTER_READY_TOLERANCE) {
+            recovering = false;
+            lastRecoverySec = (nowNanos - dipStartNs) / 1e9;
+            worstRecoverySec = Math.max(worstRecoverySec, lastRecoverySec);
         }
+    }
+
+    private static String seconds(double s) {
+        return s < 0 ? "-" : String.format("%.2f s", s);
     }
 
     /** Distance from the robot center to the active goal (no turret, so no pivot offset). */
@@ -251,8 +308,9 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
         switch (target) {
             case EMPTY_GATE:  return gamepad1.square;
             case PARK:        return gamepad1.circle;
-            case SHOOT_FAR:   return gamepad1.left_bumper;
-            case SHOOT_CLOSE: return gamepad1.right_bumper;
+            // On RED the two shoot buttons are swapped (right bumper = far, left bumper = close).
+            case SHOOT_FAR:   return alliance == BioBuzzAlliance.RED ? gamepad1.right_bumper : gamepad1.left_bumper;
+            case SHOOT_CLOSE: return alliance == BioBuzzAlliance.RED ? gamepad1.left_bumper : gamepad1.right_bumper;
             default:          return false;
         }
     }
@@ -268,7 +326,7 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
 
     @Override
     public void stop() {
-        shooter.setVelocity(0);
+        shooter.setPower(0);
         intake.setPower(0);
         transfer.setPower(0);
     }

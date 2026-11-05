@@ -27,7 +27,10 @@ public class BlockerTuner extends OpMode {
 
     private Servo blocker;
 
-    private double position = BLOCKER_BLOCK;
+    // Where the servo sits from init, so it doesn't slam to the config BLOCK position.
+    private static final double START_POSITION = 0.95;
+
+    private double position = START_POSITION;
     private double blockPos = BLOCKER_BLOCK;
     private double openPos = BLOCKER_OPEN;
 
@@ -36,7 +39,9 @@ public class BlockerTuner extends OpMode {
     @Override
     public void init() {
         blocker = hardwareMap.get(Servo.class, BLOCKER);
-        telemetry.addLine("Blocker Tuner ready. Servo moves on start.");
+        blocker.setPosition(position);
+        telemetry.addLine("Blocker Tuner ready.");
+        telemetry.addData("Init position", "%.3f", START_POSITION);
         telemetry.update();
     }
 

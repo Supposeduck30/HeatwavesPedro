@@ -30,8 +30,12 @@ public class ScrimmageTeleop extends OpMode {
     // Shooter runs at SHOOTER_FIXED_VELOCITY with the SHOOTER_P / SHOOTER_F from BioBuzzConfig.
 
     // KICKER
-    public static final double KICKER_BLOCK = 0.16;
-    public static final double KICKER_OPEN = 0.76;
+    public static final double KICKER_BLOCK = 0.63;
+    public static final double KICKER_OPEN = 0.85;
+
+    private Servo flower;
+    private boolean flowerActive = false;
+    private boolean lastCross = false;
 
     @Override
     public void init() {
@@ -39,6 +43,7 @@ public class ScrimmageTeleop extends OpMode {
         follower = Constants.create(hardwareMap);
 
         blocker = hardwareMap.get(Servo.class, "blocker");
+        flower = hardwareMap.get(Servo.class, FLOWER);
         transfer = hardwareMap.get(DcMotor.class, "transfer");
         intake = hardwareMap.get(DcMotor.class, "intake");
         shooter = hardwareMap.get(DcMotorEx.class, "shooter");
@@ -49,6 +54,7 @@ public class ScrimmageTeleop extends OpMode {
 
         // Start closed
         blocker.setPosition(KICKER_BLOCK);
+        flower.setPosition(FLOWER_REST);
 
         transfer.setDirection(DcMotor.Direction.REVERSE);
     }
@@ -70,6 +76,13 @@ public class ScrimmageTeleop extends OpMode {
         boolean blockerOpen = gamepad2.triangle || gamepad1.triangle;
         blocker.setPosition(blockerOpen ? KICKER_OPEN : KICKER_BLOCK);
 
+        // Gamepad1 cross toggles Flower1: press once = active, press again = rest
+        if (gamepad1.cross && !lastCross) {
+            flowerActive = !flowerActive;
+        }
+        lastCross = gamepad1.cross;
+        flower.setPosition(flowerActive ? FLOWER_ACTIVE : FLOWER_REST);
+
         // Right bumper = intake + transfer, left bumper = intake only, cross = reverse both
         if (gamepad2.right_bumper) {
             transfer.setPower(1.0);
@@ -88,6 +101,7 @@ public class ScrimmageTeleop extends OpMode {
         telemetry.addData("Gamepad2 assigned", gamepad2.getGamepadId() != Gamepad.ID_UNASSOCIATED);
         telemetry.addData("Shooter target / actual (ticks/s)", "%.0f / %.0f", SHOOTER_FIXED_VELOCITY, shooter.getVelocity());
         telemetry.addData("Blocker", blockerOpen ? "OPEN" : "BLOCKED");
+        telemetry.addData("Flower1", flowerActive ? "ACTIVE" : "REST");
         telemetry.addData("Robot X", follower.pose().x());
         telemetry.addData("Robot Y", follower.pose().y());
         telemetry.addData("Robot Heading", Math.toDegrees(follower.pose().heading()));
