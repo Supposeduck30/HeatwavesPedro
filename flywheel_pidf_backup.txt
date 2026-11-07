@@ -1,0 +1,24 @@
+Flywheel PIDF backup - saved 2026-11-06, before changing the constants
+Source: HeatwavesPedro3 / TeamCode / ... / biobuzz / teleop / BioBuzzConfig.java
+
+--- Current (old) values ---
+SHOOTER_P = 100
+SHOOTER_I = 0
+SHOOTER_D = 0
+SHOOTER_F = 14.9
+
+--- Related shooter constants (unchanged, for context) ---
+USE_FIXED_SHOOTER_VELOCITY = true
+SHOOTER_FIXED_VELOCITY     = 1480   (F was tuned at 1450)
+SHOOTER_VELOCITY_SCALE     = 3.0
+MAX_SHOOTER_VELOCITY       = 2300
+SHOOTER_READY_TOLERANCE    = 50
+
+--- Original line, verbatim, to paste back to restore ---
+public static final double SHOOTER_P = 100, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 14.9;
+
+--- History from your comment on that line ---
+F: 12.6 -> 14.5 (after +250g, tuner read +200 error at target 1500)
+   -> 14.6 (avg error +14 at P=0) -> ~14.8 (avg error +20 at P=120) -> 14.9
+P=120, F=14.9 tested in teleop: settle 1.98 s, overshoot 40, max dip 100, recovery 0.24 s.
+ShooterVelocityTuner at 1400 showed error 40-80 oscillating, so P lowered 120 -> 100 (an estimate).

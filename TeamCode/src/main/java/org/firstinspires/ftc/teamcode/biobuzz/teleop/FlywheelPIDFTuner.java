@@ -37,7 +37,7 @@ import com.qualcomm.robotcore.util.Range;
 public class FlywheelPIDFTuner extends OpMode {
 
     /** Fixed flywheel target while tuning, ticks/s. Set on its own, not tied to the teleop's shooter speed. */
-    private static final double TARGET_VELOCITY = 1500;
+    private static final double TARGET_VELOCITY = 1480;
     private static final double[] STEPS = {0.5, 1, 5, 10};
     /** P is never taken above this (Decode never needed more). */
     private static final double MAX_P = 125;
