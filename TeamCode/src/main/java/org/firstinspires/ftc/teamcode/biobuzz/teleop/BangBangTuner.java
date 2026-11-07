@@ -81,7 +81,8 @@ public class BangBangTuner extends OpMode {
         transfer.setDirection(TRANSFER_DIR);
         // Raw power, no built-in velocity PID. getVelocity() still reads the encoder.
         shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        // BRAKE at zero power, same as the teleops (they were tuned with it first).
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         blocker.setPosition(BLOCKER_BLOCK);
         if (hardwareMap.voltageSensor.iterator().hasNext()) {
             battery = hardwareMap.voltageSensor.iterator().next();

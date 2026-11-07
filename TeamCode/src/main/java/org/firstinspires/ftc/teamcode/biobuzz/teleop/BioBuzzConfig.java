@@ -73,11 +73,11 @@ public final class BioBuzzConfig {
 
     // Bang-bang shooter control (TeleOps): full power below the target, zero above it.
     /** Power applied while the flywheel is below the target. */
-    public static final double BANG_BANG_ON_POWER = 0.7;
+    public static final double BANG_BANG_ON_POWER = 1.0;
     /** Power applied once the flywheel has reached the target. */
-    public static final double BANG_BANG_OFF_POWER = 0.4;
+    public static final double BANG_BANG_OFF_POWER = 0.0;
     /** Ticks/s band around the target: turns on below (target - H), off above (target + H), holds in between. */
-    public static final double BANG_BANG_HYSTERESIS = 4; // og value is 5
+    public static final double BANG_BANG_HYSTERESIS = 5;
 
     public static final double SHOOTER_P = 120, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 13; //F was 14.9, F was 12.6; after +250g the tuner read +200 error (too slow, ~1300 at target 1500), so 14.5, then avg error +14 at P=0, so 14.6, then avg error +20 at P=120, so ~14.8. P=120 F=14.9 tested in teleop: settle 1.98s, overshoot 40, max dip 100, recovery 0.24s. Then ShooterVelocityTuner at 1400 showed error 40-80 oscillating, so P lowered 120 -> 100 (estimate). Re-check with FlywheelPIDFTuner.
 

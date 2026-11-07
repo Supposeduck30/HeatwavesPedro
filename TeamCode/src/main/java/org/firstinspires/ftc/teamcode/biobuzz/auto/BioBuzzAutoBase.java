@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 /**
  * BioBuzz autonomous: start -> shoot the preload -> park, all straight lines (see {@link BioBuzzAutoRoute}).
- * Use one of the six OpModes in {@link BioBuzzAutos}; they only pick the route.
+ * Use one of the two OpModes in {@link BioBuzzAutos} (Red 1 / Blue 1); they only pick the route.
  *
  * Sequence:
  *   1. Drive to the shoot pose while the flywheel spins up to SHOOTER_FIXED_VELOCITY.
@@ -95,6 +95,8 @@ public abstract class BioBuzzAutoBase extends OpMode {
         // Bang-bang (same as BangBangTeleOp): open loop, the encoder is only read for velocity.
         shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        // BRAKE at zero power (what the teleop was originally tuned with), same as BangBangTuner.
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         blocker.setPosition(BLOCKER_BLOCK);
 

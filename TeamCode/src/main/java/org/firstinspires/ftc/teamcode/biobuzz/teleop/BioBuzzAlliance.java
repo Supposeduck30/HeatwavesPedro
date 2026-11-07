@@ -13,12 +13,14 @@ import com.pedropathing.math.Pose;
  */
 public enum BioBuzzAlliance {
 
-    //          primary goal    secondary goal   start pose (x, y, heading deg)   park pose (x, y, heading deg)   vel regression A, B, C         start trim   reset pose (gamepad1 triangle)   shoot far pose (left bumper)   shoot close pose (right bumper)
+    //          primary goal    secondary goal   start pose (x, y, heading deg)   park pose (x, y, heading deg)   vel regression A, B, C         start trim   reset pose (gamepad1 triangle)   relocalize pose (gamepad1 dpad up)   shoot far pose (left bumper)   shoot close pose (right bumper)
     BLUE(  6.2, 187.2,    86.8, 184.2,    144 - 54.4, 144 - 7, 270,   144 - 38.8, 144 - 31.5, 180,   0.0220573, -0.464531, 1402.823,   0.0,
             new Pose(144 - 7, 144 - 9, Math.toRadians(270)),
+            new Pose(133.9, 134.58, Math.toRadians(270)),
             new Pose(144 - 60.35, 144 - 7, Math.toRadians(270)),  new Pose(144 - 60.35, 144 - 137, Math.toRadians(90))),
     RED( 180.1, 187.2,   100.0, 185.0,   54.4, 7, 90,            38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
             new Pose(7, 9, Math.toRadians(90)),
+            new Pose(7.75, 8.01, Math.toRadians(90)),
             new Pose(60.35, 7, Math.toRadians(90)),  new Pose(60.35, 137, Math.toRadians(270)));  // same x, each 7 in from its wall (was 59.09, 7 and 61.60, 119.46)
 
     public final double primaryGoalX, primaryGoalY;
@@ -27,6 +29,8 @@ public enum BioBuzzAlliance {
     public final Pose parkPose;
     /** gamepad1 triangle snaps the robot to this pose (use against a wall to fix drift). */
     public final Pose resetPose;
+    /** gamepad1 dpad up relocalizes the Pedro follower to this pose (drive to this spot, press, and odometry restarts from here). */
+    public final Pose relocalizePose;
     /** gamepad1 left bumper (hold) drives to and holds this pose. */
     public final Pose shootFarPose;
     /** gamepad1 right bumper (hold) drives to and holds this pose. */
@@ -42,8 +46,9 @@ public enum BioBuzzAlliance {
                     double parkX, double parkY, double parkHeadingDeg,
                     double velA, double velB, double velC,
                     double startTrimDeg,
-                    Pose resetPose, Pose shootFarPose, Pose shootClosePose) {
+                    Pose resetPose, Pose relocalizePose, Pose shootFarPose, Pose shootClosePose) {
         this.resetPose = resetPose;
+        this.relocalizePose = relocalizePose;
         this.shootFarPose = shootFarPose;
         this.shootClosePose = shootClosePose;
         this.primaryGoalX = primaryGoalX;

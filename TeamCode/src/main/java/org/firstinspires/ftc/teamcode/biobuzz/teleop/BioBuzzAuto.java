@@ -172,6 +172,8 @@ public class BioBuzzAuto extends OpMode {
     @Override
     public void stop() {
         stopMechanisms();
+        // Hand the final pose to the teleop (BioBuzzPose) so it starts where this auto ended.
+        BioBuzzPose.savePose(follower.pose());
     }
 
     // ================= HELPERS =================

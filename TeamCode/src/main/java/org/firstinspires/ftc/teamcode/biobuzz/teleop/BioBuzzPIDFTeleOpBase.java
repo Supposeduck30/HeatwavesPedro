@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  * BioBuzz TeleOp, ported from the Decode BLUETELEOP / REDTELEOP to Pedro 3.
  * Use {@link BioBuzzBlueTeleOp} or {@link BioBuzzRedTeleOp}; they only pick the alliance.
  *
- * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose
+ * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose, dpad up = relocalize
  *           HOLD to drive to and hold a point: square = empty gate, circle = park,
  *           left bumper = shoot far, right bumper = shoot close
  * gamepad2: right bumper = intake + transfer,
@@ -131,6 +131,11 @@ public abstract class BioBuzzPIDFTeleOpBase extends OpMode {
 
         if (gamepad1.triangle) {
             follower.setPose(alliance.resetPose);
+        }
+
+        // Relocalize: drive to the marked spot, press dpad up, and Pedro restarts odometry from there.
+        if (gamepad1.dpad_up) {
+            follower.setPose(alliance.relocalizePose);
         }
 
         /* ---------- HOLD POINTS / DRIVE ---------- */

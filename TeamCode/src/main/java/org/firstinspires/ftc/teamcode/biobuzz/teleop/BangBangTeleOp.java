@@ -24,7 +24,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  *
  * Alliance is picked during init: gamepad1 left bumper = BLUE (default), right bumper = RED.
  *
- * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose
+ * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose, dpad up = relocalize
  *           HOLD to drive to and hold a point: square = empty gate, circle = park,
  *           left bumper = shoot far, right bumper = shoot close
  * gamepad2: right bumper = intake + transfer,
@@ -89,6 +89,8 @@ public class BangBangTeleOp extends OpMode {
         // Open loop: we set the power ourselves; the encoder is only read for velocity.
         shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        // BRAKE at zero power (what the teleop was originally tuned with), same as BangBangTuner.
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         blocker.setPosition(BLOCKER_BLOCK);
         flower.setPosition(FLOWER_REST);
@@ -134,6 +136,11 @@ public class BangBangTeleOp extends OpMode {
 
         if (gamepad1.triangle) {
             follower.setPose(alliance.resetPose);
+        }
+
+        // Relocalize: drive to the marked spot, press dpad up, and Pedro restarts odometry from there.
+        if (gamepad1.dpad_up) {
+            follower.setPose(alliance.relocalizePose);
         }
 
         /* ---------- HOLD POINTS / DRIVE ---------- */
