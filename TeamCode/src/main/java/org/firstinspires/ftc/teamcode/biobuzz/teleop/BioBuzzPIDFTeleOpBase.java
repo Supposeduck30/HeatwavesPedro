@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.pedro.Constants;
@@ -18,7 +19,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  * BioBuzz TeleOp, ported from the Decode BLUETELEOP / REDTELEOP to Pedro 3.
  * Use {@link BioBuzzBlueTeleOp} or {@link BioBuzzRedTeleOp}; they only pick the alliance.
  *
- * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose, dpad up = relocalize
+ * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose
  *           HOLD to drive to and hold a point: square = empty gate, circle = park,
  *           left bumper = shoot far, right bumper = shoot close
  * gamepad2: right bumper = intake + transfer,
@@ -28,7 +29,8 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  *
  * PIDF VERSION: identical to BioBuzzTeleOpBase except the shooter. Instead of bang-bang, the motor runs in
  * RUN_USING_ENCODER and the hub's built-in velocity PIDF holds the target, using SHOOTER_P / I / D / F
- * from BioBuzzConfig. Tune F with FlywheelFTuner logic (P = 0) and P with FlywheelPIDFTuner.
+ * from BioBuzzConfig. Tune F with FlywheelFTuner (P = 0) and P with FlywheelPIDFTuner. Like the tuners,
+ * F is scaled by SHOOTER_F_NOMINAL_VOLTAGE / battery voltage, so the speed does not drift as the battery drains.
  *
  * TURRET IS DISABLED for now: BioBuzzTurret is not created or called. To bring it back, construct
  * it in init(), call turret.aimAtGoal(pose, velX, velY) in loop(), and take the goal/distance from
@@ -38,6 +40,13 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  * Auto handoff (start pose + turret position): {@link BioBuzzPose}.
  */
 public abstract class BioBuzzPIDFTeleOpBase extends OpMode {
+
+    /** How often the battery voltage is read and the compensated F re-sent to the hub. */
+    private static final double VOLTAGE_UPDATE_SEC = 0.5;
+    /** Voltage low-pass filter (0..1, lower = smoother). The reading sags during every shot. */
+    private static final double VOLTAGE_ALPHA = 0.2;
+    /** Ignore readings below this (sensor glitch / brownout) so the compensation can't explode. */
+    private static final double MIN_VALID_VOLTAGE = 9.0;
 
     private enum HoldTarget { NONE, EMPTY_GATE, PARK, SHOOT_FAR, SHOOT_CLOSE }
 
@@ -49,6 +58,10 @@ public abstract class BioBuzzPIDFTeleOpBase extends OpMode {
     private DcMotor intake, transfer;
     private Servo blocker;
     private Servo flower;
+    private VoltageSensor battery;
+
+    private double voltage = SHOOTER_F_NOMINAL_VOLTAGE;
+    private long lastVoltageNs;
 
     private boolean flowerActive = false;
     private boolean lastGamepad1Cross = false;
@@ -101,8 +114,12 @@ public abstract class BioBuzzPIDFTeleOpBase extends OpMode {
         // Closed loop: the hub's velocity PIDF holds the target we pass to setVelocity().
         shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F));
+        if (hardwareMap.voltageSensor.iterator().hasNext()) {
+            battery = hardwareMap.voltageSensor.iterator().next();
+            double v = battery.getVoltage();
+            if (v >= MIN_VALID_VOLTAGE) voltage = v;
+        }
+        applyShooterCoefficients();
 
         blocker.setPosition(BLOCKER_BLOCK);
         flower.setPosition(FLOWER_REST);
@@ -131,11 +148,6 @@ public abstract class BioBuzzPIDFTeleOpBase extends OpMode {
 
         if (gamepad1.triangle) {
             follower.setPose(alliance.resetPose);
-        }
-
-        // Relocalize: drive to the marked spot, press dpad up, and Pedro restarts odometry from there.
-        if (gamepad1.dpad_up) {
-            follower.setPose(alliance.relocalizePose);
         }
 
         /* ---------- HOLD POINTS / DRIVE ---------- */
@@ -181,7 +193,8 @@ public abstract class BioBuzzPIDFTeleOpBase extends OpMode {
                 : Range.clip(alliance.shooterVelocity(distance) * SHOOTER_VELOCITY_SCALE, 0, MAX_SHOOTER_VELOCITY);
         double shooterVelocity = shooter.getVelocity();
 
-        // PIDF: the hub holds the target velocity on its own.
+        // PIDF: the hub holds the target velocity on its own; F follows the battery voltage.
+        updateVoltage(nowNanos);
         shooter.setVelocity(targetVelocity);
 
         /* ---------- INTAKE ---------- */
@@ -195,8 +208,8 @@ public abstract class BioBuzzPIDFTeleOpBase extends OpMode {
             intakePower = INTAKE_IN_POWER;
         } else if (gamepad2.right_bumper) {
             // Intake + transfer
-            intakePower = INTAKE_IN_POWER;
-            transferPower = TRANSFER_IN_POWER;
+            intakePower = PIDF_INTAKE_TRANSFER_POWER;
+            transferPower = PIDF_INTAKE_TRANSFER_POWER;
         }
         intake.setPower(intakePower);
         transfer.setPower(transferPower);
@@ -222,7 +235,9 @@ public abstract class BioBuzzPIDFTeleOpBase extends OpMode {
         telemetry.addData("Target (ticks/s)", "%.0f", targetVelocity);
         telemetry.addData("Actual (ticks/s)", "%.0f", shooterVelocity);
         telemetry.addData("Velocity error", "%.0f", targetVelocity - shooterVelocity);
-        telemetry.addData("Shooter control", "PIDF  P=%s I=%s D=%s F=%s", SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F);
+        telemetry.addData("Shooter control", "PIDF  P=%s I=%s D=%s F=%s (%.3f applied at %.2f V%s)",
+                SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F, compensatedF(), voltage,
+                battery == null ? ", NO VOLTAGE SENSOR" : "");
         telemetry.addData("Shooter power (from hub)", "%.2f", shooter.getPower());
         telemetry.addData("Ready", ready ? "YES" : "no");
         telemetry.addData("--- SHOT TEST (gamepad2 dpad down = reset) ---", "");
@@ -239,6 +254,24 @@ public abstract class BioBuzzPIDFTeleOpBase extends OpMode {
         telemetry.addData("Blocker", gamepad2.triangle ? "OPEN" : "BLOCKING");
         telemetry.addData("Flower1", flowerActive ? "ACTIVE" : "REST");
         telemetry.update();
+    }
+
+    /** SHOOTER_F is defined at SHOOTER_F_NOMINAL_VOLTAGE; a lower battery needs proportionally more. */
+    private double compensatedF() {
+        return SHOOTER_F * SHOOTER_F_NOMINAL_VOLTAGE / voltage;
+    }
+
+    private void updateVoltage(long now) {
+        if (battery == null || (now - lastVoltageNs) / 1e9 < VOLTAGE_UPDATE_SEC) return;
+        double v = battery.getVoltage();
+        if (v >= MIN_VALID_VOLTAGE) voltage += VOLTAGE_ALPHA * (v - voltage);
+        applyShooterCoefficients();
+    }
+
+    private void applyShooterCoefficients() {
+        lastVoltageNs = System.nanoTime();
+        shooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
+                new PIDFCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D, compensatedF()));
     }
 
     /** Forget the dip stats. They also start over until the flywheel has been ready once. */

@@ -79,7 +79,13 @@ public final class BioBuzzConfig {
     /** Ticks/s band around the target: turns on below (target - H), off above (target + H), holds in between. */
     public static final double BANG_BANG_HYSTERESIS = 5;
 
-    public static final double SHOOTER_P = 120, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 13; //F was 14.9, F was 12.6; after +250g the tuner read +200 error (too slow, ~1300 at target 1500), so 14.5, then avg error +14 at P=0, so 14.6, then avg error +20 at P=120, so ~14.8. P=120 F=14.9 tested in teleop: settle 1.98s, overshoot 40, max dip 100, recovery 0.24s. Then ShooterVelocityTuner at 1400 showed error 40-80 oscillating, so P lowered 120 -> 100 (estimate). Re-check with FlywheelPIDFTuner.
+    // P sweep at 1480 with the voltage-corrected F: RMS stayed at the ~7-13 noise floor up to P=80, then 13 at 100,
+    // 16 at 110, oscillating at 120. P=70 had avg error 0.1 / RMS 9.2 and shot spread 20 (one reading step);
+    // P=67 then shot 4 balls back-to-back most consistently.
+    public static final double SHOOTER_P = 67, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 13.303; // 13.303 from the voltage-corrected FlywheelFTuner (at SHOOTER_F_NOMINAL_VOLTAGE, tested at 12.44 V). Older: F was 12.923, F was 14.9, F was 12.6; after +250g the tuner read +200 error (too slow, ~1300 at target 1500), so 14.5, then avg error +14 at P=0, so 14.6, then avg error +20 at P=120, so ~14.8. P=120 F=14.9 tested in teleop: settle 1.98s, overshoot 40, max dip 100, recovery 0.24s. Then ShooterVelocityTuner at 1400 showed error 40-80 oscillating, so P lowered 120 -> 100 (estimate). Re-check with FlywheelPIDFTuner.
+
+    /** Battery voltage SHOOTER_F is defined at. The tuners scale F by this / the battery voltage. */
+    public static final double SHOOTER_F_NOMINAL_VOLTAGE = 12.63;
 
     // ================= BLOCKER =================
     public static final double BLOCKER_BLOCK = 0.63;
@@ -88,18 +94,21 @@ public final class BioBuzzConfig {
     // ================= FLOWER =================l
     public static final String FLOWER = "Flower1";
     /** Default position. */
-    public static final double FLOWER_REST   = 0.2;
-    /** Position while toggled on with gamepad1 cross. */
-    public static final double FLOWER_ACTIVE = 1.0;
+    public static final double FLOWER_REST   = 0.18;
+    public static final double FLOWER_ACTIVE = 0.98;
 
     // ================= INTAKE =================
     public static final double INTAKE_IN_POWER      = 1.0;
     public static final double INTAKE_REVERSE_POWER = -0.9;
-    /** Intake AND transfer power while shooting (gamepad2 left bumper) at the primary / secondary goal. */
-    public static final double PRIMARY_FEED_POWER   = 1.0;
+    /** Intake AND transfer power in the autos (only the autos use PRIMARY_FEED_POWER). */
+    public static final double PRIMARY_FEED_POWER   = 0.85;
     public static final double SECONDARY_FEED_POWER = 1.0; // Decode intended this slower; lower it if you want
 
     // ================= TRANSFER =================
     public static final double TRANSFER_IN_POWER      = 1.0;  // TUNE
     public static final double TRANSFER_REVERSE_POWER = -0.9; // TUNE
+    /** Intake AND transfer power when both run together (right bumper) in the PIDF teleops. */
+    public static final double PIDF_INTAKE_TRANSFER_POWER = 0.85;
+    /** Intake and transfer power (left / right bumper) in the Bang Bang TeleOp. */
+    public static final double BANG_BANG_INTAKE_TRANSFER_POWER = 0.85;
 }

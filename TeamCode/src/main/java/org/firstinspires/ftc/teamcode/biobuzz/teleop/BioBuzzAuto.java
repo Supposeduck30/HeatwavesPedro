@@ -29,6 +29,9 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
 public class BioBuzzAuto extends OpMode {
 
     // ================= TUNE =================
+    /** Feedforward used by this auto (overrides SHOOTER_F in BioBuzzConfig). */
+    private static final double PIDF_F = 12.9;
+
     /** How long to feed while shooting the preloads. */
     private static final double SHOOT_SEC = 2.5;
     /** Shoot anyway if the flywheel is not READY after this long. */
@@ -87,7 +90,7 @@ public class BioBuzzAuto extends OpMode {
         shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F));
+                new PIDFCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D, PIDF_F));
 
         blocker.setPosition(BLOCKER_BLOCK);
         flower.setPosition(FLOWER_REST);
@@ -144,8 +147,8 @@ public class BioBuzzAuto extends OpMode {
             case FLOWER_DOWN:
                 if (t >= FLOWER_SEC) {
                     // Intake + transfer on BEFORE moving forward
-                    intake.setPower(INTAKE_IN_POWER);
-                    transfer.setPower(TRANSFER_IN_POWER);
+                    intake.setPower(PRIMARY_FEED_POWER);
+                    transfer.setPower(PRIMARY_FEED_POWER);
                     followPath(path2());
                     setState(State.DRIVE_FORWARD);
                 }
@@ -172,18 +175,16 @@ public class BioBuzzAuto extends OpMode {
     @Override
     public void stop() {
         stopMechanisms();
-        // Hand the final pose to the teleop (BioBuzzPose) so it starts where this auto ended.
-        BioBuzzPose.savePose(follower.pose());
     }
 
     // ================= HELPERS =================
 
-    /** Pedro call to start a path. If this does not compile, check how TemplateAuto starts a path. */
+    /** Start a path (Pedro 3: follower.follow, same as ScrimmageAuto). */
     private void followPath(Path path) {
         follower.follow(path);
     }
 
-    /** Pedro call for "still driving". If this does not compile, check TemplateAuto. */
+    /** True while the follower is still driving a path. */
     private boolean pathBusy() {
         return follower.isBusy();
     }

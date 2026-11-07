@@ -201,11 +201,11 @@ public class BangBangTeleOp extends OpMode {
             transferPower = TRANSFER_REVERSE_POWER;
         } else if (gamepad2.left_bumper) {
             // Intake only
-            intakePower = INTAKE_IN_POWER;
+            intakePower = BANG_BANG_INTAKE_TRANSFER_POWER;
         } else if (gamepad2.right_bumper) {
             // Intake + transfer
-            intakePower = INTAKE_IN_POWER;
-            transferPower = TRANSFER_IN_POWER;
+            intakePower = BANG_BANG_INTAKE_TRANSFER_POWER;
+            transferPower = BANG_BANG_INTAKE_TRANSFER_POWER;
         }
         intake.setPower(intakePower);
         transfer.setPower(transferPower);

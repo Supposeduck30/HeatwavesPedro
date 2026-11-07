@@ -4,7 +4,7 @@ import com.pedropathing.math.Pose;
 
 /**
  * Everything that differs between the red and blue teleops (Decode had a separate teleop and
- * turret class for each). All values are the Decode numbers and need re-tuning for BioBuzz.
+ * turret class for each). The poses are BioBuzz field positions.
  *
  * The BioBuzz field is symmetric by a 180 deg rotation about the center (loading zones A5 / F2,
  * gardens on opposite walls), not a mirror. RED is the tuned side; every BLUE pose is the RED one

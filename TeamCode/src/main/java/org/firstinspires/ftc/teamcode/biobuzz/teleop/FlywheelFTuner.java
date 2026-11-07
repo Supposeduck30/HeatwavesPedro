@@ -14,6 +14,10 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
  * driving the motor. Run this BEFORE FlywheelPIDFTuner, then tune P on top of the F you find here.
  * Nothing is saved: copy the final F into SHOOTER_F in BioBuzzConfig.
  *
+ * VOLTAGE: the F shown and pasted is the F at SHOOTER_F_NOMINAL_VOLTAGE. The hub gets it scaled by
+ * nominal / battery voltage (re-sent every VOLTAGE_UPDATE_SEC), so the F you find is the same on any
+ * battery and the wheel speed does not drift down as the battery drains.
+ *
  * gamepad1 (Logitech names in brackets):
  *   cross (A)             = spin up / stop (the flywheel is OFF until you press it)
  *   dpad up / down        = F + / - one step
@@ -23,7 +27,7 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
  *   triangle (Y)          = restart the measurement
  *
  * HOW TO USE:
- *   1. Use a fully charged battery. Press cross (A) to spin up.
+ *   1. Press cross (A) to spin up. Any reasonably charged battery works (F is voltage-corrected).
  *   2. Wait for "Measuring" to fill in (it ignores the first SPINUP_SEC seconds while the wheel speeds up).
  *   3. Read "Avg speed". Press square (X) to jump F to the suggested value, or nudge it with the dpad.
  *   4. Repeat until Avg speed is within a few ticks/s of the target, then copy the
@@ -42,6 +46,12 @@ public class FlywheelFTuner extends OpMode {
     private static final double[] STEPS = {0.01, 0.05, 0.1, 0.5};
     private static final double TARGET_STEP = 10;
     private static final double MAX_F = 40;
+    /** How often the battery voltage is read and the compensated F re-sent to the hub. */
+    private static final double VOLTAGE_UPDATE_SEC = 0.5;
+    /** Voltage low-pass filter (0..1, lower = smoother). The reading sags while the wheel spins up. */
+    private static final double VOLTAGE_ALPHA = 0.2;
+    /** Ignore readings below this (sensor glitch / brownout) so the compensation can't explode. */
+    private static final double MIN_VALID_VOLTAGE = 9.0;
 
     private DcMotorEx shooter;
     private VoltageSensor battery;
@@ -50,6 +60,9 @@ public class FlywheelFTuner extends OpMode {
     private double f = SHOOTER_F;
     private int stepIndex = 1; // starts at 0.05
     private boolean spinning = false;
+
+    private double voltage = SHOOTER_F_NOMINAL_VOLTAGE;
+    private long lastVoltageNs;
 
     // Measurement, restarted whenever F, the target or the spin state changes
     private long startNs;
@@ -66,6 +79,8 @@ public class FlywheelFTuner extends OpMode {
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         if (hardwareMap.voltageSensor.iterator().hasNext()) {
             battery = hardwareMap.voltageSensor.iterator().next();
+            double v = battery.getVoltage();
+            if (v >= MIN_VALID_VOLTAGE) voltage = v;
         }
         applyCoefficients();
         resetStats();
@@ -115,6 +130,7 @@ public class FlywheelFTuner extends OpMode {
         lastLb = lb; lastRb = rb;
 
         /* ---------- MOTOR ---------- */
+        updateVoltage(now);
         double velocity = shooter.getVelocity();
         shooter.setVelocity(spinning ? target : 0);
 
@@ -131,10 +147,11 @@ public class FlywheelFTuner extends OpMode {
         telemetry.addData("Flywheel", spinning ? "SPINNING" : "OFF  (cross / A to spin)");
         telemetry.addData("Target (ticks/s)", "%.0f   (bumpers +/- %.0f)", target, TARGET_STEP);
         telemetry.addData("Actual now (ticks/s)", "%.0f", velocity);
-        if (battery != null) telemetry.addData("Battery (V)", "%.2f", battery.getVoltage());
+        telemetry.addData("Battery (V)", battery == null ? "NO VOLTAGE SENSOR (F not corrected)" : String.format("%.2f", voltage));
 
         telemetry.addLine();
-        telemetry.addData("F", "%.3f   (dpad up / down)", f);
+        telemetry.addData("F", "%.3f at %.2f V   (dpad up / down)", f, SHOOTER_F_NOMINAL_VOLTAGE);
+        telemetry.addData("F applied now", "%.3f", compensatedF());
         telemetry.addData("Step", "%.2f   (dpad right = bigger, left = smaller)", STEPS[stepIndex]);
         telemetry.addData("P / I / D", "0 / 0 / 0  (fixed for this tuner)");
 
@@ -167,6 +184,18 @@ public class FlywheelFTuner extends OpMode {
         shooter.setVelocity(0);
     }
 
+    /** F is defined at SHOOTER_F_NOMINAL_VOLTAGE; a lower battery needs proportionally more. */
+    private double compensatedF() {
+        return f * SHOOTER_F_NOMINAL_VOLTAGE / voltage;
+    }
+
+    private void updateVoltage(long now) {
+        if (battery == null || (now - lastVoltageNs) / 1e9 < VOLTAGE_UPDATE_SEC) return;
+        double v = battery.getVoltage();
+        if (v >= MIN_VALID_VOLTAGE) voltage += VOLTAGE_ALPHA * (v - voltage);
+        applyCoefficients();
+    }
+
     /** F_new = F_old * target / average speed. Returns -1 when there is no usable measurement yet. */
     private double suggestedF() {
         if (samples < MIN_SAMPLES) return -1;
@@ -182,8 +211,9 @@ public class FlywheelFTuner extends OpMode {
     }
 
     private void applyCoefficients() {
+        lastVoltageNs = System.nanoTime();
         shooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(0, 0, 0, f));
+                new PIDFCoefficients(0, 0, 0, compensatedF()));
     }
 
     private void resetStats() {

@@ -13,12 +13,12 @@ public enum BioBuzzAutoRoute {
 
     //   start (x, y, heading deg)    shoot (x, y, heading deg)     park (x, y, heading deg)
     // R1/B1: no turn and no trip across the field. The shoot pose is the start pose strafed ~6 in to the
-    // robot's right (same heading) to line up with the goal; then it parks at (137, 45) blue / (6.76, 88.6) red.
+    // robot's right (same heading) to line up with the goal; then it parks at (128.89, 47.90) blue / (6.76, 88.6) red.
     // Last (optional) number = flywheel velocity added to SHOOTER_FIXED_VELOCITY for that route (R1/B1: +20).
     R1(  54,   7,   90,              60,   7,   90,              6.76, 88.6, 90,   20),   // red, audience wall near hive
     R2(   9,   9,   90,               36,  36,  41.5,               14,  36,   0),   // red, audience-wall corner
     R3(  36, 135,  -90,               36,  36,  41.5,               14,  36,   0),   // red, far wall left of hive
-    B1(  90, 137,  270,              84, 137,  270,               137,  45, 270,   20),   // blue, audience wall near hive
+    B1(  90, 137,  270,              84, 137,  270,          128.8908, 47.9048, 270,   20),   // blue, audience wall near hive
     B2( 135, 135,  270,              108, 108, 221.5,              130, 108, 180),   // blue, audience-wall corner
     B3( 108,   9,   90,              108, 108, 221.5,              130, 108, 180);   // blue, far wall right of hive
 
