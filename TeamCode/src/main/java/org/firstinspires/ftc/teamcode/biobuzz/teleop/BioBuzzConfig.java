@@ -94,8 +94,12 @@ public final class BioBuzzConfig {
     // ================= FLOWER =================l
     public static final String FLOWER = "Flower1";
     /** Default position. */
-    public static final double FLOWER_REST   = 0.18;
-    public static final double FLOWER_ACTIVE = 0.98;
+    public static final double FLOWER_REST   = 0.32;
+    public static final double FLOWER_ACTIVE = 0.59;
+    /** Second flower servo. Name must match the robot config; positions are placeholders until tuned. */
+    public static final String FLOWER2 = "Flower2";
+    public static final double FLOWER2_REST   = 0.32;
+    public static final double FLOWER2_ACTIVE = 0.59;
 
     // ================= INTAKE =================
     public static final double INTAKE_IN_POWER      = 1.0;

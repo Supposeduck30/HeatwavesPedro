@@ -1,4 +1,19 @@
+// Sloth "Load" plugin: lets Pedro AutoTune (http://192.168.43.1:10158) find the @Tuner methods in Tuning.java.
+// buildscript must be the first block in this file.
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url "https://repo.dairy.foundation/releases"
+        }
+    }
+    dependencies {
+        classpath "dev.frozenmilk:Load:0.2.4"
+    }
+}
+
 apply plugin: 'com.android.application'
+apply plugin: 'dev.frozenmilk.sinister.sloth.load'
 
 //
 // build.gradle in TeamCode
@@ -29,16 +44,6 @@ def legacyPedro2Sources = [
         'org/firstinspires/ftc/teamcode/DecodeBot/SUMOAUTOS/**',
 ]
 
-// AutoTune is temporarily OFF. These sources need `com.pedropathing:tuning` (which brings in Sloth),
-// and that dependency is removed in build.dependencies.gradle. To turn AutoTune back on:
-//   1. add `implementation 'com.pedropathing:tuning:<version>'` and the dairy.foundation maven repo
-//      back to build.dependencies.gradle
-//   2. delete the autoTuneSources exclude below
-def autoTuneSources = [
-        'org/firstinspires/ftc/teamcode/pedro/Tuning.java',
-        'org/firstinspires/ftc/teamcode/pedro/procedures/**',
-]
-
 // Include common definitions from above.
 apply from: '../build.common.gradle'
 apply from: '../build.dependencies.gradle'
@@ -54,7 +59,6 @@ android {
         main {
             java {
                 exclude legacyPedro2Sources
-                exclude autoTuneSources
             }
         }
     }

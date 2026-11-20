@@ -29,9 +29,6 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
 public class BioBuzzAuto extends OpMode {
 
     // ================= TUNE =================
-    /** Feedforward used by this auto (overrides SHOOTER_F in BioBuzzConfig). */
-    private static final double PIDF_F = 12.9;
-
     /** How long to feed while shooting the preloads. */
     private static final double SHOOT_SEC = 2.5;
     /** Shoot anyway if the flywheel is not READY after this long. */
@@ -90,7 +87,7 @@ public class BioBuzzAuto extends OpMode {
         shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D, PIDF_F));
+                new PIDFCoefficients(SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F));
 
         blocker.setPosition(BLOCKER_BLOCK);
         flower.setPosition(FLOWER_REST);
