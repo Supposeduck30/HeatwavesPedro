@@ -56,6 +56,11 @@ public class BioBuzzTurret {
         goalY = targetingSecondaryGoal ? alliance.secondaryGoalY : alliance.primaryGoalY;
     }
 
+    /** Pick the goal directly (used by the teleop's automatic goal choice). */
+    public void setSecondaryGoal(boolean secondary) {
+        if (secondary != targetingSecondaryGoal) toggleGoal();
+    }
+
     public boolean isTargetingSecondaryGoal() {
         return targetingSecondaryGoal;
     }

@@ -11,35 +11,41 @@ import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
+import org.firstinspires.ftc.teamcode.biobuzz.shooter.ShooterControl;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 /**
- * BioBuzz TeleOp, ported from the Decode BLUETELEOP / REDTELEOP to Pedro 3.
- * Use {@link BioBuzzBlueTeleOp} or {@link BioBuzzRedTeleOp}; they only pick the alliance.
+ * The one BioBuzz TeleOp. Use the four OpModes in {@link BioBuzzTeleOps}; they only pick the alliance and
+ * the shooter control ({@link org.firstinspires.ftc.teamcode.biobuzz.shooter.PIDFShooter} or
+ * {@link org.firstinspires.ftc.teamcode.biobuzz.shooter.BangBangShooter}). Everything else is identical.
  *
  * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose, dpad up = relocalize
  *           HOLD to drive to and hold a point: square = empty gate, circle = park,
  *           left bumper = shoot far, right bumper = shoot close
+ *           cross = toggle flower
  * gamepad2: right bumper = intake + transfer,
  *           left bumper = intake only,
  *           cross = reverse both, triangle (hold) = open blocker,
- *           circle = toggle primary/secondary goal, dpad down = reset the shot-test dip stats
+ *           circle = toggle primary/secondary goal (RED picks it automatically by y, see BioBuzzAlliance.autoGoalSplitY), dpad down = reset the shot-test dip stats,
+ *           dpad left / right = turret aim trim (left = counter-clockwise), options = declare the turret's
+ *           current position to be straight forward (0 deg)
  *
- * The shooter (single motor) is bang-bang controlled: full power below the speed the distance to the goal
- * calls for, zero above it (no idle speed; the blocker and intake decide when balls fire).
+ * The shooter runs at SHOOTER_FIXED_VELOCITY (or the distance regression if USE_FIXED_SHOOTER_VELOCITY is off).
+ * How it is held there is up to the ShooterControl; its constants are in BioBuzzConfig.
  *
- * TURRET IS DISABLED for now: BioBuzzTurret is not created or called. To bring it back, construct
- * it in init(), call turret.aimAtGoal(pose, velX, velY) in loop(), and take the goal/distance from
- * it instead of the helpers below. The velocity estimate is already computed for that.
+ * TURRET: {@link BioBuzzTurret} (infinite, no wrap-around) tracks the active goal from the Pedro pose, leading
+ * the shot by the robot's velocity. Start it pointing straight forward at init (or press options to re-zero).
+ * The goal distance used for the shooter regression is measured from the turret pivot.
  *
  * Tunables: {@link BioBuzzConfig} and {@link BioBuzzAlliance}.
- * Auto handoff (start pose + turret position): {@link BioBuzzPose}.
+ * Auto handoff (start pose): {@link BioBuzzPose}.
  */
 public abstract class BioBuzzTeleOpBase extends OpMode {
 
     private enum HoldTarget { NONE, EMPTY_GATE, PARK, SHOOT_FAR, SHOOT_CLOSE }
 
     private final BioBuzzAlliance alliance;
+    private final ShooterControl shooterControl;
 
     private Follower follower;
 
@@ -47,10 +53,10 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
     private DcMotor intake, transfer;
     private Servo blocker;
     private Servo flower;
+    private BioBuzzTurret turret;
 
     private boolean flowerActive = false;
     private boolean lastGamepad1Cross = false;
-    private boolean shooterOn = false;
 
     // Shot test: how far the flywheel drops below target while shooting, and how long it takes to recover
     private boolean dipArmed = false;
@@ -61,7 +67,6 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
 
     private HoldTarget activeHold = HoldTarget.NONE;
     private boolean lastGamepad2Circle = false;
-    private boolean secondaryGoal = false;
 
     // Field-frame velocity from pose differences (used for shot leading)
     private Pose lastPose = null;
@@ -74,8 +79,9 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
     private long lastLoopNanos = 0;
     private double loopMs = 0, maxLoopMs = 0;
 
-    protected BioBuzzTeleOpBase(BioBuzzAlliance alliance) {
+    protected BioBuzzTeleOpBase(BioBuzzAlliance alliance, ShooterControl shooterControl) {
         this.alliance = alliance;
+        this.shooterControl = shooterControl;
     }
 
     @Override
@@ -97,16 +103,22 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
         intake.setDirection(INTAKE_DIR);
         transfer.setDirection(TRANSFER_DIR);
 
-        // Open loop (bang-bang): we set the power ourselves; the encoder is only read for velocity.
-        shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        // BRAKE at zero power (what the teleop was originally tuned with), same as BangBangTuner.
-        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterControl.init(shooter, hardwareMap);
 
         blocker.setPosition(BLOCKER_BLOCK);
         flower.setPosition(FLOWER_REST);
 
-        telemetry.addData("Status", "Initialized (" + alliance + ")");
+        // The turret encoder reads 0 now, which means "pointing straight forward" unless auto left it turned.
+        turret = new BioBuzzTurret(hardwareMap, alliance);
+        Integer autoTurretTicks = BioBuzzPose.getTurretTicks();
+        if (autoTurretTicks != null) {
+            turret.setEncoderOffset(autoTurretTicks);
+        }
+        telemetry.addData("Turret", autoTurretTicks != null
+                ? "resumed from auto (" + autoTurretTicks + " ticks)"
+                : "fresh start (point it straight forward)");
+
+        telemetry.addData("Status", "Initialized (" + alliance + ", " + shooterControl.name() + ")");
         telemetry.update();
     }
 
@@ -158,10 +170,22 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
 
         /* ---------- GOAL TOGGLE ---------- */
         boolean circleNow = gamepad2.circle;
-        if (circleNow && !lastGamepad2Circle) {
-            secondaryGoal = !secondaryGoal;
+        if (!Double.isNaN(alliance.autoGoalSplitY)) {
+            // Automatic: above the split y = secondary goal, otherwise primary (circle is ignored).
+            turret.setSecondaryGoal(pose.y() > alliance.autoGoalSplitY);
+        } else if (circleNow && !lastGamepad2Circle) {
+            turret.toggleGoal();
         }
         lastGamepad2Circle = circleNow;
+
+        /* ---------- TURRET ---------- */
+        if (gamepad2.options) {
+            turret.resetEncoder();
+        }
+        double trimRate = (gamepad2.dpad_left ? TURRET_TRIM_RATE_DEG_PER_SEC : 0)
+                - (gamepad2.dpad_right ? TURRET_TRIM_RATE_DEG_PER_SEC : 0);
+        turret.adjustTrim(trimRate, loopMs / 1000.0);
+        turret.aimAtGoal(pose, velX, velY);
 
         /* ---------- BLOCKER ---------- */
         blocker.setPosition(gamepad2.triangle ? BLOCKER_OPEN : BLOCKER_BLOCK);
@@ -174,19 +198,12 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
         flower.setPosition(flowerActive ? FLOWER_ACTIVE : FLOWER_REST);
 
         /* ---------- SHOOTER ---------- */
-        double distance = distanceToGoal(pose);
+        double distance = turret.getDistanceToGoal(pose);
         double targetVelocity = USE_FIXED_SHOOTER_VELOCITY
-                ? SHOOTER_FIXED_VELOCITY
+                ? fixedShooterVelocity()
                 : Range.clip(alliance.shooterVelocity(distance) * SHOOTER_VELOCITY_SCALE, 0, MAX_SHOOTER_VELOCITY);
-        double shooterVelocity = shooter.getVelocity();
-
-        // Bang-bang: full power below the target, zero above it, hysteresis band in between.
-        if (shooterVelocity < targetVelocity - BANG_BANG_HYSTERESIS) {
-            shooterOn = true;
-        } else if (shooterVelocity > targetVelocity + BANG_BANG_HYSTERESIS) {
-            shooterOn = false;
-        }
-        shooter.setPower(shooterOn ? BANG_BANG_ON_POWER : BANG_BANG_OFF_POWER);
+        double shooterVelocity = shooterControl.velocity();
+        shooterControl.update(targetVelocity);
 
         /* ---------- INTAKE ---------- */
         double intakePower = 0, transferPower = 0;
@@ -198,9 +215,9 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
             // Intake only
             intakePower = INTAKE_IN_POWER;
         } else if (gamepad2.right_bumper) {
-            // Intake + transfer
-            intakePower = INTAKE_IN_POWER;
-            transferPower = TRANSFER_IN_POWER;
+            // Intake + transfer (power depends on the shooter mode, see BioBuzzConfig)
+            intakePower = shooterControl.intakeTransferPower();
+            transferPower = shooterControl.intakeTransferPower();
         }
         intake.setPower(intakePower);
         transfer.setPower(transferPower);
@@ -214,19 +231,25 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
         updateDipStats(nowNanos, targetVelocity, shooterVelocity);
 
         telemetry.addData("Loop time (ms)", "%.1f (%.0f Hz), max %.1f", loopMs, loopMs > 0 ? 1000.0 / loopMs : 0, maxLoopMs);
-        telemetry.addData("Alliance", alliance);
-        telemetry.addData("Active goal", secondaryGoal ? "SECONDARY" : "PRIMARY");
+        telemetry.addData("Alliance / shooter", "%s / %s", alliance, shooterControl.name());
+        telemetry.addData("Active goal", "%s%s", turret.isTargetingSecondaryGoal() ? "SECONDARY" : "PRIMARY",
+                Double.isNaN(alliance.autoGoalSplitY) ? "" : "  (auto by y, split " + alliance.autoGoalSplitY + ")");
         telemetry.addData("Holding", activeHold);
         telemetry.addData("--- POSE ---", "");
         telemetry.addData("X / Y (in)", "%.2f / %.2f", pose.x(), pose.y());
         telemetry.addData("Heading (deg)", "%.2f", Math.toDegrees(pose.heading()));
         telemetry.addData("Speed (in/s)", "%.1f", Math.hypot(velX, velY));
         telemetry.addData("Distance to goal (in)", "%.2f", distance);
+        telemetry.addData("--- TURRET (options = re-zero, dpad L/R = trim) ---", "");
+        telemetry.addData("Angle target / actual (deg)", "%.1f / %.1f", turret.getTargetAngle(), turret.getAngle());
+        telemetry.addData("Angle error (deg)", "%.1f", turret.getTargetAngle() - turret.getAngle());
+        telemetry.addData("Trim (deg)", "%.1f", turret.getTrim());
+        telemetry.addData("Raw ticks", turret.getRawTicks());
         telemetry.addData("--- SHOOTER ---", "");
         telemetry.addData("Target (ticks/s)", "%.0f", targetVelocity);
         telemetry.addData("Actual (ticks/s)", "%.0f", shooterVelocity);
         telemetry.addData("Velocity error", "%.0f", targetVelocity - shooterVelocity);
-        telemetry.addData("Shooter power", "%.1f", shooterOn ? BANG_BANG_ON_POWER : BANG_BANG_OFF_POWER);
+        shooterControl.addTelemetry(telemetry);
         telemetry.addData("Ready", ready ? "YES" : "no");
         telemetry.addData("--- SHOT TEST (gamepad2 dpad down = reset) ---", "");
         telemetry.addData("Tracking", dipArmed ? "ON" : "waiting for READY");
@@ -234,14 +257,19 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
         telemetry.addData("Lowest speed", lowestSpeed == Double.MAX_VALUE ? "-" : String.format("%.0f", lowestSpeed));
         telemetry.addData("Recovery time (last / worst)", "%s / %s%s",
                 seconds(lastRecoverySec), seconds(worstRecoverySec), recovering ? "  (recovering now...)" : "");
-        telemetry.addData("SEND TO CLAUDE", "P=%s F=%s maxDip=%.0f recovery=%s",
-                SHOOTER_P, SHOOTER_F, maxDip, seconds(worstRecoverySec));
+        telemetry.addData("SEND TO CLAUDE", "%s %s maxDip=%.0f recovery=%s",
+                shooterControl.name(), shooterControl.tuningSummary(), maxDip, seconds(worstRecoverySec));
         telemetry.addData("--- FEED ---", "");
-        telemetry.addData("Intake / Transfer power", "%.1f / %.1f", intakePower, transferPower);
+        telemetry.addData("Intake / Transfer power", "%.2f / %.2f", intakePower, transferPower);
         telemetry.addData("Gamepad2 assigned", gamepad2.getGamepadId() != Gamepad.ID_UNASSOCIATED);
         telemetry.addData("Blocker", gamepad2.triangle ? "OPEN" : "BLOCKING");
         telemetry.addData("Flower1", flowerActive ? "ACTIVE" : "REST");
         telemetry.update();
+    }
+
+    /** Shooter target (ticks/s) while USE_FIXED_SHOOTER_VELOCITY is on. The experiment teleops override this. */
+    protected double fixedShooterVelocity() {
+        return SHOOTER_FIXED_VELOCITY + shooterControl.velocityOffset();
     }
 
     /** Forget the dip stats. They also start over until the flywheel has been ready once. */
@@ -282,13 +310,6 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
 
     private static String seconds(double s) {
         return s < 0 ? "-" : String.format("%.2f s", s);
-    }
-
-    /** Distance from the robot center to the active goal (no turret, so no pivot offset). */
-    private double distanceToGoal(Pose pose) {
-        double gx = secondaryGoal ? alliance.secondaryGoalX : alliance.primaryGoalX;
-        double gy = secondaryGoal ? alliance.secondaryGoalY : alliance.primaryGoalY;
-        return Math.hypot(gx - pose.x(), gy - pose.y());
     }
 
     /**
@@ -333,7 +354,8 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
 
     @Override
     public void stop() {
-        shooter.setPower(0);
+        turret.stop();
+        shooterControl.stop();
         intake.setPower(0);
         transfer.setPower(0);
     }

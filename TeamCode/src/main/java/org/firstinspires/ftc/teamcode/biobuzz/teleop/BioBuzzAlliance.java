@@ -13,15 +13,20 @@ import com.pedropathing.math.Pose;
  */
 public enum BioBuzzAlliance {
 
+    // GOALS (primary, secondary): primary = the goal at y <= 70, secondary = the one at y > 70, and the teleop switches
+    // between them by the robot's y (autoGoalSplitY = 70). The pair is mirrored across y = 70 (same x, y -> 140 - y):
+    // BLUE 62.506 / 77.494, RED 65.3 / 74.7.
     //          primary goal    secondary goal   start pose (x, y, heading deg)   park pose (x, y, heading deg)   vel regression A, B, C         start trim   reset pose (gamepad1 triangle)   relocalize pose (gamepad1 dpad up)   shoot far pose (left bumper)   shoot close pose (right bumper)
-    BLUE(  6.2, 187.2,    86.8, 184.2,    144 - 54.4, 144 - 7, 270,   144 - 38.8, 144 - 31.5, 180,   0.0220573, -0.464531, 1402.823,   0.0,
+    BLUE(  83.78, 62.506,    83.78, 77.494,    144 - 54.4, 144 - 7, 270,   144 - 38.8, 144 - 31.5, 180,   0.0220573, -0.464531, 1402.823,   0.0,
             new Pose(144 - 7, 144 - 9, Math.toRadians(270)),
             new Pose(133.9, 134.58, Math.toRadians(270)),
-            new Pose(144 - 60.35, 144 - 7, Math.toRadians(270)),  new Pose(144 - 60.35, 144 - 137, Math.toRadians(90))),
-    RED( 180.1, 187.2,   100.0, 185.0,   54.4, 7, 90,            38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
+            new Pose(144 - 60.35, 144 - 7, Math.toRadians(270)),  new Pose(144 - 60.35, 144 - 137, Math.toRadians(90)),
+            70.0),
+    RED( 57.47, 65.3,   57.47, 74.7,   54.4, 7, 90,            38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
             new Pose(7, 9, Math.toRadians(90)),
             new Pose(7.75, 8.01, Math.toRadians(90)),
-            new Pose(60.35, 7, Math.toRadians(90)),  new Pose(60.35, 137, Math.toRadians(270)));  // same x, each 7 in from its wall (was 59.09, 7 and 61.60, 119.46)
+            new Pose(60.35, 7, Math.toRadians(90)),  new Pose(60.35, 137, Math.toRadians(270)),
+            70.0);  // same x, each 7 in from its wall (was 59.09, 7 and 61.60, 119.46)
 
     public final double primaryGoalX, primaryGoalY;
     public final double secondaryGoalX, secondaryGoalY;
@@ -37,6 +42,11 @@ public enum BioBuzzAlliance {
     public final Pose shootClosePose;
     /** Shooter velocity (ticks/s) = A*d^2 + B*d + C, d = distance to goal in inches. */
     public final double velA, velB, velC;
+    /**
+     * Teleop picks the goal by the robot's y: above this = secondary goal, at or below = primary goal (gamepad2 circle is
+     * ignored). NaN = no automatic choice, circle toggles the goal by hand.
+     */
+    public final double autoGoalSplitY;
     /** Starting turret aim trim in degrees. */
     public final double startTrimDeg;
 
@@ -46,7 +56,9 @@ public enum BioBuzzAlliance {
                     double parkX, double parkY, double parkHeadingDeg,
                     double velA, double velB, double velC,
                     double startTrimDeg,
-                    Pose resetPose, Pose relocalizePose, Pose shootFarPose, Pose shootClosePose) {
+                    Pose resetPose, Pose relocalizePose, Pose shootFarPose, Pose shootClosePose,
+                    double autoGoalSplitY) {
+        this.autoGoalSplitY = autoGoalSplitY;
         this.resetPose = resetPose;
         this.relocalizePose = relocalizePose;
         this.shootFarPose = shootFarPose;

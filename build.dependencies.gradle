@@ -1,7 +1,8 @@
 repositories {
     mavenCentral()
     google() // Needed for androidx
-    maven { url = 'https://repo.dairy.foundation/releases/' } // Sloth (needed by Pedro AutoTune)
+    maven { url = 'https://repo.dairy.foundation/releases/' } // Sloth (needed by Pedro AutoTune and Panels)
+    maven { url = 'https://mymaven.bylazar.com/releases' } // Panels (ShooterGraphTest)
 }
 
 dependencies {
@@ -22,6 +23,6 @@ dependencies {
     // AutoTune (served at http://192.168.43.1:10158). Pulls in Sloth, which needs the dairy.foundation repo above.
     // Pinned to 1.0.1: tuning 1.0.2 has a TunerScanner bug that leaves the AutoTune page empty (no @Tuner procedures register).
     implementation 'com.pedropathing:tuning:1.0.1'
-    // Panels ('com.bylazar:fullpanels') is OFF too: it also pulls in Sloth. Only the legacy Decode autos use it.
-    // To bring it back add the maven repo https://mymaven.bylazar.com/releases and the dairy.foundation repo above.
+    // Panels: only Shooter Graph Test (and the legacy Decode autos, which are excluded from the build) use it.
+    implementation 'com.bylazar:fullpanels:1.0.6'
 }

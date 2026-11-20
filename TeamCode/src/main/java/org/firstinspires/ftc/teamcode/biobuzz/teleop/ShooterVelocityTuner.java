@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.util.Range;
  * velocity, shoot, look at where the ball goes, repeat. The shooter uses SHOOTER_P / I / D / F from
  * BioBuzzConfig, same as the teleop. Starts at SHOOTER_FIXED_VELOCITY with the flywheel spinning.
  *
- * Every control works on either gamepad (same layout as the teleop's gamepad2):
+ * Everything is on gamepad2 (same layout as the teleop's gamepad2); gamepad1 is not used:
  *   dpad up / down        = velocity + / - one step
  *   dpad right / left     = bigger / smaller step (10, 25, 50, 100; starts at 50)
  *   triangle (hold)       = open blocker
@@ -65,12 +65,12 @@ public class ShooterVelocityTuner extends OpMode {
 
     @Override
     public void loop() {
-        /* ---------- VELOCITY INPUT (either gamepad) ---------- */
-        boolean up = gamepad1.dpad_up || gamepad2.dpad_up;
-        boolean down = gamepad1.dpad_down || gamepad2.dpad_down;
-        boolean left = gamepad1.dpad_left || gamepad2.dpad_left;
-        boolean right = gamepad1.dpad_right || gamepad2.dpad_right;
-        boolean square = gamepad1.square || gamepad2.square;
+        /* ---------- VELOCITY INPUT (gamepad2) ---------- */
+        boolean up = gamepad2.dpad_up;
+        boolean down = gamepad2.dpad_down;
+        boolean left = gamepad2.dpad_left;
+        boolean right = gamepad2.dpad_right;
+        boolean square = gamepad2.square;
 
         if (right && !lastRight) stepIndex = Math.min(stepIndex + 1, STEPS.length - 1);
         if (left && !lastLeft) stepIndex = Math.max(stepIndex - 1, 0);
@@ -83,19 +83,19 @@ public class ShooterVelocityTuner extends OpMode {
         shooter.setVelocity(spinning ? target : 0);
 
         /* ---------- BLOCKER ---------- */
-        boolean blockerOpen = gamepad1.triangle || gamepad2.triangle;
+        boolean blockerOpen = gamepad2.triangle;
         blocker.setPosition(blockerOpen ? BLOCKER_OPEN : BLOCKER_BLOCK);
 
         /* ---------- INTAKE ---------- */
         double intakePower = 0, transferPower = 0;
-        if (gamepad1.cross || gamepad2.cross) {
+        if (gamepad2.cross) {
             intakePower = INTAKE_REVERSE_POWER;
             transferPower = TRANSFER_REVERSE_POWER;
-        } else if (gamepad1.left_bumper || gamepad2.left_bumper) {
+        } else if (gamepad2.left_bumper) {
             intakePower = INTAKE_IN_POWER;
-        } else if (gamepad1.right_bumper || gamepad2.right_bumper) {
-            intakePower = INTAKE_IN_POWER;
-            transferPower = TRANSFER_IN_POWER;
+        } else if (gamepad2.right_bumper) {
+            intakePower = PIDF_INTAKE_TRANSFER_POWER;   // same power as the teleop
+            transferPower = PIDF_INTAKE_TRANSFER_POWER;
         }
         intake.setPower(intakePower);
         transfer.setPower(transferPower);

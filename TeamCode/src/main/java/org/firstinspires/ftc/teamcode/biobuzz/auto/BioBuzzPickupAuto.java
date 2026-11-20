@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.biobuzz.teleop;
+package org.firstinspires.ftc.teamcode.biobuzz.auto;
 
 import static org.firstinspires.ftc.teamcode.biobuzz.teleop.BioBuzzConfig.*;
 
@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.teamcode.biobuzz.teleop.BioBuzzPose;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 /**
@@ -26,7 +27,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  * Shooter uses PIDF (RUN_USING_ENCODER + setVelocity) with SHOOTER_P/I/D/F from BioBuzzConfig.
  */
 @Autonomous(name = "BioBuzz Auto", group = "BioBuzz")
-public class BioBuzzAuto extends OpMode {
+public class BioBuzzPickupAuto extends OpMode {
 
     // ================= TUNE =================
     /** How long to feed while shooting the preloads. */
@@ -125,8 +126,8 @@ public class BioBuzzAuto extends OpMode {
                 boolean readyLongEnough = readySinceNs >= 0 && (now - readySinceNs) / 1e9 >= READY_HOLD_SEC;
                 if (readyLongEnough || t >= SPINUP_TIMEOUT_SEC) {
                     blocker.setPosition(BLOCKER_OPEN);
-                    intake.setPower(PRIMARY_FEED_POWER);
-                    transfer.setPower(PRIMARY_FEED_POWER);
+                    intake.setPower(PIDF_AUTO_FEED_POWER);
+                    transfer.setPower(PIDF_AUTO_FEED_POWER);
                     setState(State.SHOOT);
                 }
                 break;
@@ -144,8 +145,8 @@ public class BioBuzzAuto extends OpMode {
             case FLOWER_DOWN:
                 if (t >= FLOWER_SEC) {
                     // Intake + transfer on BEFORE moving forward
-                    intake.setPower(PRIMARY_FEED_POWER);
-                    transfer.setPower(PRIMARY_FEED_POWER);
+                    intake.setPower(PIDF_AUTO_FEED_POWER);
+                    transfer.setPower(PIDF_AUTO_FEED_POWER);
                     followPath(path2());
                     setState(State.DRIVE_FORWARD);
                 }
@@ -172,6 +173,8 @@ public class BioBuzzAuto extends OpMode {
     @Override
     public void stop() {
         stopMechanisms();
+        // Hand the final pose to the teleop so it starts where this auto ended.
+        BioBuzzPose.savePose(follower.pose());
     }
 
     // ================= HELPERS =================

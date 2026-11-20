@@ -70,7 +70,7 @@ public class ScrimmageTeleop extends OpMode {
         );
         follower.update();
 
-        shooter.setVelocity(SHOOTER_FIXED_VELOCITY);
+        shooter.setVelocity(SHOOTER_FIXED_VELOCITY + PIDF_VELOCITY_OFFSET);
 
         // Hold triangle (either controller) to open blocker, release to close
         boolean blockerOpen = gamepad2.triangle || gamepad1.triangle;
@@ -99,7 +99,7 @@ public class ScrimmageTeleop extends OpMode {
         }
 
         telemetry.addData("Gamepad2 assigned", gamepad2.getGamepadId() != Gamepad.ID_UNASSOCIATED);
-        telemetry.addData("Shooter target / actual (ticks/s)", "%.0f / %.0f", SHOOTER_FIXED_VELOCITY, shooter.getVelocity());
+        telemetry.addData("Shooter target / actual (ticks/s)", "%.0f / %.0f", SHOOTER_FIXED_VELOCITY + PIDF_VELOCITY_OFFSET, shooter.getVelocity());
         telemetry.addData("Blocker", blockerOpen ? "OPEN" : "BLOCKED");
         telemetry.addData("Flower1", flowerActive ? "ACTIVE" : "REST");
         telemetry.addData("Robot X", follower.pose().x());

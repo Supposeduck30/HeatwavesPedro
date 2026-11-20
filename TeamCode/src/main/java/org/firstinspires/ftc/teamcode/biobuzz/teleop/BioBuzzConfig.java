@@ -16,7 +16,7 @@ public final class BioBuzzConfig {
     public static final String INTAKE       = "intake";
     public static final String TRANSFER     = "transfer";
     public static final String BLOCKER   = "blocker";
-    public static final String TURRET    = "Turret";
+    public static final String TURRET    = "turret";
 
     public static final DcMotorSimple.Direction SHOOTER_DIR   = DcMotorSimple.Direction.REVERSE; // scrimmage teleop ran it at setPower(-0.5), so + velocity needs REVERSE
     public static final DcMotorSimple.Direction INTAKE_DIR    = DcMotorSimple.Direction.FORWARD; // TUNE
@@ -38,11 +38,19 @@ public final class BioBuzzConfig {
     public static final double TURRET_OFFSET_LEFT    = 0.0;
 
     // ================= TURRET =================
-    /** Encoder ticks per degree of TURRET rotation (motor CPR * gear ratio / 360). TUNE */
-    public static final double TURRET_TICKS_PER_DEGREE = 366.0 / 90.0;
+    /** Turret motor: goBILDA 1150 rpm Yellow Jacket, 145.1 encoder ticks per motor-shaft revolution. */
+    public static final double TURRET_MOTOR_TICKS_PER_REV = 145.1;
+    /** Infinite turret gearing: 30 tooth motor gear drives the 116 tooth turret gear (turret turns 30/116 rev per motor rev). */
+    public static final double TURRET_GEAR_TEETH_MOTOR  = 30;
+    public static final double TURRET_GEAR_TEETH_TURRET = 116;
+    /** Encoder ticks per degree of TURRET rotation = 145.1 * 116/30 / 360 = ~1.5585 (561 ticks per full turret turn). */
+    public static final double TURRET_TICKS_PER_DEGREE =
+            TURRET_MOTOR_TICKS_PER_REV * (TURRET_GEAR_TEETH_TURRET / TURRET_GEAR_TEETH_MOTOR) / 360.0;
     /** Turret angle 0 = pointing straight out the front of the robot, positive = counter-clockwise. */
     public static final double TURRET_START_ANGLE_DEG = 0.0;
 
+    // KP / KD are the Decode values (that turret was ~2.6x more ticks per degree and a slower motor). The 1150 rpm
+    // motor on 30:116 is much faster (~1800 deg/s free), so if it overshoots / buzzes lower KP, or raise KD. TUNE
     public static final double TURRET_KP        = 0.065; // TUNE
     public static final double TURRET_KD        = 0.004; // TUNE
     public static final double TURRET_MAX_POWER = 1.0;
@@ -62,8 +70,8 @@ public final class BioBuzzConfig {
     // velocity (ticks/s) = A*d^2 + B*d + C per alliance, see BioBuzzAlliance. Re-run your regression. TUNE
     /** true = the shooter always runs at SHOOTER_FIXED_VELOCITY; false = use the distance regression below. */
     public static final boolean USE_FIXED_SHOOTER_VELOCITY = true;
-    /** Shooter target (ticks/s) while USE_FIXED_SHOOTER_VELOCITY is on. (F was tuned at 1450.) */
-    public static final double SHOOTER_FIXED_VELOCITY = 1480;
+    /** Shooter target (ticks/s) while USE_FIXED_SHOOTER_VELOCITY is on. (1460 everywhere since 2026-11-10; P / F were tuned at 1440, re-check with "Shooter PIDF Tuner".) */
+    public static final double SHOOTER_FIXED_VELOCITY = 1460;
     /** Multiplies the regression output. 1.0 = the regression as-is; 1.5 = 50% faster. TUNE */
     public static final double SHOOTER_VELOCITY_SCALE = 3.0;
     /** Safety cap on the final target (ticks/s). Above the motor's real max it just means full power. */
@@ -71,21 +79,50 @@ public final class BioBuzzConfig {
     /** Telemetry says READY when the flywheel is within this many ticks/s of the target. */
     public static final double SHOOTER_READY_TOLERANCE = 50;
 
-    // Bang-bang shooter control (TeleOps): full power below the target, zero above it.
+    // ============================================================================================
+    // TWO SHOOTER MODES. Every teleop and auto uses exactly one, and each mode has its own block of
+    // constants below (nothing is shared between the blocks except the shooter values above):
+    //   BANG BANG  ->  "Bang Bang TeleOp Blue / Red", "Bang Bang Red 1 / Blue 1"      (BangBangShooter)
+    //   PIDF       ->  "BioBuzz TeleOp Blue / Red", "Red 1 / Blue 1", other PIDF autos (PIDFShooter)
+    // ============================================================================================
+
+    // ================= BANG BANG =================
+    // Full power below the target, zero above it. These are the tuned values (BangBangTuner).
     /** Power applied while the flywheel is below the target. */
     public static final double BANG_BANG_ON_POWER = 1.0;
     /** Power applied once the flywheel has reached the target. */
     public static final double BANG_BANG_OFF_POWER = 0.0;
     /** Ticks/s band around the target: turns on below (target - H), off above (target + H), holds in between. */
     public static final double BANG_BANG_HYSTERESIS = 5;
+    /** Added to SHOOTER_FIXED_VELOCITY in every Bang Bang teleop / auto. */
+    public static final double BANG_BANG_VELOCITY_OFFSET = 0;
+    /** Teleop: intake AND transfer power when both run together (gamepad2 right bumper). */
+    public static final double BANG_BANG_INTAKE_TRANSFER_POWER = 0.85;
+    /** Autos: intake AND transfer power while spinning up / feeding. */
+    public static final double BANG_BANG_AUTO_FEED_POWER = 0.85;
+    /** Autos: the flywheel must stay READY this long before the first ball. */
+    public static final double BANG_BANG_AUTO_READY_HOLD_SEC = 0.15;
+    /** Autos: shoot anyway after this long so a slow flywheel cannot eat the whole auto. */
+    public static final double BANG_BANG_AUTO_SPIN_UP_TIMEOUT_SEC = 2.0;
 
+    // ================= PIDF =================
     // P sweep at 1480 with the voltage-corrected F: RMS stayed at the ~7-13 noise floor up to P=80, then 13 at 100,
     // 16 at 110, oscillating at 120. P=70 had avg error 0.1 / RMS 9.2 and shot spread 20 (one reading step);
     // P=67 then shot 4 balls back-to-back most consistently.
-    public static final double SHOOTER_P = 67, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 13.303; // 13.303 from the voltage-corrected FlywheelFTuner (at SHOOTER_F_NOMINAL_VOLTAGE, tested at 12.44 V). Older: F was 12.923, F was 14.9, F was 12.6; after +250g the tuner read +200 error (too slow, ~1300 at target 1500), so 14.5, then avg error +14 at P=0, so 14.6, then avg error +20 at P=120, so ~14.8. P=120 F=14.9 tested in teleop: settle 1.98s, overshoot 40, max dip 100, recovery 0.24s. Then ShooterVelocityTuner at 1400 showed error 40-80 oscillating, so P lowered 120 -> 100 (estimate). Re-check with FlywheelPIDFTuner.
+    public static final double SHOOTER_P = 160, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 12.627; // Shooter PIDF Tuner 2026-11-10 at target 1440, NO voltage scaling: F auto-locked 12.627, sweep recommended P=120; user set P=160 after the graph test (target now 1460, P above the 150 swept max). Previous (2026-11-07, voltage-scaled tune): P=120, F=12.195. Old shooter was P=67, F=13.303 at 1480.
 
-    /** Battery voltage SHOOTER_F is defined at. The tuners scale F by this / the battery voltage. */
+    /** UNUSED by the teleops / autos / Shooter PIDF Tuner (F is no longer voltage-scaled). Only Shooter Graph Test still has its own copy of this. */
     public static final double SHOOTER_F_NOMINAL_VOLTAGE = 12.63;
+    /** Added to SHOOTER_FIXED_VELOCITY in every PIDF teleop / auto (0 = target stays SHOOTER_FIXED_VELOCITY = 1460). F / P were tuned at 1440. */
+    public static final double PIDF_VELOCITY_OFFSET = 0;
+    /** Teleop: intake AND transfer power when both run together (gamepad2 right bumper). */
+    public static final double PIDF_INTAKE_TRANSFER_POWER = 1.0;
+    /** Autos: intake AND transfer power while spinning up / feeding. */
+    public static final double PIDF_AUTO_FEED_POWER = 1.0;
+    /** Autos: the flywheel must stay READY this long before the first ball (longer so the wheel is fully at speed). */
+    public static final double PIDF_AUTO_READY_HOLD_SEC = 0.5;
+    /** Autos: shoot anyway after this long so a slow flywheel cannot eat the whole auto. */
+    public static final double PIDF_AUTO_SPIN_UP_TIMEOUT_SEC = 4.0;
 
     // ================= BLOCKER =================
     public static final double BLOCKER_BLOCK = 0.63;
@@ -104,15 +141,9 @@ public final class BioBuzzConfig {
     // ================= INTAKE =================
     public static final double INTAKE_IN_POWER      = 1.0;
     public static final double INTAKE_REVERSE_POWER = -0.9;
-    /** Intake AND transfer power in the autos (only the autos use PRIMARY_FEED_POWER). */
-    public static final double PRIMARY_FEED_POWER   = 0.85;
-    public static final double SECONDARY_FEED_POWER = 1.0; // Decode intended this slower; lower it if you want
+    // (Intake + transfer power while shooting is mode-specific: see PIDF_* / BANG_BANG_* *_POWER above.)
 
     // ================= TRANSFER =================
     public static final double TRANSFER_IN_POWER      = 1.0;  // TUNE
     public static final double TRANSFER_REVERSE_POWER = -0.9; // TUNE
-    /** Intake AND transfer power when both run together (right bumper) in the PIDF teleops. */
-    public static final double PIDF_INTAKE_TRANSFER_POWER = 0.85;
-    /** Intake and transfer power (left / right bumper) in the Bang Bang TeleOp. */
-    public static final double BANG_BANG_INTAKE_TRANSFER_POWER = 0.85;
 }
