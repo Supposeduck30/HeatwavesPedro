@@ -17,14 +17,14 @@ public enum BioBuzzAlliance {
     // between them by the robot's y (autoGoalSplitY = 70). The pair is mirrored across y = 70 (same x, y -> 140 - y):
     // BLUE 62.506 / 77.494, RED 65.3 / 74.7.
     //          primary goal    secondary goal   start pose (x, y, heading deg)   park pose (x, y, heading deg)   vel regression A, B, C         start trim   reset pose (gamepad1 triangle)   relocalize pose (gamepad1 dpad up)   shoot far pose (left bumper)   shoot close pose (right bumper)
-    BLUE(  83.78, 62.506,    83.78, 77.494,    144 - 54.4, 144 - 7, 270,   144 - 38.8, 144 - 31.5, 180,   0.0220573, -0.464531, 1402.823,   0.0,
+    BLUE(  83.78, 62.506,    83.78, 77.494,    144 - 54.5, 144 - 7.4, 270,   144 - 38.8, 144 - 31.5, 180,   0.0220573, -0.464531, 1402.823,   0.0,
             new Pose(144 - 7, 144 - 9, Math.toRadians(270)),
-            new Pose(133.9, 134.58, Math.toRadians(270)),
+            new Pose(144 - 57.6, 144 - 133.8, Math.toRadians(90)),
             new Pose(144 - 60.35, 144 - 7, Math.toRadians(270)),  new Pose(144 - 60.35, 144 - 137, Math.toRadians(90)),
             70.0),
-    RED( 57.47, 65.3,   57.47, 74.7,   54.4, 7, 90,            38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
+    RED( 57.47, 65.3,   57.47, 74.7,   54.5, 7.4, 90,           38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
             new Pose(7, 9, Math.toRadians(90)),
-            new Pose(7.75, 8.01, Math.toRadians(90)),
+            new Pose(57.6, 133.8, Math.toRadians(270)),
             new Pose(60.35, 7, Math.toRadians(90)),  new Pose(60.35, 137, Math.toRadians(270)),
             70.0);  // same x, each 7 in from its wall (was 59.09, 7 and 61.60, 119.46)
 

@@ -49,6 +49,11 @@ public final class BioBuzzConfig {
     /** Turret angle 0 = pointing straight out the front of the robot, positive = counter-clockwise. */
     public static final double TURRET_START_ANGLE_DEG = 0.0;
 
+    /** Magnetic limit switch on the turret (digital port). Same name the Decode robot used. */
+    public static final String TURRET_LIMIT = "turretLimit";
+    /** Turret angle at the CENTER of the magnet band. Find it with "Turret Limit Finder". TUNE */
+    public static final double TURRET_LIMIT_ANGLE_DEG = 0.0;
+
     // KP / KD are the Decode values (that turret was ~2.6x more ticks per degree and a slower motor). The 1150 rpm
     // motor on 30:116 is much faster (~1800 deg/s free), so if it overshoots / buzzes lower KP, or raise KD. TUNE
     public static final double TURRET_KP        = 0.065; // TUNE
