@@ -24,7 +24,8 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  *           left bumper = intake only, cross = reverse both, triangle (hold) = open blocker,
  *           circle = toggle primary/secondary goal (ignored when the alliance auto-picks by y),
  *           dpad left/right = turret trim,
- *           dpad up = zero turret (current position = straight forward),
+ *           dpad up = LOCK toggle: freeze the turret where it is (stops auto-aim); tap again to resume aiming,
+ *           dpad down = zero turret (current position = straight forward),
  *           options = RE-HOME the turret on the magnet switch (does nothing unless the switch is enabled and found)
  * The turret auto-aims at the goal every loop.
  *
@@ -73,6 +74,8 @@ public abstract class BioBuzzTeleOpV3Base extends OpMode {
     private boolean lastGamepad1Cross = false;
     private boolean lastGamepad2Circle = false;
     private boolean lastGamepad2DpadLeft = false, lastGamepad2DpadRight = false;
+    private boolean lastGamepad2DpadUp = false;
+    private boolean turretLocked = false;
     private boolean firstLoop = true;
 
     private BioBuzzTurret turret;
@@ -188,9 +191,15 @@ public abstract class BioBuzzTeleOpV3Base extends OpMode {
         if (gamepad2.dpad_right && !lastGamepad2DpadRight) turret.adjustTrim(-TURRET_TRIM_STEP_DEG, 1.0);
         lastGamepad2DpadLeft = gamepad2.dpad_left;
         lastGamepad2DpadRight = gamepad2.dpad_right;
-        if (gamepad2.dpad_up) {
+        if (gamepad2.dpad_down) {
             turret.resetEncoder(); // current physical position = straight forward
         }
+        // dpad up = LOCK toggle (worst case): freeze the turret where it is and stop auto-aiming. Tap again to resume.
+        if (gamepad2.dpad_up && !lastGamepad2DpadUp) {
+            turretLocked = !turretLocked;
+            if (turretLocked) turret.lockHere();
+        }
+        lastGamepad2DpadUp = gamepad2.dpad_up;
 
         // Re-home button (gamepad2 options)
         if (gamepad2.options && !lastGamepad2Options && magSwitch != null) {
@@ -199,7 +208,9 @@ public abstract class BioBuzzTeleOpV3Base extends OpMode {
         lastGamepad2Options = gamepad2.options;
 
         // Track the goal only once homed (or when homing is off, exactly like V2).
-        if (updateHoming()) {
+        if (turretLocked) {
+            turret.hold(); // locked overrides homing and aiming
+        } else if (updateHoming()) {
             turret.aimAtGoal(pose, velX, velY);
         }
 
@@ -235,6 +246,7 @@ public abstract class BioBuzzTeleOpV3Base extends OpMode {
         transfer.setPower(transferPower);
 
         telemetry.addData("Alliance", alliance);
+        telemetry.addData("Turret", turretLocked ? "LOCKED (gamepad2 dpad up to unlock)" : "auto-aim");
         if (homing == Homing.FAILED) {
             telemetry.addData("!!!", "TURRET HOMING FAILED (no magnet in " + HOMING_TIMEOUT_MS + " ms). gamepad2 options = try again");
         }

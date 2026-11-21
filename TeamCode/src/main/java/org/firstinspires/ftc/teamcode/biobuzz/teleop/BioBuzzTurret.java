@@ -392,6 +392,21 @@ public class BioBuzzTurret {
         previousAngleDeg = current;
     }
 
+    // ================= LOCK (manual fallback) =================
+    /** Freeze the turret at the angle it is at right now. Then call {@link #hold()} every loop instead of aimAtGoal. */
+    public void lockHere() {
+        cancelHoming();
+        targetAngleDeg = getAngle();
+        previousAngleDeg = targetAngleDeg;
+        lastNanos = System.nanoTime();
+    }
+
+    /** Hold the angle saved by {@link #lockHere()} (stops aiming at the goal). Call every loop while locked. */
+    public void hold() {
+        senseLimit(); // keep the edge detection's state current so re-homing still works after unlocking
+        update();
+    }
+
     public double getTargetAngle() {
         return targetAngleDeg;
     }

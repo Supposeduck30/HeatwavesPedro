@@ -22,8 +22,9 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  *           left bumper = intake only, cross = reverse both, triangle (hold) = open blocker,
  *           circle = toggle primary/secondary goal (ignored when the alliance auto-picks by y),
  *           dpad left/right = turret trim,
- *           dpad up = zero turret (current position = straight forward)
- * The turret auto-aims at the goal every loop.
+ *           dpad up = LOCK toggle: freeze the turret where it is (stops auto-aim); tap again to resume aiming,
+ *           dpad down = zero turret (current position = straight forward)
+ * The turret auto-aims at the goal every loop (unless locked).
  *
  * Shooter uses the hub velocity PIDF (SHOOTER_P / I / D / F) at SHOOTER_FIXED_VELOCITY. Tunables: {@link BioBuzzConfig}.
  */
@@ -40,6 +41,8 @@ public abstract class BioBuzzTeleOpV2Base extends OpMode {
     private boolean lastGamepad1Cross = false;
     private boolean lastGamepad2Circle = false;
     private boolean lastGamepad2DpadLeft = false, lastGamepad2DpadRight = false;
+    private boolean lastGamepad2DpadUp = false;
+    private boolean turretLocked = false;
     private boolean firstLoop = true;
 
     private BioBuzzTurret turret;
@@ -130,10 +133,20 @@ public abstract class BioBuzzTeleOpV2Base extends OpMode {
         if (gamepad2.dpad_right && !lastGamepad2DpadRight) turret.adjustTrim(-TURRET_TRIM_STEP_DEG, 1.0);
         lastGamepad2DpadLeft = gamepad2.dpad_left;
         lastGamepad2DpadRight = gamepad2.dpad_right;
-        if (gamepad2.dpad_up) {
+        if (gamepad2.dpad_down) {
             turret.resetEncoder(); // current physical position = straight forward
         }
-        turret.aimAtGoal(pose, velX, velY);
+        // dpad up = LOCK toggle (worst case): freeze the turret where it is and stop auto-aiming. Tap again to resume.
+        if (gamepad2.dpad_up && !lastGamepad2DpadUp) {
+            turretLocked = !turretLocked;
+            if (turretLocked) turret.lockHere();
+        }
+        lastGamepad2DpadUp = gamepad2.dpad_up;
+        if (turretLocked) {
+            turret.hold();
+        } else {
+            turret.aimAtGoal(pose, velX, velY);
+        }
 
         // Shooter: the flywheel always runs at the PIDF target
         double velocity = shooter.getVelocity();
@@ -167,6 +180,7 @@ public abstract class BioBuzzTeleOpV2Base extends OpMode {
         transfer.setPower(transferPower);
 
         telemetry.addData("Alliance", alliance);
+        telemetry.addData("Turret", turretLocked ? "LOCKED (gamepad2 dpad up to unlock)" : "auto-aim");
         telemetry.addData("Turret angle / target", "%.1f / %.1f", turret.getAngle(), turret.getTargetAngle());
         telemetry.addData("Turret ticks", turret.getRawTicks());
         telemetry.addData("Turret trim (deg)", "%.1f", turret.getTrim());
