@@ -18,9 +18,10 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose, dpad up = relocalize
  * gamepad2: circle = toggle primary/secondary goal (ignored when the alliance auto-picks by y),
  *           dpad left / right = turret aim trim (left = counter-clockwise),
- *           options = re-home the turret on the magnet (spins CLOCKWISE into the left edge of the magnet band)
+ *           (DISABLED) options = re-home the turret on the magnet (spins CLOCKWISE into the left edge of the magnet band)
  *           share   = fallback: declare the turret's current position to be straight forward (90 deg)
  *
+ * LIMIT SWITCH DISABLED: homing / re-homing is commented out in BioBuzzTurret.
  * Start the turret pointing straight forward at init. Right after start it homes on the magnet (spins clockwise until
  * it hits it, then aims). After that, every clockwise pass over the magnet re-homes it, which undoes belt/gear skips.
  */
@@ -70,7 +71,7 @@ public abstract class TurretDriveTest extends OpMode {
     @Override
     public void start() {
         // Motors can't move during init, so home as soon as the opmode starts.
-        turret.startHoming();
+//        turret.startHoming();
     }
 
     @Override
@@ -124,11 +125,11 @@ public abstract class TurretDriveTest extends OpMode {
         lastGamepad2Circle = circleNow;
 
         /* ---------- TURRET ---------- */
-        boolean optionsNow = gamepad2.options;
-        if (optionsNow && !lastGamepad2Options) {
-            turret.startHoming();
-        }
-        lastGamepad2Options = optionsNow;
+//        boolean optionsNow = gamepad2.options;
+//        if (optionsNow && !lastGamepad2Options) {
+//            turret.startHoming();
+//        }
+//        lastGamepad2Options = optionsNow;
         if (gamepad2.share) {
             turret.resetEncoder(); // fallback if the switch isn't working; also cancels homing
         }
@@ -157,9 +158,9 @@ public abstract class TurretDriveTest extends OpMode {
         telemetry.addData("Field angle to goal (deg)", "%.1f", fieldAngle);
         telemetry.addData("Goal rel. to robot front (deg)", "%.1f", fieldAngle - Math.toDegrees(pose.heading()));
         telemetry.addData("--- TURRET (options = re-home, share = re-zero to 90, dpad L/R = trim) ---", "");
-        telemetry.addData("Homing", "%s: %s", turret.getHomeState(), turret.getHomeMessage());
-        telemetry.addData("Magnet", turret.isLimitPressed() ? "DETECTED" : "no");
-        telemetry.addData("Re-homes / last correction", "%d / %.1f deg", turret.getRehomeCount(), turret.getLastRehomeCorrection());
+//        telemetry.addData("Homing", "%s: %s", turret.getHomeState(), turret.getHomeMessage());
+//        telemetry.addData("Magnet", turret.isLimitPressed() ? "DETECTED" : "no");
+//        telemetry.addData("Re-homes / last correction", "%d / %.1f deg", turret.getRehomeCount(), turret.getLastRehomeCorrection());
         telemetry.addData("Angle target / actual (deg)", "%.1f / %.1f", turret.getTargetAngle(), turret.getAngle());
         telemetry.addData("Angle error (deg)", "%.1f", turret.getTargetAngle() - turret.getAngle());
         telemetry.addData("Trim (deg)", "%.1f", turret.getTrim());

@@ -6,7 +6,7 @@ import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.TouchSensor;
+//import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.Range;
 
 /**
@@ -23,6 +23,8 @@ import com.qualcomm.robotcore.util.Range;
  * (configured as a REV Touch Sensor). The switch reads over a ~4 deg band, so only its LEFT edge is used: the edge
  * the turret hits while spinning CLOCKWISE. Every clockwise entry re-homes the angle to TURRET_LIMIT_ANGLE_DEG
  * (counter-clockwise entries are ignored). startHoming() makes it go find the magnet, always finishing clockwise.
+ *
+ * LIMIT SWITCH DISABLED (commented out): the angle comes from the encoder only, no re-homing.
  */
 public class BioBuzzTurret {
 
@@ -39,27 +41,28 @@ public class BioBuzzTurret {
     private double previousAngleDeg;
     private long lastNanos;
 
-    // ================= LIMIT SWITCH / HOMING STATE =================
-    /** Magnet limit switch (REV Touch Sensor). Null if it isn't in the robot config. */
-    private final TouchSensor limit;
+    // LIMIT SWITCH DISABLED: everything for the magnet switch / re-homing is commented out below. Uncomment to bring it back.
+//    // ================= LIMIT SWITCH / HOMING STATE =================
+//    /** Magnet limit switch (REV Touch Sensor). Null if it isn't in the robot config. */
+//    private final TouchSensor limit;
 
-    // Edge detection (motor ticks, without the offset, so re-homing doesn't disturb it)
-    private int prevMotorTicks;
-    private boolean prevPressed;
-    private int clearSamples = 0;     // consecutive "not detected" reads before the current one
-    private int lastMoveDir = 0;      // +1 = CCW (angle up), -1 = CW (angle down), sticky across still loops
-    private boolean edgePending = false;
-    private double pendingEdgeMotorTicks;
+//    // Edge detection (motor ticks, without the offset, so re-homing doesn't disturb it)
+//    private int prevMotorTicks;
+//    private boolean prevPressed;
+//    private int clearSamples = 0;     // consecutive "not detected" reads before the current one
+//    private int lastMoveDir = 0;      // +1 = CCW (angle up), -1 = CW (angle down), sticky across still loops
+//    private boolean edgePending = false;
+//    private double pendingEdgeMotorTicks;
 
-    private int rehomeCount = 0;
-    private double lastRehomeCorrectionDeg = 0;
+//    private int rehomeCount = 0;
+//    private double lastRehomeCorrectionDeg = 0;
 
-    public enum HomeState { IDLE, BACKING_OFF, SEEKING, DONE, FAILED }
+//    public enum HomeState { IDLE, BACKING_OFF, SEEKING, DONE, FAILED }
 
-    private HomeState homeState = HomeState.IDLE;
-    private String homeMessage = "not homed";
-    private double homeLegStartAngle;
-    private double backoffClearedAngle = Double.NaN;
+//    private HomeState homeState = HomeState.IDLE;
+//    private String homeMessage = "not homed";
+//    private double homeLegStartAngle;
+//    private double backoffClearedAngle = Double.NaN;
 
     public BioBuzzTurret(HardwareMap hardwareMap, BioBuzzAlliance alliance) {
         this.alliance = alliance;
@@ -73,16 +76,16 @@ public class BioBuzzTurret {
         motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motor.setDirection(TURRET_DIR);
 
-        TouchSensor found;
-        try {
-            found = hardwareMap.get(TouchSensor.class, TURRET_LIMIT);
-        } catch (RuntimeException e) {
-            found = null; // not in this config: no homing, everything else still works
-        }
-        limit = found;
+//        TouchSensor found;
+//        try {
+//            found = hardwareMap.get(TouchSensor.class, TURRET_LIMIT);
+//        } catch (RuntimeException e) {
+//            found = null; // not in this config: no homing, everything else still works
+//        }
+//        limit = found;
 
-        prevMotorTicks = motor.getCurrentPosition();
-        prevPressed = isLimitPressed();
+//        prevMotorTicks = motor.getCurrentPosition();
+//        prevPressed = isLimitPressed();
         previousAngleDeg = getAngle();
         lastNanos = System.nanoTime();
     }
@@ -122,182 +125,182 @@ public class BioBuzzTurret {
 
     /** Declares the turret's current physical position to be {@code TURRET_START_ANGLE_DEG}. */
     public void resetEncoder() {
-        cancelHoming();
+//        cancelHoming();
         encoderOffsetTicks = -motor.getCurrentPosition();
         targetAngleDeg = TURRET_START_ANGLE_DEG;
         previousAngleDeg = getAngle();
         motor.setPower(0);
     }
 
-    // ================= LIMIT SWITCH / HOMING =================
-    public boolean hasLimitSwitch() {
-        return limit != null;
-    }
+//    // ================= LIMIT SWITCH / HOMING =================
+//    public boolean hasLimitSwitch() {
+//        return limit != null;
+//    }
 
-    /** True while the magnet is detected. A REV Touch Sensor's isPressed() already means "line LOW" = magnet there. */
-    public boolean isLimitPressed() {
-        return limit != null && limit.isPressed();
-    }
+//    /** True while the magnet is detected. A REV Touch Sensor's isPressed() already means "line LOW" = magnet there. */
+//    public boolean isLimitPressed() {
+//        return limit != null && limit.isPressed();
+//    }
 
-    /** Homing / re-homing needs the switch and a measured TURRET_LIMIT_ANGLE_DEG. */
-    public boolean canHome() {
-        return limit != null && !Double.isNaN(TURRET_LIMIT_ANGLE_DEG);
-    }
+//    /** Homing / re-homing needs the switch and a measured TURRET_LIMIT_ANGLE_DEG. */
+//    public boolean canHome() {
+//        return limit != null && !Double.isNaN(TURRET_LIMIT_ANGLE_DEG);
+//    }
 
-    /**
-     * Start homing: if already on the magnet, back off counter-clockwise until clear by TURRET_HOME_BACKOFF_DEG, then
-     * spin CLOCKWISE until it enters the magnet, which re-homes on the band's left edge. While homing, aimAtGoal
-     * drives the homing instead of aiming, so callers just keep calling aimAtGoal every loop.
-     */
-    public void startHoming() {
-        if (!canHome()) {
-            homeState = HomeState.FAILED;
-            homeMessage = limit == null ? "no limit switch \"" + TURRET_LIMIT + "\" in config" : "TURRET_LIMIT_ANGLE_DEG not set";
-            return;
-        }
-        homeLegStartAngle = getAngle();
-        if (isLimitPressed()) {
-            homeState = HomeState.BACKING_OFF;
-            backoffClearedAngle = Double.NaN;
-            homeMessage = "on the magnet: backing off CCW";
-        } else {
-            homeState = HomeState.SEEKING;
-            homeMessage = "seeking CW";
-        }
-    }
+//    /**
+//     * Start homing: if already on the magnet, back off counter-clockwise until clear by TURRET_HOME_BACKOFF_DEG, then
+//     * spin CLOCKWISE until it enters the magnet, which re-homes on the band's left edge. While homing, aimAtGoal
+//     * drives the homing instead of aiming, so callers just keep calling aimAtGoal every loop.
+//     */
+//    public void startHoming() {
+//        if (!canHome()) {
+//            homeState = HomeState.FAILED;
+//            homeMessage = limit == null ? "no limit switch \"" + TURRET_LIMIT + "\" in config" : "TURRET_LIMIT_ANGLE_DEG not set";
+//            return;
+//        }
+//        homeLegStartAngle = getAngle();
+//        if (isLimitPressed()) {
+//            homeState = HomeState.BACKING_OFF;
+//            backoffClearedAngle = Double.NaN;
+//            homeMessage = "on the magnet: backing off CCW";
+//        } else {
+//            homeState = HomeState.SEEKING;
+//            homeMessage = "seeking CW";
+//        }
+//    }
 
-    public boolean isHoming() {
-        return homeState == HomeState.BACKING_OFF || homeState == HomeState.SEEKING;
-    }
+//    public boolean isHoming() {
+//        return homeState == HomeState.BACKING_OFF || homeState == HomeState.SEEKING;
+//    }
 
-    public void cancelHoming() {
-        if (isHoming()) {
-            homeState = HomeState.IDLE;
-            homeMessage = "cancelled";
-            motor.setPower(0);
-        }
-    }
+//    public void cancelHoming() {
+//        if (isHoming()) {
+//            homeState = HomeState.IDLE;
+//            homeMessage = "cancelled";
+//            motor.setPower(0);
+//        }
+//    }
 
-    public HomeState getHomeState() {
-        return homeState;
-    }
+//    public HomeState getHomeState() {
+//        return homeState;
+//    }
 
-    public String getHomeMessage() {
-        return homeMessage;
-    }
+//    public String getHomeMessage() {
+//        return homeMessage;
+//    }
 
-    /** How many times the angle has been re-homed on the magnet. */
-    public int getRehomeCount() {
-        return rehomeCount;
-    }
+//    /** How many times the angle has been re-homed on the magnet. */
+//    public int getRehomeCount() {
+//        return rehomeCount;
+//    }
 
-    /** How far the last re-home moved the angle (deg). This is roughly how much the belt/gears skipped since the one before. */
-    public double getLastRehomeCorrection() {
-        return lastRehomeCorrectionDeg;
-    }
+//    /** How far the last re-home moved the angle (deg). This is roughly how much the belt/gears skipped since the one before. */
+//    public double getLastRehomeCorrection() {
+//        return lastRehomeCorrectionDeg;
+//    }
 
-    /**
-     * Read the encoder and the switch once each, every loop. Re-homes when the turret enters the magnet while moving
-     * CLOCKWISE (that's the band's left edge). The edge is placed halfway between this read and the last one, and must
-     * still read "detected" on the next loop (so one noisy read can't re-home it). Returns true if it re-homed.
-     */
-    private boolean senseLimit() {
-        int ticks = motor.getCurrentPosition();
-        boolean pressed = isLimitPressed();
-        int step = ticks - prevMotorTicks;
-        if (step != 0) lastMoveDir = Integer.signum(step);
+//    /**
+//     * Read the encoder and the switch once each, every loop. Re-homes when the turret enters the magnet while moving
+//     * CLOCKWISE (that's the band's left edge). The edge is placed halfway between this read and the last one, and must
+//     * still read "detected" on the next loop (so one noisy read can't re-home it). Returns true if it re-homed.
+//     */
+//    private boolean senseLimit() {
+//        int ticks = motor.getCurrentPosition();
+//        boolean pressed = isLimitPressed();
+//        int step = ticks - prevMotorTicks;
+//        if (step != 0) lastMoveDir = Integer.signum(step);
 
-        boolean rehomed = false;
-        boolean seeking = homeState == HomeState.SEEKING;
-        boolean enabled = canHome() && (TURRET_REHOME_ON_PASS || seeking);
+//        boolean rehomed = false;
+//        boolean seeking = homeState == HomeState.SEEKING;
+//        boolean enabled = canHome() && (TURRET_REHOME_ON_PASS || seeking);
 
-        if (edgePending) {
-            edgePending = false;
-            if (pressed && enabled) {
-                rehome(pendingEdgeMotorTicks);
-                rehomed = true;
-            }
-        }
+//        if (edgePending) {
+//            edgePending = false;
+//            if (pressed && enabled) {
+//                rehome(pendingEdgeMotorTicks);
+//                rehomed = true;
+//            }
+//        }
 
-        boolean risingEdge = pressed && !prevPressed && clearSamples >= 2;
-        boolean clockwise = lastMoveDir < 0;
-        boolean slowEnough = seeking || Math.abs(step) / TURRET_TICKS_PER_DEGREE <= TURRET_REHOME_MAX_STEP_DEG;
-        if (enabled && risingEdge && clockwise && slowEnough) {
-            edgePending = true;
-            pendingEdgeMotorTicks = (prevMotorTicks + ticks) / 2.0;
-        }
+//        boolean risingEdge = pressed && !prevPressed && clearSamples >= 2;
+//        boolean clockwise = lastMoveDir < 0;
+//        boolean slowEnough = seeking || Math.abs(step) / TURRET_TICKS_PER_DEGREE <= TURRET_REHOME_MAX_STEP_DEG;
+//        if (enabled && risingEdge && clockwise && slowEnough) {
+//            edgePending = true;
+//            pendingEdgeMotorTicks = (prevMotorTicks + ticks) / 2.0;
+//        }
 
-        clearSamples = pressed ? 0 : clearSamples + 1;
-        prevPressed = pressed;
-        prevMotorTicks = ticks;
-        return rehomed;
-    }
+//        clearSamples = pressed ? 0 : clearSamples + 1;
+//        prevPressed = pressed;
+//        prevMotorTicks = ticks;
+//        return rehomed;
+//    }
 
-    /** Shift the encoder offset so the given motor-tick position reads as the left edge (nearest equivalent angle). */
-    private void rehome(double edgeMotorTicks) {
-        double before = TURRET_START_ANGLE_DEG + (edgeMotorTicks + encoderOffsetTicks) / TURRET_TICKS_PER_DEGREE;
-        // Keep the same number of full turns, so an infinite turret's angle doesn't jump by 360.
-        double edgeAngle = TURRET_LIMIT_ANGLE_DEG + 360.0 * Math.round((before - TURRET_LIMIT_ANGLE_DEG) / 360.0);
-        encoderOffsetTicks = (int) Math.round((edgeAngle - TURRET_START_ANGLE_DEG) * TURRET_TICKS_PER_DEGREE - edgeMotorTicks);
-        double after = TURRET_START_ANGLE_DEG + (edgeMotorTicks + encoderOffsetTicks) / TURRET_TICKS_PER_DEGREE;
+//    /** Shift the encoder offset so the given motor-tick position reads as the left edge (nearest equivalent angle). */
+//    private void rehome(double edgeMotorTicks) {
+//        double before = TURRET_START_ANGLE_DEG + (edgeMotorTicks + encoderOffsetTicks) / TURRET_TICKS_PER_DEGREE;
+//        // Keep the same number of full turns, so an infinite turret's angle doesn't jump by 360.
+//        double edgeAngle = TURRET_LIMIT_ANGLE_DEG + 360.0 * Math.round((before - TURRET_LIMIT_ANGLE_DEG) / 360.0);
+//        encoderOffsetTicks = (int) Math.round((edgeAngle - TURRET_START_ANGLE_DEG) * TURRET_TICKS_PER_DEGREE - edgeMotorTicks);
+//        double after = TURRET_START_ANGLE_DEG + (edgeMotorTicks + encoderOffsetTicks) / TURRET_TICKS_PER_DEGREE;
 
-        lastRehomeCorrectionDeg = after - before;
-        rehomeCount++;
-        previousAngleDeg += lastRehomeCorrectionDeg; // keep the D term's velocity continuous
-        targetAngleDeg += lastRehomeCorrectionDeg;
-    }
+//        lastRehomeCorrectionDeg = after - before;
+//        rehomeCount++;
+//        previousAngleDeg += lastRehomeCorrectionDeg; // keep the D term's velocity continuous
+//        targetAngleDeg += lastRehomeCorrectionDeg;
+//    }
 
-    /** One step of start / button homing. */
-    private void runHoming(boolean rehomedThisLoop) {
-        double angle = getAngle();
-        if (homeState == HomeState.SEEKING) {
-            if (rehomedThisLoop) {
-                motor.setPower(0);
-                homeState = HomeState.DONE;
-                homeMessage = String.format("homed (moved %.1f deg)", lastRehomeCorrectionDeg);
-                targetAngleDeg = getAngle();
-                previousAngleDeg = getAngle();
-                lastNanos = System.nanoTime();
-                return;
-            }
-            if (homeLegStartAngle - angle > TURRET_HOME_MAX_SEEK_DEG) {
-                failHoming(String.format("no magnet after %.0f deg clockwise", TURRET_HOME_MAX_SEEK_DEG));
-                return;
-            }
-            setAnglePower(-TURRET_HOME_POWER); // CW = angle down
-            return;
-        }
+//    /** One step of start / button homing. */
+//    private void runHoming(boolean rehomedThisLoop) {
+//        double angle = getAngle();
+//        if (homeState == HomeState.SEEKING) {
+//            if (rehomedThisLoop) {
+//                motor.setPower(0);
+//                homeState = HomeState.DONE;
+//                homeMessage = String.format("homed (moved %.1f deg)", lastRehomeCorrectionDeg);
+//                targetAngleDeg = getAngle();
+//                previousAngleDeg = getAngle();
+//                lastNanos = System.nanoTime();
+//                return;
+//            }
+//            if (homeLegStartAngle - angle > TURRET_HOME_MAX_SEEK_DEG) {
+//                failHoming(String.format("no magnet after %.0f deg clockwise", TURRET_HOME_MAX_SEEK_DEG));
+//                return;
+//            }
+//            setAnglePower(-TURRET_HOME_POWER); // CW = angle down
+//            return;
+//        }
 
-        // BACKING_OFF (counter-clockwise, off the magnet)
-        if (isLimitPressed()) {
-            backoffClearedAngle = Double.NaN;
-            if (angle - homeLegStartAngle > TURRET_HOME_MAX_BACKOFF_DEG) {
-                failHoming(String.format("still on the magnet after %.0f deg CCW", TURRET_HOME_MAX_BACKOFF_DEG));
-                return;
-            }
-        } else {
-            if (Double.isNaN(backoffClearedAngle)) backoffClearedAngle = angle;
-            if (angle - backoffClearedAngle >= TURRET_HOME_BACKOFF_DEG) {
-                homeState = HomeState.SEEKING;
-                homeLegStartAngle = angle;
-                homeMessage = "seeking CW";
-                setAnglePower(-TURRET_HOME_POWER);
-                return;
-            }
-        }
-        setAnglePower(TURRET_HOME_BACKOFF_POWER); // CCW = angle up
-    }
+//        // BACKING_OFF (counter-clockwise, off the magnet)
+//        if (isLimitPressed()) {
+//            backoffClearedAngle = Double.NaN;
+//            if (angle - homeLegStartAngle > TURRET_HOME_MAX_BACKOFF_DEG) {
+//                failHoming(String.format("still on the magnet after %.0f deg CCW", TURRET_HOME_MAX_BACKOFF_DEG));
+//                return;
+//            }
+//        } else {
+//            if (Double.isNaN(backoffClearedAngle)) backoffClearedAngle = angle;
+//            if (angle - backoffClearedAngle >= TURRET_HOME_BACKOFF_DEG) {
+//                homeState = HomeState.SEEKING;
+//                homeLegStartAngle = angle;
+//                homeMessage = "seeking CW";
+//                setAnglePower(-TURRET_HOME_POWER);
+//                return;
+//            }
+//        }
+//        setAnglePower(TURRET_HOME_BACKOFF_POWER); // CCW = angle up
+//    }
 
-    private void failHoming(String why) {
-        motor.setPower(0);
-        homeState = HomeState.FAILED;
-        homeMessage = "FAILED: " + why;
-    }
+//    private void failHoming(String why) {
+//        motor.setPower(0);
+//        homeState = HomeState.FAILED;
+//        homeMessage = "FAILED: " + why;
+//    }
 
-    /** Power in the angle frame: positive = CCW (angle up). Applies TURRET_POWER_SIGN. */
-    private void setAnglePower(double power) {
-        motor.setPower(TURRET_POWER_SIGN * Range.clip(power, -1.0, 1.0));
-    }
+//    /** Power in the angle frame: positive = CCW (angle up). Applies TURRET_POWER_SIGN. */
+//    private void setAnglePower(double power) {
+//        motor.setPower(TURRET_POWER_SIGN * Range.clip(power, -1.0, 1.0));
+//    }
 
     public double getTrim() {
         return trimDeg;
@@ -355,11 +358,11 @@ public class BioBuzzTurret {
      * homing if it's active, or aims at the goal.
      */
     public void aimAtGoal(Pose robot, double velX, double velY) {
-        boolean rehomed = senseLimit();
-        if (isHoming()) {
-            runHoming(rehomed);
-            return;
-        }
+//        boolean rehomed = senseLimit();
+//        if (isHoming()) {
+//            runHoming(rehomed);
+//            return;
+//        }
 
         double desired = calculateTargetAngleWithPrediction(robot, velX, velY);
         double current = getAngle();
@@ -395,7 +398,7 @@ public class BioBuzzTurret {
     // ================= LOCK (manual fallback) =================
     /** Freeze the turret at the angle it is at right now. Then call {@link #hold()} every loop instead of aimAtGoal. */
     public void lockHere() {
-        cancelHoming();
+//        cancelHoming();
         targetAngleDeg = getAngle();
         previousAngleDeg = targetAngleDeg;
         lastNanos = System.nanoTime();
@@ -403,7 +406,7 @@ public class BioBuzzTurret {
 
     /** Hold the angle saved by {@link #lockHere()} (stops aiming at the goal). Call every loop while locked. */
     public void hold() {
-        senseLimit(); // keep the edge detection's state current so re-homing still works after unlocking
+//        senseLimit(); // keep the edge detection's state current so re-homing still works after unlocking
         update();
     }
 
@@ -412,7 +415,7 @@ public class BioBuzzTurret {
     }
 
     public void stop() {
-        cancelHoming();
+//        cancelHoming();
         motor.setPower(0);
     }
 

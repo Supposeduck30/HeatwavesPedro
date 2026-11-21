@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  *           right bumper = intake + transfer (blocker stays closed),
  *           left bumper = intake only, cross = reverse both, triangle (hold) = open blocker,
  *           circle = toggle primary/secondary goal (ignored when the alliance auto-picks by y),
- *           dpad left/right = turret trim,
+ *           dpad left/right = turret trim (tap = one step, hold = continuous),
  *           dpad up = LOCK toggle: freeze the turret where it is (stops auto-aim); tap again to resume aiming,
  *           dpad down = zero turret (current position = straight forward)
  * The turret auto-aims at the goal every loop (unless locked).
@@ -41,6 +41,7 @@ public abstract class BioBuzzTeleOpV2Base extends OpMode {
     private boolean lastGamepad1Cross = false;
     private boolean lastGamepad2Circle = false;
     private boolean lastGamepad2DpadLeft = false, lastGamepad2DpadRight = false;
+    private long dpadLeftPressNanos = 0, dpadRightPressNanos = 0, lastTrimNanos = 0;
     private boolean lastGamepad2DpadUp = false;
     private boolean turretLocked = false;
     private boolean firstLoop = true;
@@ -128,9 +129,23 @@ public abstract class BioBuzzTeleOpV2Base extends OpMode {
         lastGamepad2Circle = gamepad2.circle;
 
         // Turret: auto-aim at the goal (A/B picked by the robot's side of the halfway mark). dpad left/right = trim
-        // Drift correction: each tap nudges the aim TURRET_TRIM_STEP_DEG (left = CCW, right = CW)
-        if (gamepad2.dpad_left && !lastGamepad2DpadLeft)   turret.adjustTrim(TURRET_TRIM_STEP_DEG, 1.0);
-        if (gamepad2.dpad_right && !lastGamepad2DpadRight) turret.adjustTrim(-TURRET_TRIM_STEP_DEG, 1.0);
+        // Drift correction (left = CCW, right = CW):
+        //   each TAP nudges the aim TURRET_TRIM_STEP_DEG instantly (spam-tap to move fast),
+        //   HOLDING past TURRET_TRIM_HOLD_DELAY_SEC keeps moving it at TURRET_TRIM_HOLD_RATE_DEG_PER_SEC.
+        double loopDt = lastTrimNanos == 0 ? 0 : Math.min((nowNanos - lastTrimNanos) / 1e9, 0.1);
+        lastTrimNanos = nowNanos;
+        if (gamepad2.dpad_left && !lastGamepad2DpadLeft) {
+            turret.adjustTrim(TURRET_TRIM_STEP_DEG, 1.0);
+            dpadLeftPressNanos = nowNanos;
+        } else if (gamepad2.dpad_left && (nowNanos - dpadLeftPressNanos) / 1e9 >= TURRET_TRIM_HOLD_DELAY_SEC) {
+            turret.adjustTrim(TURRET_TRIM_HOLD_RATE_DEG_PER_SEC, loopDt);
+        }
+        if (gamepad2.dpad_right && !lastGamepad2DpadRight) {
+            turret.adjustTrim(-TURRET_TRIM_STEP_DEG, 1.0);
+            dpadRightPressNanos = nowNanos;
+        } else if (gamepad2.dpad_right && (nowNanos - dpadRightPressNanos) / 1e9 >= TURRET_TRIM_HOLD_DELAY_SEC) {
+            turret.adjustTrim(-TURRET_TRIM_HOLD_RATE_DEG_PER_SEC, loopDt);
+        }
         lastGamepad2DpadLeft = gamepad2.dpad_left;
         lastGamepad2DpadRight = gamepad2.dpad_right;
         if (gamepad2.dpad_down) {

@@ -102,6 +102,10 @@ public final class BioBuzzConfig {
 
     /** V2 / V3 teleop: each TAP of gamepad2 dpad left/right shifts the turret aim this many degrees (drift correction). */
     public static final double TURRET_TRIM_STEP_DEG = 1.0;
+    /** V2 teleop: after holding dpad left/right this long, the trim starts moving continuously... */
+    public static final double TURRET_TRIM_HOLD_DELAY_SEC = 0.25;
+    /** ...at this rate (deg/s) for as long as the button stays held. */
+    public static final double TURRET_TRIM_HOLD_RATE_DEG_PER_SEC = 30.0;
 
     // ================= PREDICTIVE AIMING =================
     public static final double PROJECTILE_SPEED_IN_PER_SEC = 193.75; // TUNE
