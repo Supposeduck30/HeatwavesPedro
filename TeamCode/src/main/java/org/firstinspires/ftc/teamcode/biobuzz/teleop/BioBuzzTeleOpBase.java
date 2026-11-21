@@ -15,9 +15,8 @@ import org.firstinspires.ftc.teamcode.biobuzz.shooter.ShooterControl;
 import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 /**
- * The one BioBuzz TeleOp. Use the four OpModes in {@link BioBuzzTeleOps}; they only pick the alliance and
- * the shooter control ({@link org.firstinspires.ftc.teamcode.biobuzz.shooter.PIDFShooter} or
- * {@link org.firstinspires.ftc.teamcode.biobuzz.shooter.BangBangShooter}). Everything else is identical.
+ * The one BioBuzz TeleOp. Use the Blue / Red OpModes in {@link BioBuzzTeleOps}; they only pick the alliance.
+ * The shooter is held at speed by {@link org.firstinspires.ftc.teamcode.biobuzz.shooter.PIDFShooter}.
  *
  * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose, dpad up = relocalize
  *           HOLD to drive to and hold a point: square = empty gate, circle = park,
@@ -268,7 +267,7 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
         telemetry.update();
     }
 
-    /** Shooter target (ticks/s) while USE_FIXED_SHOOTER_VELOCITY is on. The experiment teleops override this. */
+    /** Shooter target (ticks/s) while USE_FIXED_SHOOTER_VELOCITY is on. */
     protected double fixedShooterVelocity() {
         return SHOOTER_FIXED_VELOCITY + shooterControl.velocityOffset();
     }

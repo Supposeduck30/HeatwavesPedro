@@ -13,7 +13,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
  * PIDF flywheel: the motor runs in RUN_USING_ENCODER and the hub's velocity PIDF holds the target we pass
  * to setVelocity(), using SHOOTER_P / I / D / F from BioBuzzConfig as-is (no battery-voltage scaling).
  *
- * All PIDF constants are in the "PIDF" block of BioBuzzConfig. Tune F and P with "Shooter PIDF Tuner". This class never touches the BANG_BANG_* constants.
+ * All PIDF constants are in the "PIDF" block of BioBuzzConfig. Tune F and P with "Shooter Graph Test".
  */
 public class PIDFShooter implements ShooterControl {
 

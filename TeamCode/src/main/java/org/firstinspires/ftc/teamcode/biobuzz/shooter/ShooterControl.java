@@ -6,14 +6,12 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 /**
- * How the flywheel is driven. There are exactly two ways, and every teleop and auto uses one of them:
- * {@link PIDFShooter} (the hub's velocity PIDF) or {@link BangBangShooter} (full power / zero power).
- * Everything that is specific to one mode (its constants, feed powers, auto timings) lives in that class
- * and in its own block of BioBuzzConfig, so the teleop and auto code is identical for both.
+ * How the flywheel is driven. The only implementation is {@link PIDFShooter} (the hub's velocity PIDF);
+ * every teleop and auto uses it. Its constants, feed powers and auto timings are in BioBuzzConfig.
  */
 public interface ShooterControl {
 
-    /** "PIDF" or "Bang Bang", for telemetry. */
+    /** "PIDF", for telemetry. */
     String name();
 
     /** Put the motor in this mode's run mode. Direction is set by the caller. */

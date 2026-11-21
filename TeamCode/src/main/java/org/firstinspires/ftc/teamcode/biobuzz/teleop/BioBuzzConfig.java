@@ -108,7 +108,7 @@ public final class BioBuzzConfig {
     // velocity (ticks/s) = A*d^2 + B*d + C per alliance, see BioBuzzAlliance. Re-run your regression. TUNE
     /** true = the shooter always runs at SHOOTER_FIXED_VELOCITY; false = use the distance regression below. */
     public static final boolean USE_FIXED_SHOOTER_VELOCITY = true;
-    /** Shooter target (ticks/s) while USE_FIXED_SHOOTER_VELOCITY is on. (1450 since 2026-11-20, was 1360, 1460; F 14.664 was tuned at 1360, re-check with "Shooter PIDF Tuner".) */
+    /** Shooter target (ticks/s) while USE_FIXED_SHOOTER_VELOCITY is on. */
     public static final double SHOOTER_FIXED_VELOCITY = 1450;
     /** Multiplies the regression output. 1.0 = the regression as-is; 1.5 = 50% faster. TUNE */
     public static final double SHOOTER_VELOCITY_SCALE = 3.0;
@@ -117,41 +117,12 @@ public final class BioBuzzConfig {
     /** Telemetry says READY when the flywheel is within this many ticks/s of the target. */
     public static final double SHOOTER_READY_TOLERANCE = 50;
 
-    // ============================================================================================
-    // TWO SHOOTER MODES. Every teleop and auto uses exactly one, and each mode has its own block of
-    // constants below (nothing is shared between the blocks except the shooter values above):
-    //   BANG BANG  ->  "Bang Bang TeleOp Blue / Red", "Bang Bang Red 1 / Blue 1"      (BangBangShooter)
-    //   PIDF       ->  "BioBuzz TeleOp Blue / Red", "Red 1 / Blue 1", other PIDF autos (PIDFShooter)
-    // ============================================================================================
-
-    // ================= BANG BANG =================
-    // Full power below the target, zero above it. These are the tuned values (BangBangTuner).
-    /** Power applied while the flywheel is below the target. */
-    public static final double BANG_BANG_ON_POWER = 1.0;
-    /** Power applied once the flywheel has reached the target. */
-    public static final double BANG_BANG_OFF_POWER = 0.0;
-    /** Ticks/s band around the target: turns on below (target - H), off above (target + H), holds in between. */
-    public static final double BANG_BANG_HYSTERESIS = 5;
-    /** Added to SHOOTER_FIXED_VELOCITY in every Bang Bang teleop / auto. */
-    public static final double BANG_BANG_VELOCITY_OFFSET = 0;
-    /** Teleop: intake AND transfer power when both run together (gamepad2 right bumper). */
-    public static final double BANG_BANG_INTAKE_TRANSFER_POWER = 0.85;
-    /** Autos: intake AND transfer power while spinning up / feeding. */
-    public static final double BANG_BANG_AUTO_FEED_POWER = 0.85;
-    /** Autos: the flywheel must stay READY this long before the first ball. */
-    public static final double BANG_BANG_AUTO_READY_HOLD_SEC = 0.15;
-    /** Autos: shoot anyway after this long so a slow flywheel cannot eat the whole auto. */
-    public static final double BANG_BANG_AUTO_SPIN_UP_TIMEOUT_SEC = 2.0;
-
     // ================= PIDF =================
-    // P sweep at 1480 with the voltage-corrected F: RMS stayed at the ~7-13 noise floor up to P=80, then 13 at 100,
-    // 16 at 110, oscillating at 120. P=70 had avg error 0.1 / RMS 9.2 and shot spread 20 (one reading step);
-    // P=67 then shot 4 balls back-to-back most consistently.
-    public static final double SHOOTER_P = 130, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 13.85; // 2026-11-20 user set P 130 / F 13.85 (F found on Shooter Graph Test; before that P 140 / F 14, before that P 135 / F 14.6; tuner F stage gave 14.664; before that P 80, F 12.627). Older: Shooter PIDF Tuner 2026-11-10 at target 1440, NO voltage scaling: F auto-locked 12.627, sweep recommended P=120; user set P=160 after the graph test (target now 1460, P above the 150 swept max). Previous (2026-11-07, voltage-scaled tune): P=120, F=12.195. Old shooter was P=67, F=13.303 at 1480.
+    // The hub's velocity PIDF holds the shooter at the target (PIDFShooter). F is used as-is, no voltage scaling.
+    // Tune with "Shooter Graph Test".
+    public static final double SHOOTER_P = 130, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 13.85; // 2026-11-20 (F found on Shooter Graph Test)
 
-    /** UNUSED by the teleops / autos / Shooter PIDF Tuner (F is no longer voltage-scaled). Only Shooter Graph Test still has its own copy of this. */
-    public static final double SHOOTER_F_NOMINAL_VOLTAGE = 12.63;
-    /** Added to SHOOTER_FIXED_VELOCITY in every PIDF teleop / auto (0 = target stays SHOOTER_FIXED_VELOCITY = 1460). F / P were tuned at 1440. */
+    /** Added to SHOOTER_FIXED_VELOCITY in every teleop / auto (0 = target stays SHOOTER_FIXED_VELOCITY). */
     public static final double PIDF_VELOCITY_OFFSET = 0;
     /** Teleop: intake AND transfer power when both run together (gamepad2 right bumper). */
     public static final double PIDF_INTAKE_TRANSFER_POWER = 1.0;
@@ -179,7 +150,7 @@ public final class BioBuzzConfig {
     // ================= INTAKE =================
     public static final double INTAKE_IN_POWER      = 1.0;
     public static final double INTAKE_REVERSE_POWER = -0.9;
-    // (Intake + transfer power while shooting is mode-specific: see PIDF_* / BANG_BANG_* *_POWER above.)
+    // (Intake + transfer power while shooting: PIDF_INTAKE_TRANSFER_POWER / PIDF_AUTO_FEED_POWER above.)
 
     // ================= TRANSFER =================
     public static final double TRANSFER_IN_POWER      = 1.0;  // TUNE
