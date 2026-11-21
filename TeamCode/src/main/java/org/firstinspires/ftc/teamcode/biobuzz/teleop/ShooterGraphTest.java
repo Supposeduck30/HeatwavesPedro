@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.biobuzz.teleop;
 
+import com.bylazar.configurables.annotations.Configurable;
 import com.bylazar.telemetry.PanelsTelemetry;
 import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -29,8 +30,11 @@ import com.qualcomm.robotcore.util.Range;
  *   circle (B, hold)   = open the blocker (balls go into the wheel)
  *   right bumper       = intake + transfer, left bumper = intake only
  *   right trigger      = intake + transfer, BOTH at 0.9
- *   dpad up / down     = P + / - 5  (LIVE, so you can compare 120 vs 100 on the same graph)
- *   dpad right / left  = F + / - 0.05 (LIVE)
+ *   dpad up / down     = P + / - P_STEP (5)  (LIVE, so you can compare 120 vs 100 on the same graph)
+ *   dpad right / left  = F + / - F_STEP (0.05) (LIVE)
+ *
+ * PANELS: the Configurables tab has "ShooterGraphTest" with P, F, P_STEP and F_STEP. Type a new value there
+ * and it goes to the hub on the next loop, same as a dpad press.
  *   triangle (Y)       = clear the shot stats
  *
  * WHAT TO LOOK FOR: after each ball "Actual" drops below "Target" and should climb back quickly with no
@@ -38,6 +42,7 @@ import com.qualcomm.robotcore.util.Range;
  * = F too low (or too high if above). "Time below band" is how long one burst kept the wheel out of the
  * +/- TOL band; the shots that came out during that time were slower than the rest.
  */
+@Configurable
 @TeleOp(name = "Shooter Graph Test", group = "BioBuzz")
 public class ShooterGraphTest extends OpMode {
 
@@ -49,7 +54,6 @@ public class ShooterGraphTest extends OpMode {
     private static final double BLOCKER_BLOCK = 0.49, BLOCKER_OPEN = 0.68;
 
     private static final double TARGET = 1450 + 0; // SHOOTER_FIXED_VELOCITY + PIDF_VELOCITY_OFFSET
-    private static final double START_P = 130, START_F = 13.85; // = SHOOTER_P / SHOOTER_F in BioBuzzConfig (2026-11-20; was P 140 / F 13.85, P 135 / F 14.6). F is NOT voltage-scaled (same as the teleops).
     private static final double INTAKE_TRANSFER_POWER = 1.0, INTAKE_POWER = 1.0;
     /** Transfer power while feeding (right bumper). 0.9 since 2026-11-20 (was 1.0, same as the intake). */
     private static final double TRANSFER_POWER = 0.9;
@@ -59,7 +63,19 @@ public class ShooterGraphTest extends OpMode {
     private static final double TOL = 25;
     // ===============================================================
 
-    private static final double P_STEP = 5, F_STEP = 0.05, MAX_P = 300, MAX_F = 40;
+    // ================= EDITABLE IN PANELS (Configurables tab) =================
+    // Change these in Panels while the OpMode runs; the new P / F go to the hub on the next loop.
+    // The dpad changes them too (and Panels shows the new value). They start at SHOOTER_P / SHOOTER_F
+    // from BioBuzzConfig and keep your changes until the robot app restarts. F is NOT voltage-scaled.
+    public static double P = 130;
+    public static double F = 13.85;
+    /** How much one dpad up / down press changes P. */
+    public static double P_STEP = 5;
+    /** How much one dpad right / left press changes F. */
+    public static double F_STEP = 0.05;
+    // ==========================================================================
+
+    private static final double MAX_P = 300, MAX_F = 40;
     private static final double VOLTAGE_UPDATE_SEC = 0.5, VOLTAGE_ALPHA = 0.2, MIN_VALID_VOLTAGE = 9.0;
     private static final double BURST_END_HOLD_SEC = 0.15;
 
@@ -69,7 +85,9 @@ public class ShooterGraphTest extends OpMode {
     private VoltageSensor battery;
     private TelemetryManager panels;
 
-    private double p = START_P, f = START_F;
+    /** What was last sent to the hub, so a change from Panels is noticed. */
+    private double appliedP = Double.NaN, appliedF = Double.NaN;
+    private boolean appliedSpinning;
     private boolean spinning = false;
     private double voltage = 12.0; // display only
     private double lastVoltageSec;
@@ -118,16 +136,18 @@ public class ShooterGraphTest extends OpMode {
         boolean cross = gamepad1.cross, triangle = gamepad1.triangle;
         boolean circle = gamepad1.circle;
 
-        if (cross && !lCross) {
-            spinning = !spinning;
-            applyCoefficients();
-        }
-        if (up && !lUp) { p = Range.clip(p + P_STEP, 0, MAX_P); applyCoefficients(); }
-        if (down && !lDown) { p = Range.clip(p - P_STEP, 0, MAX_P); applyCoefficients(); }
-        if (right && !lRight) { f = Range.clip(f + F_STEP, 0, MAX_F); applyCoefficients(); }
-        if (left && !lLeft) { f = Range.clip(f - F_STEP, 0, MAX_F); applyCoefficients(); }
+        if (cross && !lCross) spinning = !spinning;
+        if (up && !lUp) P += P_STEP;
+        if (down && !lDown) P -= P_STEP;
+        if (right && !lRight) F += F_STEP;
+        if (left && !lLeft) F -= F_STEP;
         if (triangle && !lTriangle) clearStats();
         lUp = up; lDown = down; lLeft = left; lRight = right; lCross = cross; lTriangle = triangle;
+
+        // Picks up dpad presses AND edits made in Panels.
+        P = Range.clip(P, 0, MAX_P);
+        F = Range.clip(F, 0, MAX_F);
+        if (P != appliedP || F != appliedF || spinning != appliedSpinning) applyCoefficients();
 
         /* ---------- MOTOR ---------- */
         updateVoltage(t);
@@ -164,7 +184,7 @@ public class ShooterGraphTest extends OpMode {
         panels.addData("Shot gate", TARGET - 300 + (circle ? 40 : 0));
 
         panels.addData("Flywheel", spinning ? (Math.abs(command - velocity) <= TOL ? "AT SPEED" : "recovering") : "OFF");
-        panels.addData("P / F (live, dpad)", String.format("P=%.0f  F=%.3f  (battery %.2f V, F not scaled)", p, f, voltage));
+        panels.addData("P / F (live: dpad or Panels)", String.format("P=%.1f  F=%.3f  (battery %.2f V, F not scaled)", P, F, voltage));
         panels.addData("Bursts", bursts);
         if (bursts > 0) {
             panels.addData("Last burst dip / time below band", String.format("%.0f ticks/s / %.2f s   (at P=%.0f F=%.3f)", lastDip, lastBelowBand, lastBurstP, lastBurstF));
@@ -207,8 +227,8 @@ public class ShooterGraphTest extends OpMode {
             bursts++;
             lastDip = TARGET - burstLow;
             lastBelowBand = belowBandSec;
-            lastBurstP = p;
-            lastBurstF = f;
+            lastBurstP = P;
+            lastBurstF = F;
             worstDip = Math.max(worstDip, lastDip);
             worstBelowBand = Math.max(worstBelowBand, lastBelowBand);
             burstActive = false;
@@ -218,8 +238,8 @@ public class ShooterGraphTest extends OpMode {
             bursts++;
             lastDip = TARGET - burstLow;
             lastBelowBand = belowBandSec;
-            lastBurstP = p;
-            lastBurstF = f;
+            lastBurstP = P;
+            lastBurstF = F;
             worstDip = Math.max(worstDip, lastDip);
             worstBelowBand = Math.max(worstBelowBand, lastBelowBand);
             burstActive = false;
@@ -234,7 +254,7 @@ public class ShooterGraphTest extends OpMode {
 
     /** No voltage scaling (the teleops use F as-is). */
     private double compensatedF() {
-        return f;
+        return F;
     }
 
     /** Battery voltage is shown only. */
@@ -248,6 +268,9 @@ public class ShooterGraphTest extends OpMode {
     /** P is 0 while OFF so stopping coasts instead of reverse-driving the wheel. */
     private void applyCoefficients() {
         shooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER,
-                new PIDFCoefficients(spinning ? p : 0, 0, 0, compensatedF()));
+                new PIDFCoefficients(spinning ? P : 0, 0, 0, compensatedF()));
+        appliedP = P;
+        appliedF = F;
+        appliedSpinning = spinning;
     }
 }
