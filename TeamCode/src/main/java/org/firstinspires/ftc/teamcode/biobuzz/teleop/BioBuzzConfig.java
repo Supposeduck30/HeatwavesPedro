@@ -60,9 +60,10 @@ public final class BioBuzzConfig {
     public static final String TURRET_LIMIT = "turretLimit";
     /**
      * Turret angle at the LEFT edge of the magnet band (where it triggers while spinning CLOCKWISE).
-     * "Turret Limit Finder" 2026-11-20: CW leading edge 33.12 (band ~29.8..33.1, center 31.5). NaN = homing off. TUNE
+     * "Turret Limit Finder" 2026-11-20: CW leading edge 33.12 (band ~29.8..33.1, center 31.5).
+     * "Turret Magnet Angle Test" 2026-11-21: CW ENTER at 42.52 (this frame, front = 90; = -47.48 when front = 0). NaN = homing off. TUNE
      */
-    public static final double TURRET_LIMIT_ANGLE_DEG = 33.12;
+    public static final double TURRET_LIMIT_ANGLE_DEG = 42.52;
     /** Re-home on every clockwise pass over the magnet while aiming (false = only on start / button homing). */
     public static final boolean TURRET_REHOME_ON_PASS = true;
     /**
@@ -109,7 +110,7 @@ public final class BioBuzzConfig {
     /** true = the shooter always runs at SHOOTER_FIXED_VELOCITY; false = use the distance regression below. */
     public static final boolean USE_FIXED_SHOOTER_VELOCITY = true;
     /** Shooter target (ticks/s) while USE_FIXED_SHOOTER_VELOCITY is on. */
-    public static final double SHOOTER_FIXED_VELOCITY = 1450;
+    public static final double SHOOTER_FIXED_VELOCITY = 1500;
     /** Multiplies the regression output. 1.0 = the regression as-is; 1.5 = 50% faster. TUNE */
     public static final double SHOOTER_VELOCITY_SCALE = 3.0;
     /** Safety cap on the final target (ticks/s). Above the motor's real max it just means full power. */
@@ -120,7 +121,7 @@ public final class BioBuzzConfig {
     // ================= PIDF =================
     // The hub's velocity PIDF holds the shooter at the target (PIDFShooter). F is used as-is, no voltage scaling.
     // Tune with "Shooter Graph Test".
-    public static final double SHOOTER_P = 130, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 13.85; // 2026-11-20 (F found on Shooter Graph Test)
+    public static final double SHOOTER_P = 400, SHOOTER_I = 0, SHOOTER_D = 0, SHOOTER_F = 13.85; // 2026-11-21 (P / F / target found on Shooter Graph Test)
 
     /** Added to SHOOTER_FIXED_VELOCITY in every teleop / auto (0 = target stays SHOOTER_FIXED_VELOCITY). */
     public static final double PIDF_VELOCITY_OFFSET = 0;

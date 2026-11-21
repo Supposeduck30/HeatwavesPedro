@@ -116,8 +116,8 @@ public abstract class TurretDriveTest extends OpMode {
         /* ---------- GOAL TOGGLE ---------- */
         boolean circleNow = gamepad2.circle;
         if (!Double.isNaN(alliance.autoGoalSplitY)) {
-            // Automatic: above the split y = secondary goal, otherwise primary (circle is ignored).
-            turret.setSecondaryGoal(pose.y() > alliance.autoGoalSplitY);
+            // Automatic: per-alliance rule, see BioBuzzAlliance.useSecondaryGoalAt (circle is ignored).
+            turret.setSecondaryGoal(alliance.useSecondaryGoalAt(pose.y()));
         } else if (circleNow && !lastGamepad2Circle) {
             turret.toggleGoal();
         }

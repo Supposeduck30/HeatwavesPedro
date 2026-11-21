@@ -13,21 +13,21 @@ import com.pedropathing.math.Pose;
  */
 public enum BioBuzzAlliance {
 
-    // GOALS (primary, secondary): primary = the goal at y <= 70, secondary = the one at y > 70, and the teleop switches
-    // between them by the robot's y (autoGoalSplitY = 70). The pair is mirrored across y = 70 (same x, y -> 140 - y):
-    // BLUE 62.506 / 77.494, RED 65.3 / 74.7.
+    // GOALS (primary, secondary): the y split is 72, and the teleop switches
+    // between them by the robot's y (autoGoalSplitY = 72). The field is rotated 180 deg, not mirrored, so the rule differs:
+    //   RED : y > 72 -> secondary (57.27, 94.43),  y <= 72 -> primary
+    //   BLUE: y <= 72 -> secondary (84, 54.54), y > 72  -> primary   (see useSecondaryGoalAt)
     //          primary goal    secondary goal   start pose (x, y, heading deg)   park pose (x, y, heading deg)   vel regression A, B, C         start trim   reset pose (gamepad1 triangle)   relocalize pose (gamepad1 dpad up)   shoot far pose (left bumper)   shoot close pose (right bumper)
-    BLUE(  83.78, 62.506,    83.78, 77.494,    144 - 54.5, 144 - 7.4, 270,   144 - 38.8, 144 - 31.5, 180,   0.0220573, -0.464531, 1402.823,   0.0,
-            new Pose(144 - 7, 144 - 9, Math.toRadians(270)),
-            new Pose(144 - 57.6, 144 - 133.8, Math.toRadians(90)),
-            new Pose(144 - 60.35, 144 - 7, Math.toRadians(270)),  new Pose(144 - 60.35, 144 - 137, Math.toRadians(90)),
-            70.0),
-    RED( 59.47, 65.3,   57.47, 74.7,  54.5, 7.4, 90,           38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
+    BLUE(  84, 82.94,    84, 54.54,    54.5, 7.4, 90,           38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
             new Pose(7, 9, Math.toRadians(90)),
             new Pose(57.6, 133.8, Math.toRadians(270)),
             new Pose(60.35, 7, Math.toRadians(90)),  new Pose(60.35, 137, Math.toRadians(270)),
-            70.0);  // same x, each 7 in from its wall (was 59.09, 7 and 61.60, 119.46)
-
+            72.0, false),
+    RED( 57.27, 58.92,   57.27, 94.43,  144 - 54.5, 144 - 7.4, 270,   144 - 38.8, 144 - 31.5, 180,   0.0220573, -0.464531, 1402.823,   0.0,
+            new Pose(144 - 7, 144 - 9, Math.toRadians(270)),
+            new Pose(144 - 57.6, 144 - 133.8, Math.toRadians(90)),
+            new Pose(144 - 60.35, 144 - 7, Math.toRadians(270)),  new Pose(144 - 60.35, 144 - 137, Math.toRadians(90)),
+            72.0, true);  // same x, each 7 in from its wall (was 59.09, 7 and 61.60, 119.46)
     public final double primaryGoalX, primaryGoalY;
     public final double secondaryGoalX, secondaryGoalY;
     public final Pose startPose;
@@ -47,6 +47,8 @@ public enum BioBuzzAlliance {
      * ignored). NaN = no automatic choice, circle toggles the goal by hand.
      */
     public final double autoGoalSplitY;
+    /** true = the secondary goal is used ABOVE the split y (Red); false = at or BELOW it (Blue). */
+    public final boolean secondaryAboveSplit;
     /** Starting turret aim trim in degrees. */
     public final double startTrimDeg;
 
@@ -57,8 +59,9 @@ public enum BioBuzzAlliance {
                     double velA, double velB, double velC,
                     double startTrimDeg,
                     Pose resetPose, Pose relocalizePose, Pose shootFarPose, Pose shootClosePose,
-                    double autoGoalSplitY) {
+                    double autoGoalSplitY, boolean secondaryAboveSplit) {
         this.autoGoalSplitY = autoGoalSplitY;
+        this.secondaryAboveSplit = secondaryAboveSplit;
         this.resetPose = resetPose;
         this.relocalizePose = relocalizePose;
         this.shootFarPose = shootFarPose;
@@ -73,6 +76,11 @@ public enum BioBuzzAlliance {
         this.velB = velB;
         this.velC = velC;
         this.startTrimDeg = startTrimDeg;
+    }
+
+    /** Which goal to aim at for a robot at this y: true = secondary. Only meaningful when autoGoalSplitY is not NaN. */
+    public boolean useSecondaryGoalAt(double robotY) {
+        return secondaryAboveSplit ? robotY > autoGoalSplitY : robotY <= autoGoalSplitY;
     }
 
     public double shooterVelocity(double distanceInches) {

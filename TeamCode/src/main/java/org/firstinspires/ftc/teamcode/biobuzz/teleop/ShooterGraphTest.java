@@ -28,12 +28,12 @@ import com.qualcomm.robotcore.util.Range;
  * gamepad1 (PS names; Logitech in brackets):
  *   cross (A)          = spin up / stop
  *   circle (B, hold)   = open the blocker (balls go into the wheel)
- *   right bumper       = intake + transfer, left bumper = intake only
- *   right trigger      = intake + transfer, BOTH at 0.9
+ *   right bumper       = intake (INTAKE_WITH_TRANSFER) + transfer 1.0, left bumper = intake only
+ *   right trigger      = intake (INTAKE_WITH_TRANSFER) + transfer 1.0
  *   dpad up / down     = P + / - P_STEP (5)  (LIVE, so you can compare 120 vs 100 on the same graph)
  *   dpad right / left  = F + / - F_STEP (0.05) (LIVE)
  *
- * PANELS: the Configurables tab has "ShooterGraphTest" with P, F, P_STEP and F_STEP. Type a new value there
+ * PANELS: the Configurables tab has "ShooterGraphTest" with TARGET, INTAKE_WITH_TRANSFER, P, F, P_STEP and F_STEP. Type a new value there
  * and it goes to the hub on the next loop, same as a dpad press.
  *   triangle (Y)       = clear the shot stats
  *
@@ -53,12 +53,11 @@ public class ShooterGraphTest extends OpMode {
     private static final DcMotorSimple.Direction TRANSFER_DIR = DcMotorSimple.Direction.REVERSE;
     private static final double BLOCKER_BLOCK = 0.49, BLOCKER_OPEN = 0.68;
 
-    private static final double TARGET = 1450 + 0; // SHOOTER_FIXED_VELOCITY + PIDF_VELOCITY_OFFSET
-    private static final double INTAKE_TRANSFER_POWER = 1.0, INTAKE_POWER = 1.0;
-    /** Transfer power while feeding (right bumper). 0.9 since 2026-11-20 (was 1.0, same as the intake). */
-    private static final double TRANSFER_POWER = 0.9;
-    /** Right trigger: intake AND transfer both at this power (2026-11-20). */
-    private static final double TRIGGER_FEED_POWER = 0.9;
+    private static final double INTAKE_POWER = 1.0;
+    /** Transfer power while feeding (right bumper). */
+    private static final double TRANSFER_POWER = 1.0;
+    /** Right trigger: transfer power (intake uses INTAKE_WITH_TRANSFER). */
+    private static final double TRIGGER_TRANSFER_POWER = 1.0;
     /** Within this many ticks/s of the target counts as "at speed". (The hub reads in steps of 20.) */
     private static final double TOL = 25;
     // ===============================================================
@@ -67,7 +66,11 @@ public class ShooterGraphTest extends OpMode {
     // Change these in Panels while the OpMode runs; the new P / F go to the hub on the next loop.
     // The dpad changes them too (and Panels shows the new value). They start at SHOOTER_P / SHOOTER_F
     // from BioBuzzConfig and keep your changes until the robot app restarts. F is NOT voltage-scaled.
-    public static double P = 130;
+    /** Target flywheel velocity (ticks/s). Editable live in Panels. */
+    public static double TARGET = 1500;
+    /** Intake power whenever it runs together with the transfer (right trigger and right bumper). Editable live in Panels. */
+    public static double INTAKE_WITH_TRANSFER = 1.0;
+    public static double P = 400;
     public static double F = 13.85;
     /** How much one dpad up / down press changes P. */
     public static double P_STEP = 5;
@@ -75,7 +78,7 @@ public class ShooterGraphTest extends OpMode {
     public static double F_STEP = 0.05;
     // ==========================================================================
 
-    private static final double MAX_P = 300, MAX_F = 40;
+    private static final double MAX_P = 1000, MAX_F = 40;
     private static final double VOLTAGE_UPDATE_SEC = 0.5, VOLTAGE_ALPHA = 0.2, MIN_VALID_VOLTAGE = 9.0;
     private static final double BURST_END_HOLD_SEC = 0.15;
 
@@ -161,12 +164,12 @@ public class ShooterGraphTest extends OpMode {
         blocker.setPosition(circle ? BLOCKER_OPEN : BLOCKER_BLOCK);
         double intakePower = 0, transferPower = 0;
         if (gamepad1.right_trigger > 0.5) {
-            intakePower = TRIGGER_FEED_POWER;
-            transferPower = TRIGGER_FEED_POWER;
+            intakePower = INTAKE_WITH_TRANSFER;
+            transferPower = TRIGGER_TRANSFER_POWER;
         } else if (gamepad1.left_bumper) {
             intakePower = INTAKE_POWER;
         } else if (gamepad1.right_bumper) {
-            intakePower = INTAKE_TRANSFER_POWER;
+            intakePower = INTAKE_WITH_TRANSFER;
             transferPower = TRANSFER_POWER;
         }
         intake.setPower(intakePower);

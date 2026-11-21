@@ -18,7 +18,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  * Teleop used at the BioBuzz scrimmage (carried over from the other repo, logic unchanged).
  * Simple and sensor-free: constant shooter velocity, no turret, no ball counting.
  */
-@TeleOp(name = "Scrimmage Teleop", group = "BioBuzz")
+//@TeleOp(name = "Scrimmage Teleop", group = "BioBuzz")
 public class ScrimmageTeleop extends OpMode {
 
     private Follower follower;
