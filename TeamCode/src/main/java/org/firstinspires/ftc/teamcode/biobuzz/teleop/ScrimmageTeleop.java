@@ -30,8 +30,8 @@ public class ScrimmageTeleop extends OpMode {
     // Shooter runs at SHOOTER_FIXED_VELOCITY with the SHOOTER_P / SHOOTER_F from BioBuzzConfig.
 
     // KICKER
-    public static final double KICKER_BLOCK = 0.63;
-    public static final double KICKER_OPEN = 0.85;
+    public static final double KICKER_BLOCK = 0.49;
+    public static final double KICKER_OPEN = 0.68;
 
     private Servo flower;
     private boolean flowerActive = false;

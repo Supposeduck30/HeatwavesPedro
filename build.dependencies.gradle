@@ -24,5 +24,5 @@ dependencies {
     // Pinned to 1.0.1: tuning 1.0.2 has a TunerScanner bug that leaves the AutoTune page empty (no @Tuner procedures register).
     implementation 'com.pedropathing:tuning:1.0.1'
     // Panels: only Shooter Graph Test (and the legacy Decode autos, which are excluded from the build) use it.
-    implementation 'com.bylazar:fullpanels:1.0.6'
+    implementation 'com.bylazar:fullpanels:1.0.20'
 }

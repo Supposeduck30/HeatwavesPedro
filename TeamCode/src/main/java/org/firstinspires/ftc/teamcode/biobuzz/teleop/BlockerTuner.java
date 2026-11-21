@@ -28,7 +28,7 @@ public class BlockerTuner extends OpMode {
     private Servo blocker;
 
     // Where the servo sits from init, so it doesn't slam to the config BLOCK position.
-    private static final double START_POSITION = 0.95;
+    private static final double START_POSITION = 0.5;
 
     private double position = START_POSITION;
     private double blockPos = BLOCKER_BLOCK;

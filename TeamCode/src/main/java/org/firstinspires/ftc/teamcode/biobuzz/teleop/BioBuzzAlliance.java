@@ -22,7 +22,7 @@ public enum BioBuzzAlliance {
             new Pose(144 - 57.6, 144 - 133.8, Math.toRadians(90)),
             new Pose(144 - 60.35, 144 - 7, Math.toRadians(270)),  new Pose(144 - 60.35, 144 - 137, Math.toRadians(90)),
             70.0),
-    RED( 57.47, 65.3,   57.47, 74.7,   54.5, 7.4, 90,           38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
+    RED( 59.47, 65.3,   57.47, 74.7,  54.5, 7.4, 90,           38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
             new Pose(7, 9, Math.toRadians(90)),
             new Pose(57.6, 133.8, Math.toRadians(270)),
             new Pose(60.35, 7, Math.toRadians(90)),  new Pose(60.35, 137, Math.toRadians(270)),

@@ -179,13 +179,14 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
         lastGamepad2Circle = circleNow;
 
         /* ---------- TURRET ---------- */
-        if (gamepad2.options) {
-            turret.resetEncoder();
-        }
-        double trimRate = (gamepad2.dpad_left ? TURRET_TRIM_RATE_DEG_PER_SEC : 0)
-                - (gamepad2.dpad_right ? TURRET_TRIM_RATE_DEG_PER_SEC : 0);
-        turret.adjustTrim(trimRate, loopMs / 1000.0);
-        turret.aimAtGoal(pose, velX, velY);
+        // TURRET DISABLED: motor is never driven. The turret object is still used for goal distance (shooter regression).
+        // if (gamepad2.options) {
+        //     turret.resetEncoder();
+        // }
+        // double trimRate = (gamepad2.dpad_left ? TURRET_TRIM_RATE_DEG_PER_SEC : 0)
+        //         - (gamepad2.dpad_right ? TURRET_TRIM_RATE_DEG_PER_SEC : 0);
+        // turret.adjustTrim(trimRate, loopMs / 1000.0);
+        // turret.aimAtGoal(pose, velX, velY);
 
         /* ---------- BLOCKER ---------- */
         blocker.setPosition(gamepad2.triangle ? BLOCKER_OPEN : BLOCKER_BLOCK);
@@ -354,7 +355,7 @@ public abstract class BioBuzzTeleOpBase extends OpMode {
 
     @Override
     public void stop() {
-        turret.stop();
+        // turret.stop();
         shooterControl.stop();
         intake.setPower(0);
         transfer.setPower(0);
