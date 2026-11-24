@@ -82,6 +82,7 @@ public class ShooterGraphTest extends OpMode {
     private static final double VOLTAGE_UPDATE_SEC = 0.5, VOLTAGE_ALPHA = 0.2, MIN_VALID_VOLTAGE = 9.0;
     private static final double BURST_END_HOLD_SEC = 0.15;
 
+
     private DcMotorEx shooter;
     private DcMotor intake, transfer;
     private Servo blocker;

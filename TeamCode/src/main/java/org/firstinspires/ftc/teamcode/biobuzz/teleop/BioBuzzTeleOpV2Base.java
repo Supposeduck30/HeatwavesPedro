@@ -160,7 +160,7 @@ public abstract class BioBuzzTeleOpV2Base extends OpMode {
         if (turretLocked) {
             turret.hold();
         } else {
-            turret.aimAtGoal(pose, velX, velY);
+            turret.aimAtGoal(pose, 0, 0); // no shot leading (same as auto)
         }
 
         // Shooter: the flywheel always runs at the PIDF target
