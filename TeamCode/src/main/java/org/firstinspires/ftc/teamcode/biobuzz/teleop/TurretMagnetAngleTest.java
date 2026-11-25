@@ -115,7 +115,8 @@ public class TurretMagnetAngleTest extends OpMode {
             if (now) {
                 lastEnterAngle = angle;
                 if (lastDir < 0) {
-                    cwEnterSum += angle;
+                    // Wrap to one turn (in BioBuzzConfig's frame) so passes on different turns average correctly.
+                    cwEnterSum += wrap180(angle + TURRET_START_ANGLE_DEG - START_ANGLE_DEG);
                     cwEnterCount++;
                 }
             } else {
@@ -131,10 +132,11 @@ public class TurretMagnetAngleTest extends OpMode {
         telemetry.addData("MAGNET", limit == null ? "no switch in config" : (now ? "DETECTED" : "clear"));
         telemetry.addData("Last ENTER / EXIT angle", "%s / %s", fmt(lastEnterAngle), fmt(lastExitAngle));
         double toConfig = TURRET_START_ANGLE_DEG - START_ANGLE_DEG; // add to get BioBuzzConfig's frame (front = 90)
-        telemetry.addData("AVG clockwise ENTER (this test's frame)",
-                cwEnterCount == 0 ? "-" : String.format("%.2f  (%d passes)", cwEnterSum / cwEnterCount, cwEnterCount));
+        // The angle keeps counting past +-360 (no hard stops), so the average is wrapped to one turn.
+        telemetry.addData("AVG clockwise ENTER (this test's frame, wrapped)",
+                cwEnterCount == 0 ? "-" : String.format("%.2f  (%d passes)", cwEnterSum / cwEnterCount - toConfig, cwEnterCount));
         telemetry.addData("  = in BioBuzzConfig frame -> TURRET_LIMIT_ANGLE_DEG",
-                cwEnterCount == 0 ? "-" : String.format("%.2f", cwEnterSum / cwEnterCount + toConfig));
+                cwEnterCount == 0 ? "-" : String.format("%.2f", cwEnterSum / cwEnterCount));
         telemetry.addData("Events (newest last; square = clear)", events.isEmpty() ? "-" : "");
         for (int i = 0; i < events.size(); i++) telemetry.addData(" " + (i + 1), events.get(i));
         telemetry.update();
@@ -156,6 +158,14 @@ public class TurretMagnetAngleTest extends OpMode {
 
     private double angleAt(int motorTicks) {
         return START_ANGLE_DEG + (motorTicks + offsetTicks) / TURRET_TICKS_PER_DEGREE;
+    }
+
+    /** Same angle, moved into -180..180 by whole turns. */
+    private static double wrap180(double deg) {
+        deg %= 360.0;
+        if (deg > 180.0) deg -= 360.0;
+        if (deg <= -180.0) deg += 360.0;
+        return deg;
     }
 
     private static String fmt(double v) {

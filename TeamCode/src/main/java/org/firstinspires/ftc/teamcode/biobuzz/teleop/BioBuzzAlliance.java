@@ -18,12 +18,16 @@ public enum BioBuzzAlliance {
     //   RED : y > 70 -> secondary (57.47, 74.7),  y <= 70 -> primary (59.47, 65.3)
     //   BLUE: y <= 70 -> secondary (83.78, 62.506), y > 70  -> primary (83.78, 77.494)   (see useSecondaryGoalAt)
     //          primary goal    secondary goal   start pose (x, y, heading deg)   park pose (x, y, heading deg)   vel regression A, B, C         start trim   reset pose (gamepad1 triangle)   relocalize pose (gamepad1 dpad up)   shoot far pose (left bumper)   shoot close pose (right bumper)
-    BLUE(  83.78, 77.494,    83.78, 62.506,    54.5, 7.4, 90,           38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
+    // Start pose = the Solo2 auto start SPOT (BioBuzzAutoSolo2Blue/Red START_X/Y), used by teleop when no auto ran first.
+    // Heading = the robot facing UP the field toward its goal (Red 90, Blue 270), NOT the auto's 180 / 0 (that is the
+    // robot placed sideways). The heading must match how the robot is set down, or the turret aims off by the difference.
+    // (x/y were swapped before 2026-11-24: Red teleop thought it was at the blue start spot.)
+    BLUE(  83.78, 77.494,    83.78, 62.506,    86.7161, 133.9505, 270,     38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
             new Pose(7, 9, Math.toRadians(90)),
             new Pose(57.6, 133.8, Math.toRadians(270)),
             new Pose(60.35, 7, Math.toRadians(90)),  new Pose(60.35, 137, Math.toRadians(270)),
             70.0, false),
-    RED( 59.47, 65.3,   57.47, 74.7,  144 - 54.5, 144 - 7.4, 270,   144 - 38.8, 144 - 31.5, 180,   0.0220573, -0.464531, 1402.823,   0.0,
+    RED( 59.47, 65.3,   57.47, 74.7,  54.6158, 7.3815, 90,   144 - 38.8, 144 - 31.5, 180,   0.0220573, -0.464531, 1402.823,   0.0,
             new Pose(144 - 7, 144 - 9, Math.toRadians(270)),
             new Pose(144 - 57.6, 144 - 133.8, Math.toRadians(90)),
             new Pose(144 - 60.35, 144 - 7, Math.toRadians(270)),  new Pose(144 - 60.35, 144 - 137, Math.toRadians(90)),

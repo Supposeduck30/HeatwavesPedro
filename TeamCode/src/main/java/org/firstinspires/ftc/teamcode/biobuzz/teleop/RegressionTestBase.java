@@ -19,27 +19,26 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Shooter regression data collection. Use {@link RegressionTestBlue} or {@link RegressionTestRed}.
+ * Shooter regression data collection (distance -> flywheel velocity, for a fit in Desmos).
+ * Use {@link RegressionTestRed} or {@link RegressionTestBlue}.
  *
- * Drive to a spot, let the turret aim at the PRIMARY goal (never switches to the secondary), shoot with the
- * target velocity you want, and write down (distance, velocity) for the shots that go in. Telemetry (driver
- * station AND Panels) reports the distance from the turret to the goal every loop.
+ * START: always the teleop's default start pose for the alliance (BioBuzzAlliance.startPose, Red = (54.6, 7.4) facing
+ * up the field), never the pose from an auto. Place the robot there, turret straight forward, then press init.
  *
- * Same hardware logic as {@link BioBuzzTeleOpV2Base}: the flywheel ALWAYS runs on the hub velocity PIDF
- * (SHOOTER_P / I / D / F from BioBuzzConfig, currently P=400 F=13.85), the turret auto-aims, and
- * gamepad2 right trigger (hold) = shoot (opens the blocker, intake + transfer at PIDF_INTAKE_TRANSFER_POWER).
+ * The turret auto-aims at the same goal point the teleop uses (picked by the robot's y, split at 70), and the
+ * distance shown is from the turret to that goal point, the same number the teleop will feed the regression.
  *
- * TARGET VELOCITY: starts at SHOOTER_FIXED_VELOCITY. Change it with gamepad2 dpad up / down (+- VELOCITY_STEP)
- * or type it into Panels (Configurables -> "RegressionTestBase" -> TARGET_VELOCITY / VELOCITY_STEP).
- * Panels edits and the dpad both change the same number.
+ * HOW TO COLLECT: drive to a spot, adjust the velocity until shots go in, press gamepad2 square to save
+ * (distance, velocity). Repeat at different distances. The "DESMOS" lines at the bottom are ready to type in:
+ *     D = [ ... ]      V = [ ... ]      then in Desmos:   V ~ a D^2 + b D + c
  *
  * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose, cross = toggle flower
- * gamepad2: right trigger (hold) = shoot, right bumper = intake + transfer, left bumper = intake only,
- *           cross = reverse both, triangle (hold) = open blocker,
- *           dpad up / down = target velocity + / - VELOCITY_STEP,
- *           dpad left / right = turret trim, options = declare the turret's current position straight forward,
- *           square = SAVE a sample (distance, target velocity) to the list below, share = clear the list
- *
+ * gamepad2: dpad up / down    = velocity + / - BIG_STEP   (default 50)
+ *           dpad right / left = velocity + / - SMALL_STEP (default 10)
+ *           right trigger (hold) = shoot, right bumper = intake + transfer, left bumper = intake only,
+ *           cross = reverse both, triangle (hold) = open blocker, options = turret straight forward (re-zero),
+ *           square = SAVE a sample, share = clear the samples
+ * Panels (Configurables -> "RegressionTestBase"): TARGET_VELOCITY, BIG_STEP, SMALL_STEP.
  * Panels graph keys: "Target", "Actual", "Error", "Distance".
  */
 @Configurable
@@ -48,12 +47,13 @@ public abstract class RegressionTestBase extends OpMode {
     // ================= EDITABLE IN PANELS =================
     /** Flywheel target (ticks/s). Starts at SHOOTER_FIXED_VELOCITY + PIDF_VELOCITY_OFFSET. */
     public static double TARGET_VELOCITY = SHOOTER_FIXED_VELOCITY + PIDF_VELOCITY_OFFSET;
-    /** How much one dpad up / down press changes TARGET_VELOCITY. */
-    public static double VELOCITY_STEP = 20;
+    /** gamepad2 dpad up / down step (ticks/s). */
+    public static double BIG_STEP = 50;
+    /** gamepad2 dpad right / left step (ticks/s). */
+    public static double SMALL_STEP = 10;
     // ======================================================
 
-    private static final double MAX_TARGET = MAX_SHOOTER_VELOCITY;
-    private static final int MAX_SAMPLES = 15;
+    private static final int MAX_SAMPLES = 20;
 
     private final BioBuzzAlliance alliance;
 
@@ -65,14 +65,10 @@ public abstract class RegressionTestBase extends OpMode {
     private TelemetryManager panels;
 
     private boolean flowerActive = false;
-    private boolean lastG1Cross, lUp, lDown, lSquare, lShare;
+    private boolean lastG1Cross, lUp, lDown, lLeft, lRight, lSquare, lShare;
     private boolean firstLoop = true;
 
-    private Pose lastPose = null;
-    private long lastNanos = 0;
-    private double velX = 0, velY = 0;
-
-    private final List<String> samples = new ArrayList<>();
+    private final List<double[]> samples = new ArrayList<>(); // {distance, velocity}
 
     protected RegressionTestBase(BioBuzzAlliance alliance) {
         this.alliance = alliance;
@@ -81,7 +77,7 @@ public abstract class RegressionTestBase extends OpMode {
     @Override
     public void init() {
         follower = Constants.create(hardwareMap);
-        follower.setPose(BioBuzzPose.hasPoseFromAuto() ? BioBuzzPose.getPose() : alliance.startPose);
+        follower.setPose(alliance.startPose); // always the teleop default start pose, never the auto's
 
         shooter  = hardwareMap.get(DcMotorEx.class, SHOOTER);
         intake   = hardwareMap.get(DcMotor.class, INTAKE);
@@ -102,15 +98,12 @@ public abstract class RegressionTestBase extends OpMode {
         blocker.setPosition(BLOCKER_BLOCK);
         flower.setPosition(FLOWER_REST);
 
-        turret = new BioBuzzTurret(hardwareMap, alliance);
-        turret.setSecondaryGoal(false); // primary goal only
-        Integer autoTicks = BioBuzzPose.getTurretTicks();
-        if (BioBuzzPose.hasPoseFromAuto() && autoTicks != null) {
-            turret.setEncoderOffset(autoTicks);
-        }
+        turret = new BioBuzzTurret(hardwareMap, alliance); // encoder reset here = straight forward
 
         panels = PanelsTelemetry.INSTANCE.getTelemetry();
-        telemetry.addData("Status", "Initialized (" + alliance + ", regression, primary goal)");
+        telemetry.addData("Status", "Initialized (" + alliance + " regression)");
+        telemetry.addData("Start pose", "%.1f, %.1f, %.0f deg  (place the robot here, turret forward)",
+                alliance.startPose.x(), alliance.startPose.y(), Math.toDegrees(alliance.startPose.heading()));
         telemetry.update();
     }
 
@@ -126,37 +119,25 @@ public abstract class RegressionTestBase extends OpMode {
             follower.setPose(alliance.resetPose);
         }
         follower.manual(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x);
-
-        long nowNanos = System.nanoTime();
         Pose pose = follower.pose();
-        if (lastPose != null) {
-            double dt = (nowNanos - lastNanos) / 1e9;
-            if (dt > 0.005) {
-                velX = (pose.x() - lastPose.x()) / dt;
-                velY = (pose.y() - lastPose.y()) / dt;
-                lastPose = pose;
-                lastNanos = nowNanos;
-            }
-        } else {
-            lastPose = pose;
-            lastNanos = nowNanos;
+
+        /* ---------- TARGET VELOCITY: dpad up/down = big step, right/left = small step ---------- */
+        if (gamepad2.dpad_up && !lUp)       TARGET_VELOCITY += BIG_STEP;
+        if (gamepad2.dpad_down && !lDown)   TARGET_VELOCITY -= BIG_STEP;
+        if (gamepad2.dpad_right && !lRight) TARGET_VELOCITY += SMALL_STEP;
+        if (gamepad2.dpad_left && !lLeft)   TARGET_VELOCITY -= SMALL_STEP;
+        lUp = gamepad2.dpad_up; lDown = gamepad2.dpad_down;
+        lRight = gamepad2.dpad_right; lLeft = gamepad2.dpad_left;
+        TARGET_VELOCITY = Math.max(0, Math.min(MAX_SHOOTER_VELOCITY, TARGET_VELOCITY));
+
+        /* ---------- TURRET: same goal choice as the teleop ---------- */
+        if (!Double.isNaN(alliance.autoGoalSplitY)) {
+            turret.setSecondaryGoal(alliance.useSecondaryGoalAt(pose.y()));
         }
-
-        /* ---------- TARGET VELOCITY (dpad or Panels) ---------- */
-        boolean up = gamepad2.dpad_up, down = gamepad2.dpad_down;
-        if (up && !lUp) TARGET_VELOCITY += VELOCITY_STEP;
-        if (down && !lDown) TARGET_VELOCITY -= VELOCITY_STEP;
-        lUp = up; lDown = down;
-        TARGET_VELOCITY = Math.max(0, Math.min(MAX_TARGET, TARGET_VELOCITY));
-
-        /* ---------- TURRET: primary goal only ---------- */
-        turret.setSecondaryGoal(false);
-        double trimDir = (gamepad2.dpad_left ? 1 : 0) - (gamepad2.dpad_right ? 1 : 0);
-        turret.adjustTrim(trimDir * TURRET_TRIM_RATE_DEG_PER_SEC, 0.02);
         if (gamepad2.options) {
             turret.resetEncoder();
         }
-        turret.aimAtGoal(pose, velX, velY);
+        turret.aimAtGoal(pose, 0, 0); // no shot leading (same as teleop)
         double distance = turret.getDistanceToGoal(pose);
 
         /* ---------- SHOOTER (always running) + SHOOT ---------- */
@@ -187,35 +168,48 @@ public abstract class RegressionTestBase extends OpMode {
         transfer.setPower(transferPower);
 
         /* ---------- SAMPLES ---------- */
-        boolean square = gamepad2.square, share = gamepad2.share;
-        if (square && !lSquare) {
-            samples.add(String.format("%.1f in -> %.0f", distance, TARGET_VELOCITY));
+        if (gamepad2.square && !lSquare) {
+            samples.add(new double[]{distance, TARGET_VELOCITY});
             if (samples.size() > MAX_SAMPLES) samples.remove(0);
         }
-        if (share && !lShare) samples.clear();
-        lSquare = square; lShare = share;
+        if (gamepad2.share && !lShare) samples.clear();
+        lSquare = gamepad2.square;
+        lShare = gamepad2.share;
 
         /* ---------- TELEMETRY ---------- */
         boolean ready = Math.abs(TARGET_VELOCITY - velocity) < SHOOTER_READY_TOLERANCE;
-        telemetry.addData("Alliance", alliance + " (primary goal only)");
         telemetry.addData("DISTANCE TO GOAL (in)", "%.2f", distance);
-        telemetry.addData("Target / actual (ticks/s)", "%.0f / %.0f", TARGET_VELOCITY, velocity);
-        telemetry.addData("Velocity error", "%.0f  %s", TARGET_VELOCITY - velocity, ready ? "READY" : "recovering");
-        telemetry.addData("PIDF", "P=%s I=%s D=%s F=%s", SHOOTER_P, SHOOTER_I, SHOOTER_D, SHOOTER_F);
-        telemetry.addData("Turret angle / target / trim", "%.1f / %.1f / %.1f", turret.getAngle(), turret.getTargetAngle(), turret.getTrim());
-        telemetry.addData("X / Y (in)", "%.2f / %.2f", pose.x(), pose.y());
-        telemetry.addData("Heading (deg)", "%.2f", Math.toDegrees(pose.heading()));
-        telemetry.addData("Shooting", shooting ? "YES" : "no");
-        telemetry.addData("Saved samples (square = save, share = clear)", samples.isEmpty() ? "-" : "");
-        for (int i = 0; i < samples.size(); i++) telemetry.addData("  " + (i + 1), samples.get(i));
+        telemetry.addData("VELOCITY target / actual", "%.0f / %.0f  %s", TARGET_VELOCITY, velocity,
+                ready ? "READY" : "recovering");
+        telemetry.addData("Steps", "dpad up/down +-%.0f, right/left +-%.0f", BIG_STEP, SMALL_STEP);
+        telemetry.addData("Goal", turret.isTargetingSecondaryGoal() ? "SECONDARY" : "PRIMARY");
+        telemetry.addData("X / Y / heading", "%.1f / %.1f / %.1f deg", pose.x(), pose.y(), Math.toDegrees(pose.heading()));
+        telemetry.addData("Turret angle / target", "%.1f / %.1f", turret.getAngle(), turret.getTargetAngle());
+        telemetry.addData("Samples (square = save, share = clear)", samples.size());
+        for (int i = 0; i < samples.size(); i++) {
+            telemetry.addData("  " + (i + 1), "%.1f in -> %.0f", samples.get(i)[0], samples.get(i)[1]);
+        }
+        if (!samples.isEmpty()) {
+            telemetry.addData("DESMOS D", desmosList(0));
+            telemetry.addData("DESMOS V", desmosList(1));
+        }
         telemetry.update();
 
         panels.addData("Target", TARGET_VELOCITY);
         panels.addData("Actual", velocity);
         panels.addData("Error", TARGET_VELOCITY - velocity);
         panels.addData("Distance", distance);
-        panels.addData("Flywheel", ready ? "AT SPEED" : "recovering");
         panels.update();
+    }
+
+    /** "[a, b, c]" of one column of the samples, for pasting into Desmos. */
+    private String desmosList(int column) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < samples.size(); i++) {
+            if (i > 0) sb.append(", ");
+            sb.append(String.format(column == 0 ? "%.1f" : "%.0f", samples.get(i)[column]));
+        }
+        return sb.append("]").toString();
     }
 
     @Override

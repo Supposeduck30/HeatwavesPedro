@@ -40,7 +40,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  *   2. Find LIMIT_ANGLE_DEG. Set REHOME_ON_PASS = false (so nothing gets corrected). Pass the magnet CLOCKWISE slowly
  *      (stick or by hand) 5+ times. Each pass shows "Last edge angle"; "Avg edge angle" is the mean. Type that average
  *      into LIMIT_ANGLE_DEG. (options clears the averages. This only works if the encoder hasn't skipped, so start
- *      from a fresh init with the turret straight forward. TurretLimitFinder does the same thing with sweeps.)
+ *      from a fresh init with the turret straight forward.)
  *   3. Prove the re-home. Turn REHOME_ON_PASS back on. Mess the angle up on purpose: turn the turret by hand with
  *      power off, then press triangle (declares "straight forward = 90" wrong on purpose). Now drive the turret
  *      CLOCKWISE through the magnet: "Angle" JUMPS by "Last correction" and "Re-homes" goes up by 1. After that the

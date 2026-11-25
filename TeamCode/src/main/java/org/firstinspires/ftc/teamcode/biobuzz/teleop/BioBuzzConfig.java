@@ -62,8 +62,11 @@ public final class BioBuzzConfig {
      * Turret angle at the LEFT edge of the magnet band (where it triggers while spinning CLOCKWISE).
      * "Turret Limit Finder" 2026-11-20: CW leading edge 33.12 (band ~29.8..33.1, center 31.5).
      * "Turret Magnet Angle Test" 2026-11-21: CW ENTER at 42.52 (this frame, front = 90; = -47.48 when front = 0). NaN = homing off. TUNE
+     * "Turret Magnet Angle Test" 2026-11-24 (clockwise): -410 in the test's frame = -50 after one full turn = 40 here.
+     * "Turret Magnet Hand Finder" 2026-11-24: first clockwise hit at 35.46, rounded to 35 (CURRENT VALUE).
+     * Used by the teleop's gamepad2 circle homing. Any +-360 equivalent works (the turret is infinite).
      */
-    public static final double TURRET_LIMIT_ANGLE_DEG = 42.52;
+    public static final double TURRET_LIMIT_ANGLE_DEG = 35.0;
     /** Re-home on every clockwise pass over the magnet while aiming (false = only on start / button homing). */
     public static final boolean TURRET_REHOME_ON_PASS = true;
     /**
@@ -73,6 +76,12 @@ public final class BioBuzzConfig {
     public static final double TURRET_REHOME_MAX_STEP_DEG = 4.0;
     /** Clockwise seek power for start / button homing. Slow and constant (the finder sweep was 0.15). TUNE */
     public static final double TURRET_HOME_POWER = 0.15;
+    /**
+     * Fast clockwise power for the FIRST part of homing: spins quickly to find the magnet roughly, then the turret backs
+     * off and comes back in slowly at TURRET_HOME_POWER for the exact edge. Raise if it's still slow, lower if it
+     * slams/overshoots a lot. TUNE
+     */
+    public static final double TURRET_HOME_FAST_POWER = 0.4;
     /** Counter-clockwise back-off power, used when homing starts while already on the magnet. */
     public static final double TURRET_HOME_BACKOFF_POWER = 0.2;
     /** How far past the magnet to back off (CCW) before seeking clockwise. */

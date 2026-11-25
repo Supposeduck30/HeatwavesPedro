@@ -12,7 +12,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
 
 /**
  * Drivetrain + turret ONLY (no shooter, intake, transfer or blocker; the flower servo is just held up), for coding the turret.
- * Same start pose, goals, relocalize and turret logic as {@link BioBuzzTeleOpBase}; the turret is
+ * Same start pose, goals, relocalize and turret logic as {@link BioBuzzTeleOpV2Base}; the turret is
  * {@link BioBuzzTurret}. Tunables: {@link BioBuzzConfig} (TURRET_*) and {@link BioBuzzAlliance} (goals, poses).
  *
  * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose, dpad up = relocalize
