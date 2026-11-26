@@ -19,7 +19,7 @@ import com.qualcomm.robotcore.util.Range;
  *
  * Turret angle convention: 0 = robot RIGHT, 90 = robot FRONT, 180 = left, 270 = back, positive = counter-clockwise.
  *
- * HOMING: the belt/gears skip, so the encoder angle drifts. A magnet on the turret passes a REV magnetic switch
+ * HOMING: the belt/gears skip, so  encoder angle drifts. A magnet on the turret passes a REV magnetic switch
  * (configured as a REV Touch Sensor). The switch reads over a ~4 deg band, so only its LEFT edge is used: the edge
  * the turret hits while spinning CLOCKWISE. Every clockwise entry re-homes the angle to TURRET_LIMIT_ANGLE_DEG
  * (counter-clockwise entries are ignored). startHoming() makes it go find the magnet, always finishing clockwise.

@@ -20,7 +20,7 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  * gamepad1: left stick = drive/strafe, right stick = turn, triangle = reset pose, cross = toggle flower,
  *           share DURING INIT = start from the default start pose instead of where the last auto ended
  *           (the auto pose is only used once: a second teleop in a row always starts from the default)
- * gamepad2: the flywheel ALWAYS runs (hub PIDF at SHOOTER_FIXED_VELOCITY) from the moment the OpMode starts,
+ * gamepad2: the flywheel ALWAYS runs (hub PIDF at the distance regression target) from the moment the OpMode starts,
  *           right trigger (hold) = SHOOT: opens the blocker and runs intake + transfer at PIDF_INTAKE_TRANSFER_POWER,
  *           right bumper = intake + transfer (blocker stays closed),
  *           left bumper = intake only, cross = reverse both, triangle (hold) = open blocker,
@@ -39,7 +39,8 @@ import org.firstinspires.ftc.teamcode.pedro.Constants;
  * No magnet within HOMING_TIMEOUT_MS = the turret stops and the screen shows "TURRET HOMING FAILED" (circle = retry).
  * If the switch is missing from the robot config, circle does nothing.
  *
- * Shooter uses the hub velocity PIDF (SHOOTER_P / I / D / F) at SHOOTER_FIXED_VELOCITY. Tunables: {@link BioBuzzConfig}.
+ * Shooter uses the hub velocity PIDF (SHOOTER_P / I / D / F). The target comes from the distance-to-goal regression
+ * (velA / velB / velC in {@link BioBuzzAlliance}), capped at MAX_SHOOTER_VELOCITY. Tunables: {@link BioBuzzConfig}.
  */
 public abstract class BioBuzzTeleOpV2Base extends OpMode {
 
@@ -273,7 +274,10 @@ public abstract class BioBuzzTeleOpV2Base extends OpMode {
 
         // Shooter: the flywheel always runs at the PIDF target
         double velocity = shooter.getVelocity();
-        shooter.setVelocity(SHOOTER_FIXED_VELOCITY + PIDF_VELOCITY_OFFSET);
+        double distance = turret.getDistanceToGoal(pose);
+        double shooterTarget = Math.max(0, Math.min(MAX_SHOOTER_VELOCITY,
+                alliance.shooterVelocity(distance) + PIDF_VELOCITY_OFFSET));
+        shooter.setVelocity(shooterTarget);
 
         // Right trigger (hold) = shoot: open the blocker and feed at the shooter feed power (same as Shooter Graph Test)
         boolean shooting = gamepad2.right_trigger > 0.1;
@@ -316,10 +320,10 @@ public abstract class BioBuzzTeleOpV2Base extends OpMode {
         telemetry.addData("Turret ticks", turret.getRawTicks());
         telemetry.addData("Turret trim (deg)", "%.1f", turret.getTrim());
         telemetry.addData("Goal", turret.isTargetingSecondaryGoal() ? "SECONDARY" : "PRIMARY");
-        telemetry.addData("Distance to goal (in)", "%.1f", turret.getDistanceToGoal(pose));
+        telemetry.addData("Distance to goal (in)", "%.1f", distance);
         telemetry.addData("X / Y (in)", "%.2f / %.2f", pose.x(), pose.y());
         telemetry.addData("Heading (deg)", "%.2f", Math.toDegrees(pose.heading()));
-        telemetry.addData("Shooter target / actual", "%.0f / %.0f", SHOOTER_FIXED_VELOCITY + PIDF_VELOCITY_OFFSET, velocity);
+        telemetry.addData("Shooter target / actual", "%.0f / %.0f", shooterTarget, velocity);
         telemetry.addData("Blocker", shooting || gamepad2.triangle ? "OPEN" : "BLOCKING");
         telemetry.addData("Shooting", shooting ? "YES" : "no");
         telemetry.update();

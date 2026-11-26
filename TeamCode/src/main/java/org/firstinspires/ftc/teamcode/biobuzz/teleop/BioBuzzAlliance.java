@@ -22,12 +22,12 @@ public enum BioBuzzAlliance {
     // Heading = the robot facing UP the field toward its goal (Red 90, Blue 270), NOT the auto's 180 / 0 (that is the
     // robot placed sideways). The heading must match how the robot is set down, or the turret aims off by the difference.
     // (x/y were swapped before 2026-11-24: Red teleop thought it was at the blue start spot.)
-    BLUE(  83.78, 77.494,    83.78, 62.506,    86.7161, 133.9505, 270,     38.8, 31.5, 0,     0.0220573, -0.464531, 1402.823,   0.0,
+    BLUE(  83.78, 77.494,    83.78, 62.506,    86.7161, 133.9505, 270,     38.8, 31.5, 0,     -0.251195, 36.6639, 177.5342,   0.0,
             new Pose(7, 9, Math.toRadians(90)),
             new Pose(57.6, 133.8, Math.toRadians(270)),
             new Pose(60.35, 7, Math.toRadians(90)),  new Pose(60.35, 137, Math.toRadians(270)),
             70.0, false),
-    RED( 59.47, 65.3,   57.47, 74.7,  54.6158, 7.3815, 90,   144 - 38.8, 144 - 31.5, 180,   0.0220573, -0.464531, 1402.823,   0.0,
+    RED( 59.47, 65.3,   57.47, 74.7,  54.6158, 7.3815, 90,   144 - 38.8, 144 - 31.5, 180,   -0.251195, 36.6639, 177.5342,   0.0,
             new Pose(144 - 7, 144 - 9, Math.toRadians(270)),
             new Pose(144 - 57.6, 144 - 133.8, Math.toRadians(90)),
             new Pose(144 - 60.35, 144 - 7, Math.toRadians(270)),  new Pose(144 - 60.35, 144 - 137, Math.toRadians(90)),
